@@ -191,18 +191,22 @@ section.dark .sec-head .sub{color:var(--mute-2)}
 .bstep .bnum{width:48px;height:48px;color:var(--accent);margin-bottom:1.5rem;display:flex;align-items:center;justify-content:center;line-height:0}
 .bstep .bnum svg{width:100%;height:100%;overflow:visible;display:block}
 /* ─── brand icon animations ─── */
-@keyframes bicon-ctx-twinkle{0%{opacity:0.15}15%{opacity:1}50%{opacity:0.3}100%{opacity:0.15}}
-.bicon-ctx-d1{animation:bicon-ctx-twinkle 3.5s ease-out infinite;animation-delay:0s}
-.bicon-ctx-d2{animation:bicon-ctx-twinkle 3.5s ease-out infinite;animation-delay:-0.5s}
-.bicon-ctx-d3{animation:bicon-ctx-twinkle 3.5s ease-out infinite;animation-delay:-1s}
-.bicon-ctx-d4{animation:bicon-ctx-twinkle 3.5s ease-out infinite;animation-delay:-1.5s}
-.bicon-ctx-d5{animation:bicon-ctx-twinkle 3.5s ease-out infinite;animation-delay:-2s}
-.bicon-ctx-d6{animation:bicon-ctx-twinkle 3.5s ease-out infinite;animation-delay:-2.5s}
-.bicon-ctx-d7{animation:bicon-ctx-twinkle 3.5s ease-out infinite;animation-delay:-3s}
-@keyframes bicon-compass{0%,100%{transform:rotate(-26deg)}50%{transform:rotate(26deg)}}
-.bicon-compass{animation:bicon-compass 4.2s cubic-bezier(0.4,0,0.2,1) infinite;transform-origin:center;transform-box:fill-box}
-@keyframes bicon-pos-spin{to{transform:rotate(360deg)}}
-.bicon-pos-ring{stroke-dasharray:44 132;transform-origin:center;transform-box:fill-box;animation:bicon-pos-spin 2.6s linear infinite}
+/* 01 · Контекст — AI sparkle (central + 3 satellites with filled/outline crossfade, always at least one visible) */
+.bicon-spark-core,.bicon-spark-sat{transform-origin:center;transform-box:fill-box}
+@keyframes bicon-spark-breathe{0%,100%{transform:scale(0.82);opacity:0.7}50%{transform:scale(1.15);opacity:1}}
+.bicon-spark-core{animation:bicon-spark-breathe 4.5s ease-in-out infinite}
+@keyframes bicon-spark-sat-fill{0%{opacity:0;transform:scale(0.5)}8%,30%{opacity:1;transform:scale(1)}42%,100%{opacity:0;transform:scale(0.5)}}
+@keyframes bicon-spark-sat-line{0%,50%{opacity:0;transform:scale(0.5)}58%,80%{opacity:1;transform:scale(1)}92%,100%{opacity:0;transform:scale(0.5)}}
+.bicon-spark-a-fill,.bicon-spark-b-fill,.bicon-spark-c-fill{animation:bicon-spark-sat-fill 5s ease-in-out infinite}
+.bicon-spark-a-line,.bicon-spark-b-line,.bicon-spark-c-line{animation:bicon-spark-sat-line 5s ease-in-out infinite}
+.bicon-spark-b-fill,.bicon-spark-b-line{animation-delay:-1.67s}
+.bicon-spark-c-fill,.bicon-spark-c-line{animation-delay:-3.33s}
+/* 02 · Позиция — compass needle (centered, gentle rocking) + 12-dot loader */
+.bicon-compass{transform-origin:center;transform-box:fill-box;animation:bicon-compass 5s cubic-bezier(0.4,0,0.2,1) infinite}
+@keyframes bicon-compass{0%,100%{transform:rotate(-22deg)}50%{transform:rotate(22deg)}}
+.bicon-pos-dot{transform-origin:center;transform-box:fill-box;opacity:0.18;animation:bicon-pos-pulse 2.4s linear infinite}
+@keyframes bicon-pos-pulse{0%{opacity:1;transform:scale(1.25)}25%,100%{opacity:0.18;transform:scale(1)}}
+.bicon-pos-d1{animation-delay:0s}.bicon-pos-d2{animation-delay:-0.2s}.bicon-pos-d3{animation-delay:-0.4s}.bicon-pos-d4{animation-delay:-0.6s}.bicon-pos-d5{animation-delay:-0.8s}.bicon-pos-d6{animation-delay:-1.0s}.bicon-pos-d7{animation-delay:-1.2s}.bicon-pos-d8{animation-delay:-1.4s}.bicon-pos-d9{animation-delay:-1.6s}.bicon-pos-d10{animation-delay:-1.8s}.bicon-pos-d11{animation-delay:-2.0s}.bicon-pos-d12{animation-delay:-2.2s}
 @keyframes bicon-eq-s{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1.05)}}
 @keyframes bicon-eq-m{0%,100%{transform:scaleY(0.4)}50%{transform:scaleY(1.25)}}
 @keyframes bicon-eq-l{0%,100%{transform:scaleY(0.35)}50%{transform:scaleY(1.45)}}
@@ -442,7 +446,7 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
 .h2-in .h2-line{opacity:1;transform:translateY(0)}
 .sec-head .num-block .num{transform:translate(var(--mx,0),var(--my,0));transition:transform 0.6s var(--ease-out)}
 .hero .container{will-change:auto}
-@media (prefers-reduced-motion:reduce){.scroll-progress{display:none}.brand-marquee-row{animation:none}.hero-title .word,.cta-title .word{opacity:1;transform:none}.hero-title .dot{animation:none}.hero-title em.is-typing::after{animation:none;opacity:0}.sec-head.in-view .num-block .num{animation:none}.bmp-dotgrid.in-view .d{animation:none;opacity:0.35}.bmp-dotgrid.in-view .d.accent{opacity:1}.has-tip::after,.tip-num-block::after,.ft-top .arr{transition:none!important}.bicon-ctx-d1,.bicon-ctx-d2,.bicon-ctx-d3,.bicon-ctx-d4,.bicon-ctx-d5,.bicon-ctx-d6,.bicon-ctx-d7,.bicon-compass,.bicon-pos-ring,.bicon-eq,.bicon-aa-letter,.bicon-sys-ray,.bicon-ripple,.numbers-grid .cell .big{animation:none}}
+@media (prefers-reduced-motion:reduce){.scroll-progress{display:none}.brand-marquee-row{animation:none}.hero-title .word,.cta-title .word{opacity:1;transform:none}.hero-title .dot{animation:none}.hero-title em.is-typing::after{animation:none;opacity:0}.sec-head.in-view .num-block .num{animation:none}.bmp-dotgrid.in-view .d{animation:none;opacity:0.35}.bmp-dotgrid.in-view .d.accent{opacity:1}.has-tip::after,.tip-num-block::after,.ft-top .arr{transition:none!important}.bicon-spark-core,.bicon-spark-sat,.bicon-compass,.bicon-pos-dot,.bicon-eq,.bicon-aa-letter,.bicon-sys-ray,.bicon-ripple,.numbers-grid .cell .big{animation:none}}
 @media (max-width:720px){.brand-marquee-row{animation-duration:35s}}
 
 /* ─── LANGUAGE SWITCHER ─── */
@@ -678,8 +682,8 @@ nav.top.on-dark .lang-switch .sep{color:var(--mute-2);opacity:0.35}
 </div>
 </div>
 <div class="brand-steps stagger" data-reveal>
-<div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle class="bicon-ctx-d1" cx="14" cy="16" r="2.5"/><circle class="bicon-ctx-d2" cx="52" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle class="bicon-ctx-d3" cx="8" cy="44" r="2"/><circle class="bicon-ctx-d4" cx="55" cy="48" r="2.5"/><circle class="bicon-ctx-d5" cx="30" cy="6" r="1.5"/><circle class="bicon-ctx-d6" cx="46" cy="38" r="1.8" fill="none" stroke="currentColor" stroke-width="1.5"/><circle class="bicon-ctx-d7" cx="18" cy="32" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="32" cy="32" r="5"/></svg></div><div class="bname" data-i18n="br.1.n">Контекст</div><p class="bdesc" data-i18n="br.1.d">Рынок, конкуренты, аудитория, цели бизнеса. Что знаем точно, а&nbsp;что только предполагаем.</p></div>
-<div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle class="bicon-pos-ring" cx="32" cy="32" r="28" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path class="bicon-compass" d="M32 12 L40 32 L32 28 L24 32 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></div><div class="bname" data-i18n="br.2.n">Позиция</div><p class="bdesc" data-i18n="br.2.d">Для кого мы, против кого, и&nbsp;о&nbsp;чём мы&nbsp;принципиально молчим. Без второго первое не&nbsp;работает.</p></div>
+<div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path class="bicon-spark-core" d="M 32 12 Q 32 30 46 32 Q 32 34 32 52 Q 32 34 18 32 Q 32 30 32 12 Z"/><path class="bicon-spark-sat bicon-spark-a-fill" d="M 52 6 Q 52 10.5 57 11 Q 52 11.5 52 16 Q 52 11.5 47 11 Q 52 10.5 52 6 Z"/><path class="bicon-spark-sat bicon-spark-a-line" d="M 52 6 Q 52 10.5 57 11 Q 52 11.5 52 16 Q 52 11.5 47 11 Q 52 10.5 52 6 Z" fill="none" stroke="currentColor" stroke-width="1.3"/><path class="bicon-spark-sat bicon-spark-b-fill" d="M 12 48 Q 12 52.5 17 53 Q 12 53.5 12 58 Q 12 53.5 7 53 Q 12 52.5 12 48 Z"/><path class="bicon-spark-sat bicon-spark-b-line" d="M 12 48 Q 12 52.5 17 53 Q 12 53.5 12 58 Q 12 53.5 7 53 Q 12 52.5 12 48 Z" fill="none" stroke="currentColor" stroke-width="1.3"/><path class="bicon-spark-sat bicon-spark-c-fill" d="M 14 15 Q 14 17.5 17 18 Q 14 18.5 14 21 Q 14 18.5 11 18 Q 14 17.5 14 15 Z"/><path class="bicon-spark-sat bicon-spark-c-line" d="M 14 15 Q 14 17.5 17 18 Q 14 18.5 14 21 Q 14 18.5 11 18 Q 14 17.5 14 15 Z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></div><div class="bname" data-i18n="br.1.n">Контекст</div><p class="bdesc" data-i18n="br.1.d">Рынок, конкуренты, аудитория, цели бизнеса. Что знаем точно, а&nbsp;что только предполагаем.</p></div>
+<div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle class="bicon-pos-dot bicon-pos-d1"  cx="57"    cy="32"    r="1.4"/><circle class="bicon-pos-dot bicon-pos-d2"  cx="53.65" cy="44.5"  r="1.4"/><circle class="bicon-pos-dot bicon-pos-d3"  cx="44.5"  cy="53.65" r="1.4"/><circle class="bicon-pos-dot bicon-pos-d4"  cx="32"    cy="57"    r="1.4"/><circle class="bicon-pos-dot bicon-pos-d5"  cx="19.5"  cy="53.65" r="1.4"/><circle class="bicon-pos-dot bicon-pos-d6"  cx="10.35" cy="44.5"  r="1.4"/><circle class="bicon-pos-dot bicon-pos-d7"  cx="7"     cy="32"    r="1.4"/><circle class="bicon-pos-dot bicon-pos-d8"  cx="10.35" cy="19.5"  r="1.4"/><circle class="bicon-pos-dot bicon-pos-d9"  cx="19.5"  cy="10.35" r="1.4"/><circle class="bicon-pos-dot bicon-pos-d10" cx="32"    cy="7"     r="1.4"/><circle class="bicon-pos-dot bicon-pos-d11" cx="44.5"  cy="10.35" r="1.4"/><circle class="bicon-pos-dot bicon-pos-d12" cx="53.65" cy="19.5"  r="1.4"/><path class="bicon-compass" d="M 32 22 L 40 42 L 32 38 L 24 42 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></div><div class="bname" data-i18n="br.2.n">Позиция</div><p class="bdesc" data-i18n="br.2.d">Для кого мы, против кого, и&nbsp;о&nbsp;чём мы&nbsp;принципиально молчим. Без второго первое не&nbsp;работает.</p></div>
 <div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect class="bicon-eq bicon-eq-1" x="7" y="28" width="2.5" height="8" rx="1.25"/><rect class="bicon-eq bicon-eq-2" x="14" y="23" width="2.5" height="18" rx="1.25"/><rect class="bicon-eq bicon-eq-3" x="21" y="18" width="2.5" height="28" rx="1.25"/><rect class="bicon-eq bicon-eq-4" x="28" y="25" width="2.5" height="14" rx="1.25"/><rect class="bicon-eq bicon-eq-5" x="35" y="20" width="2.5" height="24" rx="1.25"/><rect class="bicon-eq bicon-eq-6" x="42" y="27" width="2.5" height="10" rx="1.25"/><rect class="bicon-eq bicon-eq-7" x="49" y="23" width="2.5" height="18" rx="1.25"/><rect class="bicon-eq bicon-eq-8" x="56" y="29" width="2.5" height="6" rx="1.25"/></svg></div><div class="bname" data-i18n="br.3.n">Голос</div><p class="bdesc" data-i18n="br.3.d">Как звучит бренд в&nbsp;письме, в&nbsp;баннере, в&nbsp;техподдержке. Тон, который узнают.</p></div>
 <div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><text class="bicon-aa-letter" x="22" y="46" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="44" font-style="italic" fill="currentColor">A</text><text class="bicon-aa-letter" x="44" y="46" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="32" font-style="italic" fill="currentColor">a</text></svg></div><div class="bname" data-i18n="br.4.n">Визуальный язык</div><p class="bdesc" data-i18n="br.4.d">Типографика, цвет, образ, motion, фотостиль. Не&nbsp;«логотип и&nbsp;палитра», а&nbsp;целая грамматика.</p></div>
 <div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><line class="bicon-sys-ray bicon-sys-r1" x1="54" y1="32" x2="40" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r2" x1="43" y1="13" x2="36" y2="25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r3" x1="21" y1="13" x2="28" y2="25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r4" x1="10" y1="32" x2="24" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r5" x1="21" y1="51" x2="28" y2="39" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r6" x1="43" y1="51" x2="36" y2="39" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="56" cy="32" r="2"/><circle cx="44" cy="11" r="2"/><circle cx="20" cy="11" r="2"/><circle cx="8" cy="32" r="2"/><circle cx="20" cy="53" r="2"/><circle cx="44" cy="53" r="2"/><circle cx="32" cy="32" r="5"/></svg></div><div class="bname" data-i18n="br.5.n">Система</div><p class="bdesc" data-i18n="br.5.d">Как айдентика разворачивается на&nbsp;сайт, соцсети, продукт, презентации, наружку. Без потерь.</p></div>
@@ -1517,6 +1521,18 @@ if(oldBrandList){
 }
 
 /* ─────────────── stat counter ─────────────── */
+/* randomize the order in which the 6 numbers glitch — keeps the 2s spacing
+   but breaks the predictable left-to-right top-to-bottom sequence */
+(function(){
+  const bigs=document.querySelectorAll('.numbers-grid .cell .big');
+  if(bigs.length<2)return;
+  const delays=['0s','-2s','-4s','-6s','-8s','-10s'];
+  for(let i=delays.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [delays[i],delays[j]]=[delays[j],delays[i]];
+  }
+  bigs.forEach((b,i)=>{if(delays[i])b.style.animationDelay=delays[i];});
+})();
 document.querySelectorAll('.numbers-grid .cell .big').forEach(big=>{
   const tn=big.firstChild;
   if(!tn||tn.nodeType!==3)return;
