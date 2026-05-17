@@ -13,32 +13,35 @@
 <meta property="og:locale:alternate" content="en_US" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,100..900,0..100;1,9..144,100..900,0..100&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:#FBFAF6; --bg-2:#F4EFE5; --bg-soft:#F8F1ED; --bg-dark:#0C0D11;
-  --ink:#14151A; --ink-2:#2A2D34; --ink-3:#4A4E57;
-  --mute:#5C6470; --mute-2:#A8AEB8;
-  --hair:#E5E2DA; --hair-dk:#252830;
-  --accent:#D14F3C; --accent-2:#B83C2A; --accent-tint:#F2DCD4; --accent-faint:#FAEEE9;
-  --glow-1:rgba(209,79,60,0.04); --glow-2:rgba(209,79,60,0.025); --glow-3:rgba(209,79,60,0.02);
+:root{
+  --bg:#FBFAF6;
+  --bg-dark:#0C0D11;
+  --ink:#14151A;
+  --ink-2:#2A2D34;
+  --mute:#5C6470;
+  --mute-2:#A8AEB8;
+  --hair:#E5E2DA;
+  --hair-dk:#252830;
+  --accent:#D14F3C;
   --serif:'Fraunces',Georgia,'Iowan Old Style','Palatino Linotype',serif;
   --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --mono:'IBM Plex Mono',ui-monospace,'SF Mono',monospace;
-  --container:100%; --gutter:clamp(1.25rem,2.8vw,2.5rem);
+  --container:100%;
+  --gutter:1rem;
   --nav-safe-right:clamp(0rem,4.5vw,5rem);
   --col-gap:clamp(0.875rem,1.8vw,2rem);
   --t-hero:clamp(4rem,10vw,9.75rem);
   --t-h1:clamp(2rem,4.5vw,4rem);
-  --t-h2:clamp(2rem,4vw,3.5rem);
   --t-h3:clamp(1.5rem,2.2vw,2.125rem);
-  --t-lead:clamp(1.5rem,2vw,1.875rem);
   --t-body:clamp(1.0625rem,1.2vw,1.1875rem);
-  --t-eyebrow:0.9375rem; --t-tag:0.9rem; --t-mono-sm:0.875rem;
+  --t-eyebrow:0.9375rem;
+  --t-tag:0.9rem;
+  --t-mono-sm:0.875rem;
   --ease-out:cubic-bezier(0.16,1,0.3,1);
-  --ease-snap:cubic-bezier(0.34,1.56,0.64,1);
-  --ease-emp:cubic-bezier(0.7,0,0.3,1);
 }
+
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:var(--t-body);line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -67,7 +70,6 @@ ul{padding:0;margin:0;list-style:none}
 .container{max-width:var(--container);margin:0 auto;padding:0 var(--gutter);padding-right:calc(var(--gutter) + var(--nav-safe-right));width:100%}
 section.hero > .container, #hero > .container{padding-right:var(--gutter)}
 /* 12-column grid primitive — used inside .container where needed */
-.grid12{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);width:100%}
 nav.top{position:fixed;top:0;left:0;right:0;padding:1.25rem var(--gutter);display:flex;align-items:center;justify-content:space-between;z-index:100;background:transparent;border-bottom:1px solid transparent;transition:background 0.4s var(--ease-out),backdrop-filter 0.4s var(--ease-out),border-color 0.4s var(--ease-out),color 0.4s var(--ease-out)}
 nav.top.scrolled{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);background:color-mix(in srgb,var(--bg) 78%,transparent);border-bottom-color:var(--hair)}
 nav.top.on-dark{color:#fff}
@@ -78,6 +80,9 @@ nav .brand b{font-weight:500;color:var(--accent)}
 nav .meta{font-family:var(--mono);font-size:var(--t-mono-sm);color:var(--mute);letter-spacing:0.08em;text-transform:uppercase}
 nav.top.on-dark .meta{color:var(--mute-2)}
 section{position:relative;min-height:clamp(70vh,85vh,100vh);display:flex;align-items:center;padding:clamp(8rem,13vh,11rem) 0 clamp(5rem,8vh,7.5rem);overflow:hidden}
+/* Performance: let the browser skip rendering sections that are far off-screen.
+   #hero stays always-rendered so curtain/tilt/fit work. */
+section:not(#hero){content-visibility:auto;contain-intrinsic-size:1px 90vh}
 section.dark{background:var(--bg-dark);color:#f1efe9;position:relative}
 section.dark::before{content:'';position:absolute;top:0;left:var(--gutter);right:calc(var(--gutter) + var(--nav-safe-right));height:1px;background:var(--hair-dk);opacity:0.6;z-index:0}
 section.dark::after{content:'';position:absolute;bottom:0;left:var(--gutter);right:calc(var(--gutter) + var(--nav-safe-right));height:1px;background:var(--hair-dk);opacity:0.6;z-index:0}
@@ -89,21 +94,20 @@ section.dark+section:not(.dark){padding-top:clamp(11rem,18vh,17rem)}
 
 section.dark h1,section.dark h2{color:#fff}
 .sec-head{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);margin-bottom:clamp(2.5rem,5vw,4.5rem);align-items:end;position:relative;z-index:10}
-.sec-head .num-block{grid-column:1 / 4}
+.sec-head
 .sec-head > div:nth-child(2){grid-column:4 / -1}
 @media (max-width:720px){
   .sec-head{grid-template-columns:1fr;row-gap:1rem}
-  .sec-head .num-block{grid-column:1 / -1}
+  .sec-head
   .sec-head > div:nth-child(2){grid-column:1 / -1}
 }
 #services .sec-head{margin-bottom:clamp(1.5rem,3vw,2.5rem)}
 #services .svc-name{font-size:clamp(1.375rem,1.9vw,1.75rem)}
-.sec-head .num-block .num{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(5rem,11vw,10rem);line-height:0.85;color:var(--accent);display:inline-block}
-.sec-head .num-block .kicker{font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.11em;text-transform:uppercase;color:var(--mute);margin-top:1rem;font-weight:500;display:block}
-section.dark .sec-head .num-block .kicker{color:var(--mute-2)}
+.sec-head
+.sec-head
+section.dark .sec-head
 .sec-head h2{font-family:var(--serif);font-weight:400;font-size:var(--t-h1);line-height:0.96;letter-spacing:-0.04em;padding-bottom:0.4rem;text-wrap:balance}
-.sec-head .sub{margin-top:1.5rem;font-family:var(--serif);font-style:italic;font-weight:300;font-size:var(--t-h3);color:var(--mute);max-width:56ch;line-height:1.3}
-section.dark .sec-head .sub{color:var(--mute-2)}
+section.dark
 .eyebrow{font-family:var(--mono);font-size:var(--t-eyebrow);letter-spacing:0.11em;text-transform:uppercase;color:var(--accent);font-weight:500;display:inline-flex;align-items:center;gap:0.6rem}
 [data-reveal]{opacity:0;transform:translateY(40px);filter:blur(6px);transition:opacity 1.6s var(--ease-out),transform 1.5s cubic-bezier(0.22,1,0.36,1),filter 1s var(--ease-out)}
 [data-reveal].in-view{opacity:1;transform:translateY(0);filter:blur(0)}
@@ -118,7 +122,6 @@ section.dark .sec-head .sub{color:var(--mute-2)}
 .hero{align-items:stretch}
 .hero .container{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:0;padding-top:7rem;padding-bottom:2.5rem;position:relative;z-index:2;align-content:space-between;width:100%;min-height:100%}
 .hero .container > [data-reveal-num]{grid-column:4 / -1}
-.hero-eyebrow-top{grid-column:1 / 4;display:block;color:var(--accent);margin-bottom:0}
 .hero-eyebrow-bottom{grid-column:1 / 4;display:block;color:var(--mute-2);margin-bottom:0}
 .hero-title{font-family:var(--serif);font-size:var(--t-hero);font-weight:400;line-height:0.88;letter-spacing:-0.035em;color:#fff;text-wrap:balance;font-variation-settings:"opsz" 144,"SOFT" 0,"WONK" 0}
 .hero-title em{font-style:italic;font-weight:400;font-variation-settings:"opsz" 144,"SOFT" 30}
@@ -136,10 +139,9 @@ section.dark .sec-head .sub{color:var(--mute-2)}
 .hero-title em{display:inline-block;transform:translate(calc(var(--hp) * 10%),calc(var(--hp) * 28%));transform-origin:left center;will-change:transform}
 .hero-sub{opacity:calc(1 - var(--hp) * 1.8);transform:translateY(calc(var(--hp) * 32px));will-change:opacity,transform}
 .hero-bottom{opacity:calc(1 - var(--hp) * 2.2);transform:translateY(calc(var(--hp) * 40px));will-change:opacity,transform}
-.hero-eyebrow-top,.hero-eyebrow-bottom{opacity:calc(1 - var(--hp) * 2.4)}
 @media (prefers-reduced-motion:reduce){.hero{--hp:0 !important}}
 @media (max-width:720px){.hero{--hp:0 !important}}
-.hero-bottom{grid-column:1 / -1;margin-top:clamp(3rem,6vw,5rem);padding-top:1.75rem;border-top:1px solid var(--hair-dk);display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap)}
+.hero-bottom{grid-column:1 / -1;margin-top:clamp(3rem,6vw,5rem);padding-top:0;padding-bottom:1.75rem;border-top:none;border-bottom:1px solid var(--hair-dk);display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap)}
 .hero-bottom-items{grid-column:4 / -1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:2rem}
 .hero-bottom .item .label{font-family:var(--mono);font-size:var(--t-eyebrow);color:var(--mute-2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.65rem;font-weight:500}
 .hero-bottom .item .value{color:#fff;font-size:1.0625rem;line-height:1.45}
@@ -150,7 +152,6 @@ section.dark .sec-head .sub{color:var(--mute-2)}
   .intro-mark,
   .intro-stamp,
   .ts-mark,
-  .svc-mark{display:none !important}
   .hero .container > [data-reveal-num]{grid-column:1 / -1}
   .hero-bottom-items{grid-column:1 / -1;grid-template-columns:1fr}
 }
@@ -162,30 +163,16 @@ section.dark .sec-head .sub{color:var(--mute-2)}
 .intro-spread .intro-p{font-family:var(--sans);font-weight:400;font-style:normal;font-size:1.0625rem;line-height:1.6;color:var(--mute);margin:0;max-width:38ch}
 .intro-spread .intro-p strong{font-weight:500;color:var(--ink)}
 .intro-spread .intro-stamp{grid-column:9 / -1;font-family:var(--mono);font-size:var(--t-mono-sm);font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--mute);text-align:right;line-height:1.4;padding-top:clamp(1.5rem,3vw,2.5rem)}
-.intro-spread .intro-mark{grid-column:1 / 4;color:var(--accent);width:clamp(0.625rem,0.9vw,0.875rem);display:flex;align-items:center;padding-top:clamp(1.5rem,3vw,2.5rem);justify-self:start;align-self:center}
-.intro-spread .intro-mark svg{width:100%;height:auto;display:block}
+.intro-spread .intro-mark{grid-column:1 / 4;width:clamp(0.625rem,0.9vw,0.875rem);aspect-ratio:1;background:var(--accent);justify-self:start;align-self:center;margin-top:clamp(1.5rem,3vw,2.5rem)}
 @media (max-width:900px){
   .intro-spread .intro-title,.intro-spread .intro-rule,.intro-spread .intro-cols,.intro-spread .intro-stamp{grid-column:1 / -1}
   .intro-spread .intro-cols{grid-template-columns:1fr}
   .intro-spread .intro-stamp{text-align:left}
 }
-.intro-grid{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2rem,4vw,3rem);align-items:start;width:100%}
-.intro-grid .left{grid-column:1 / 5}
-.intro-grid .right{grid-column:5 / -1}
-.intro-grid .left .eyebrow{margin-bottom:1.5rem}
-.intro-grid .left h2{font-family:var(--serif);font-weight:400;font-size:clamp(2.25rem,3.6vw,3.5rem);line-height:1;letter-spacing:-0.035em;color:var(--ink)}
-.intro-grid .right p{font-family:var(--serif);font-weight:300;font-size:var(--t-lead);line-height:1.4;color:var(--ink-2);margin-bottom:1.6rem}
-.intro-grid .right p strong{font-weight:500;color:var(--ink)}
-.intro-grid .right p:last-child{margin-bottom:0}
-.intro-grid .right p em{font-style:italic;color:var(--accent)}
-@media (max-width:900px){
-  .intro-grid .left,.intro-grid .right{grid-column:1 / -1}
-}
-.numbers-block{width:100%}
 .numbers-spread{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(3.5rem,6vw,5rem);align-items:start;width:100%}
 .numbers-text{grid-column:4 / -1;grid-row:1;display:flex;flex-direction:column;gap:clamp(1rem,2vw,1.75rem);max-width:60ch}
 .numbers-title{font-family:var(--serif);font-weight:400;font-size:var(--t-h1);letter-spacing:-0.035em;line-height:1.05;color:var(--ink);margin:0}
-.numbers-lead{font-family:var(--sans);font-weight:400;font-style:normal;font-size:1.0625rem;line-height:1.6;color:var(--mute);max-width:60ch;margin:0}
+.numbers-lead{font-family:var(--serif);font-weight:300;font-style:italic;font-size:clamp(1.125rem,1.8vw,1.5rem);line-height:1.4;letter-spacing:-0.022em;color:var(--mute);max-width:56ch;margin:0}
 .numbers-grid{grid-column:4 / -1;grid-row:2;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:auto auto;grid-auto-flow:column;gap:clamp(2rem,3.5vw,3.5rem) clamp(2rem,3vw,3rem);border-top:1px solid var(--hair);padding-top:clamp(2rem,4vw,3rem);margin:0}
 @media (max-width:900px){
   .numbers-text,.numbers-grid{grid-column:1 / -1}
@@ -202,6 +189,33 @@ section.dark .sec-head .sub{color:var(--mute-2)}
 .numbers-grid .cell:nth-child(4) .big{animation-delay:-6s}
 .numbers-grid .cell:nth-child(5) .big{animation-delay:-8s}
 .numbers-grid .cell:nth-child(6) .big{animation-delay:-10s}
+/* ─── Shape cycle: red mark morphs through geometric shapes ─── */
+/* All polygons use 24 points so browser smoothly interpolates point-by-point.
+   Order alternates geometric ↔ radial so similar shapes don't follow each other. */
+.shape-cycle{
+  clip-path:polygon(0.0% 0.0%,16.7% 0.0%,33.3% 0.0%,50.0% 0.0%,66.7% 0.0%,83.3% 0.0%,100.0% 0.0%,100.0% 16.7%,100.0% 33.3%,100.0% 50.0%,100.0% 66.7%,100.0% 83.3%,100.0% 100.0%,83.3% 100.0%,66.7% 100.0%,50.0% 100.0%,33.3% 100.0%,16.7% 100.0%,0.0% 100.0%,0.0% 83.3%,0.0% 66.7%,0.0% 50.0%,0.0% 33.3%,0.0% 16.7%);
+  animation:shape-morph 5s ease-in-out infinite;
+  will-change:clip-path;
+}
+@keyframes shape-morph{
+  /* 1. Square (geometric) */
+  0%, 14% { clip-path:polygon(0.0% 0.0%,16.7% 0.0%,33.3% 0.0%,50.0% 0.0%,66.7% 0.0%,83.3% 0.0%,100.0% 0.0%,100.0% 16.7%,100.0% 33.3%,100.0% 50.0%,100.0% 66.7%,100.0% 83.3%,100.0% 100.0%,83.3% 100.0%,66.7% 100.0%,50.0% 100.0%,33.3% 100.0%,16.7% 100.0%,0.0% 100.0%,0.0% 83.3%,0.0% 66.7%,0.0% 50.0%,0.0% 33.3%,0.0% 16.7%); }
+  /* 2. 12-pointed star (radial) */
+  20%, 34% { clip-path:polygon(50.0% 0.0%,55.7% 28.7%,75.0% 6.7%,65.6% 34.4%,93.3% 25.0%,71.3% 44.3%,100.0% 50.0%,71.3% 55.7%,93.3% 75.0%,65.6% 65.6%,75.0% 93.3%,55.7% 71.3%,50.0% 100.0%,44.3% 71.3%,25.0% 93.3%,34.4% 65.6%,6.7% 75.0%,28.7% 55.7%,0.0% 50.0%,28.7% 44.3%,6.7% 25.0%,34.4% 34.4%,25.0% 6.7%,44.3% 28.7%); }
+  /* 3. Triangle (geometric) */
+  40%, 54% { clip-path:polygon(50.0% 0.0%,56.2% 12.5%,62.5% 25.0%,68.8% 37.5%,75.0% 50.0%,81.2% 62.5%,87.5% 75.0%,93.8% 87.5%,100.0% 100.0%,87.5% 100.0%,75.0% 100.0%,62.5% 100.0%,50.0% 100.0%,37.5% 100.0%,25.0% 100.0%,12.5% 100.0%,0.0% 100.0%,6.2% 87.5%,12.5% 75.0%,18.8% 62.5%,25.0% 50.0%,31.2% 37.5%,37.5% 25.0%,43.8% 12.5%); }
+  /* 4. Circle (smooth radial) */
+  60%, 74% { clip-path:polygon(50.0% 0.0%,62.9% 1.7%,75.0% 6.7%,85.4% 14.6%,93.3% 25.0%,98.3% 37.1%,100.0% 50.0%,98.3% 62.9%,93.3% 75.0%,85.4% 85.4%,75.0% 93.3%,62.9% 98.3%,50.0% 100.0%,37.1% 98.3%,25.0% 93.3%,14.6% 85.4%,6.7% 75.0%,1.7% 62.9%,0.0% 50.0%,1.7% 37.1%,6.7% 25.0%,14.6% 14.6%,25.0% 6.7%,37.1% 1.7%); }
+  /* 5. Gemini-style 4-point sparkle — sampled from bicon-spark-core bezier
+     (M 32 12 Q 32 30 46 32 ...). Asymmetric: vertically tall, horizontally narrow.
+     Thin waist (5% offset) → very sharp pointed rays. */
+  80%, 94% { clip-path:polygon(50.0% 0.0%,51.0% 13.9%,53.9% 25.6%,58.8% 35.0%,65.6% 42.2%,74.3% 47.2%,85.0% 50.0%,74.3% 52.8%,65.6% 57.8%,58.8% 65.0%,53.9% 74.4%,51.0% 86.1%,50.0% 100.0%,49.0% 86.1%,46.1% 74.4%,41.2% 65.0%,34.4% 57.8%,25.7% 52.8%,15.0% 50.0%,25.7% 47.2%,34.4% 42.2%,41.2% 35.0%,46.1% 25.6%,49.0% 13.9%); }
+  /* loop back to square smoothly */
+  100% { clip-path:polygon(0.0% 0.0%,16.7% 0.0%,33.3% 0.0%,50.0% 0.0%,66.7% 0.0%,83.3% 0.0%,100.0% 0.0%,100.0% 16.7%,100.0% 33.3%,100.0% 50.0%,100.0% 66.7%,100.0% 83.3%,100.0% 100.0%,83.3% 100.0%,66.7% 100.0%,50.0% 100.0%,33.3% 100.0%,16.7% 100.0%,0.0% 100.0%,0.0% 83.3%,0.0% 66.7%,0.0% 50.0%,0.0% 33.3%,0.0% 16.7%); }
+}
+@media (prefers-reduced-motion:reduce){
+  .shape-cycle{animation:none}
+}
 @keyframes number-glitch{
 0%,94%,100%{transform:translate(0,0) skewX(0);text-shadow:none}
 94.5%{transform:translate(-4px,1px) skewX(-2deg);text-shadow:4px 0 0 var(--accent),-3px 0 0 rgba(20,21,26,0.55)}
@@ -231,7 +245,7 @@ section.dark .sec-head .sub{color:var(--mute-2)}
 
 /* Char-by-char magnetic pull — controlled via --lift and --mag (set by JS in real-time) */
 .pain-list .pt{position:relative}
-.pain-list .pt .char{display:inline-block;transform:translateY(var(--lift,0));color:rgb(calc(20 + 189 * var(--mag,0)),calc(21 + 58 * var(--mag,0)),calc(26 + 34 * var(--mag,0)));transition:transform 0.28s cubic-bezier(0.22,1,0.36,1),color 0.18s linear;will-change:transform,color}
+.pain-list .pt .char{display:inline-block;transform:translateY(var(--lift,0));color:rgb(calc(20 + 189 * var(--mag,0)),calc(21 + 58 * var(--mag,0)),calc(26 + 34 * var(--mag,0)));transition:transform 0.28s cubic-bezier(0.22,1,0.36,1),color 0.18s linear}
 .pain-list .pt .char.is-space{display:inline}
 
 /* Mono-note magnetic + arrow indicator */
@@ -257,11 +271,11 @@ section.dark .sec-head .sub{color:var(--mute-2)}
   .pain-list .pnote{grid-column:2 / -1;text-align:left;margin-top:0.85rem;align-self:start;padding-bottom:0;justify-self:start;max-width:none}
 }
 /* Unified section-conclusion style — applied to all final quotes */
-.pain-quote,.partner-final,.aud-quote,.rs-quote{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(1.375rem,2.2vw,1.875rem);line-height:1.32;color:var(--accent);letter-spacing:-0.022em;text-wrap:balance;margin-top:clamp(2.75rem,5vw,4rem);max-width:62ch}
-.pain-quote em,.partner-final em,.aud-quote em,.rs-quote em{color:var(--accent);font-style:italic;font-weight:400}
+.pain-quote,.partner-final,.aud-quote{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(1.375rem,2.2vw,1.875rem);line-height:1.32;color:var(--accent);letter-spacing:-0.022em;text-wrap:balance;margin-top:clamp(2.75rem,5vw,4rem);max-width:62ch}
+.pain-quote em,.partner-final em,.aud-quote em em{color:var(--accent);font-style:italic;font-weight:400}
 .pain-quote{grid-column:4 / -1}
 @media (max-width:900px){
-  .pain-quote,.partner-final,.aud-quote,.rs-quote{max-width:none}
+  .pain-quote,.partner-final,.aud-quote{max-width:none}
   .pain-quote{grid-column:1 / -1}
 }
 .pain-foot{grid-column:4 / -1;margin-top:clamp(1.25rem,2.2vw,2rem);font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(1.125rem,1.5vw,1.4rem);color:var(--mute);line-height:1.4;max-width:none}
@@ -290,6 +304,27 @@ section.dark .sec-head .sub{color:var(--mute-2)}
 .partner-compare .col ul li:first-child{border-top:none}
 .partner-compare .col.partner-col ul li{color:var(--ink)}
 .partner-final em{color:var(--accent);font-style:italic}
+/* Row that aligns the partner-final text and its bottom-right shape mark
+   so the mark sits flush with the last text line. */
+.partner-final-row{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:clamp(1.5rem,3vw,3rem);
+  margin-top:clamp(2.75rem,5vw,4rem);
+}
+.partner-final-row .partner-final{margin-top:0}
+.partner-mark{
+  flex-shrink:0;
+  width:clamp(0.625rem,0.9vw,0.875rem);
+  aspect-ratio:1;
+  background:var(--accent);
+  margin-bottom:0.15em;
+}
+@media (max-width:720px){
+  .partner-final-row{gap:1.25rem}
+  .partner-mark{margin-bottom:0.1em}
+}
 .principles-grid{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2.5rem,5vw,5rem);margin-top:clamp(1rem,3vw,2rem)}
 .principles-grid > .principle:nth-child(odd){grid-column:4 / 8}
 .principles-grid > .principle:nth-child(even){grid-column:8 / -1}
@@ -322,7 +357,6 @@ section.dark .sec-head .sub{color:var(--mute-2)}
   .aud-list .anote{grid-column:2 / -1;text-align:left;padding-bottom:0;justify-self:start;margin-top:0.5rem}
   .aud-quote{max-width:none}
 }
-.aud-cell .adesc{color:var(--mute);line-height:1.55;font-size:1.0625rem;margin-top:auto}
 .brand-steps{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2.5rem,4vw,4rem);margin-bottom:clamp(2rem,4vw,3rem);margin-top:clamp(1rem,3vw,2rem)}
 .brand-steps > .bstep:nth-child(3n+1){grid-column:4 / 7}
 .brand-steps > .bstep:nth-child(3n+2){grid-column:7 / 10}
@@ -333,6 +367,100 @@ section.dark .sec-head .sub{color:var(--mute-2)}
   .brand-steps > .bstep:nth-child(3n+1){grid-column:1 / 7}
   .brand-steps > .bstep:nth-child(3n+2){grid-column:7 / -1}
   .brand-steps > .bstep:nth-child(3n){grid-column:1 / -1}
+}
+@media (max-width:900px){
+  /* ─── Simplified intermediate layout (tablet portrait, narrow tablet) ─── */
+  /* All multi-column section grids → single column, all children full-width */
+  
+  .brand-steps{grid-template-columns:1fr !important;column-gap:0 !important}
+  .brand-steps > .bstep,
+  .brand-steps > .bstep:nth-child(3n+1),
+  .brand-steps > .bstep:nth-child(3n+2),
+  .brand-steps > .bstep:nth-child(3n){grid-column:1 / -1 !important;width:100% !important}
+  
+  .principles-grid{grid-template-columns:1fr !important;column-gap:0 !important}
+  .principles-grid > .principle,
+  .principles-grid > .principle:nth-child(odd),
+  .principles-grid > .principle:nth-child(even){grid-column:1 / -1 !important;width:100% !important}
+  .ds-layers{grid-template-columns:1fr !important;column-gap:0 !important}
+  .ds-layers > .ds-layer{grid-column:1 / -1 !important;width:100% !important}
+  
+  .partner-compare{grid-template-columns:1fr !important}
+  
+  .bmp-cols{grid-template-columns:1fr !important}
+  
+  .numbers-grid{grid-template-columns:repeat(2,1fr) !important;grid-auto-flow:row !important}
+  
+  /* Pain list — stack number, text, note vertically */
+  .pain-list li{grid-template-columns:1fr !important;row-gap:0.5rem !important}
+  
+  /* Audience list — stack */
+  .aud-list li{grid-template-columns:1fr !important;row-gap:0.5rem !important}
+  
+  /* Services rows — stack number above content */
+  .svc-row{grid-template-columns:60px 1fr !important;column-gap:1rem !important}
+  .svc-row .svc-text{grid-column:1 / -1 !important;padding-top:0.5rem !important}
+  
+  /* Companies — stack vertically */
+  .co{grid-template-columns:1fr !important;gap:0.85rem !important}
+  .co .award{text-align:left !important}
+  
+  /* Level rows — stack */
+  .level{grid-template-columns:1fr auto !important;gap:0.5rem 1rem !important;padding:1.25rem 0 !important}
+  .level .ltitle{grid-column:1 !important;grid-row:1 !important}
+  .level .ln{grid-column:2 !important;grid-row:1 !important;text-align:right !important;padding-top:0.65rem !important;align-self:start !important;white-space:nowrap !important;transform:none !important;opacity:1 !important;font-size:0.6875rem !important}
+  .level .ldesc{grid-column:1 / -1 !important;grid-row:2 !important;margin-top:0.5rem !important;transform:none !important;opacity:1 !important}
+  .level .lq{grid-column:1 / -1 !important;grid-row:3 !important;text-align:left !important;padding-top:0.25rem !important;font-size:0.75rem !important;letter-spacing:0.08em !important;font-family:var(--mono) !important;font-style:normal !important;text-transform:uppercase !important;justify-self:start !important}
+  .level .ltitle{font-size:clamp(1.5rem,4vw,2.25rem) !important;transform:none !important;letter-spacing:-0.022em !important;line-height:1.1 !important}
+  
+  /* BMP split — stack with 69 left / 31 right */
+  .bmp-split{grid-template-columns:1fr !important;gap:1.75rem !important;align-items:start !important}
+  .bmp-split .vs{display:none !important}
+  .bmp-split .side{display:flex !important;flex-direction:column !important}
+  .bmp-split .side:nth-child(1){align-items:flex-start !important;text-align:left !important}
+  .bmp-split .side:nth-child(1) .label{text-align:left !important;margin-left:0 !important;margin-right:auto !important}
+  .bmp-split .side:nth-child(3){align-items:flex-end !important;text-align:right !important}
+  .bmp-split .side:nth-child(3) .pct{text-align:right !important}
+  .bmp-split .side:nth-child(3) .label{text-align:right !important;margin-left:auto !important;margin-right:0 !important}
+  
+  /* Headers — stack to single column */
+  .sec-head{grid-template-columns:1fr !important;row-gap:1rem !important}
+  .sec-head
+  .sec-head > div:nth-child(2){grid-column:1 / -1 !important}
+  
+  /* Team rows full width */
+  .team-manifesto .tm-row{grid-template-columns:1fr !important;row-gap:0.75rem !important}
+  .team-manifesto .tm-row .tm-tag{grid-column:1 / -1 !important}
+  .team-manifesto .tm-row .lead-line,
+  .team-manifesto .tm-row .lead-sub,
+  .team-manifesto .tm-row .lead-accent{grid-column:1 / -1 !important}
+  
+  /* Team blocks (4) — single column */
+  .team-blocks-4{grid-template-columns:1fr !important}
+  .team-blocks-4 .tblock:nth-child(1),
+  .team-blocks-4 .tblock:nth-child(2),
+  .team-blocks-4 .tblock:nth-child(3),
+  .team-blocks-4 .tblock:nth-child(4){grid-column:1 / -1 !important}
+  
+  /* Outcomes grid (results) — single column at this width */
+  
+  /* Hero bottom items — stack */
+  .hero-bottom{grid-template-columns:1fr !important;gap:1.5rem !important}
+  .hero-bottom-items{grid-column:1 / -1 !important;grid-template-columns:1fr !important;gap:1.25rem !important}
+  
+  /* CTA meta — 2 cols max */
+  
+  /* Numbers head */
+  .numbers-text,.numbers-grid{grid-column:1 / -1 !important}
+  
+  /* Intro grid */
+  .intro-spread .intro-cols{grid-template-columns:1fr !important}
+  
+  /* BMP dotgrid keep at intermediate */
+  .bmp-top > *{grid-column:1 / -1 !important}
+  
+  /* Section asides — above section, not floating */
+  .sec-asides-bar{position:static !important;flex-direction:row !important;flex-wrap:wrap !important;margin-bottom:2rem;gap:1rem}
 }
 @media (max-width:720px){
   .principles-grid > .principle:nth-child(odd),.principles-grid > .principle:nth-child(even){grid-column:1 / -1}
@@ -389,7 +517,6 @@ section.dark .sec-head .sub{color:var(--mute-2)}
 .bstep .bname{font-family:var(--serif);font-weight:400;font-size:clamp(1.5rem,2vw,1.75rem);color:var(--ink);margin-bottom:0.85rem;letter-spacing:-0.022em;transition:color 0.35s var(--ease-out)}
 .bstep:hover .bname{color:var(--accent)}
 .bstep .bdesc{color:var(--mute);font-size:1.0625rem;line-height:1.55}
-.brand-foot{font-family:var(--serif);font-style:italic;font-weight:300;font-size:var(--t-h3);color:var(--accent);max-width:62ch;line-height:1.35}
 .bmp-top{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:0;width:100%;margin-bottom:clamp(2rem,4vw,3rem)}
 .bmp-top > *{grid-column:4 / -1}
 .bmp-split{display:grid;grid-template-columns:1fr auto 1fr;gap:clamp(2rem,4vw,3.5rem);margin-bottom:clamp(1.5rem,3vw,2rem);align-items:center}
@@ -418,7 +545,6 @@ section{--tp:0}
   #bmp{--bp:0 !important}
   section{--tp:0 !important}
 }
-.bmp-caption{font-family:var(--serif);font-style:italic;font-weight:300;font-size:1.125rem;color:var(--mute);margin-bottom:clamp(2rem,4vw,3rem);max-width:56ch}
 .bmp-dotgrid{display:grid;grid-template-columns:repeat(50,1fr);gap:5px;margin-bottom:clamp(2rem,4vw,3rem);width:100%}
 .bmp-dotgrid .d{aspect-ratio:1;border-radius:50%;background:var(--mute-2);opacity:0.35;transition:opacity 0.4s var(--ease-out),transform 0.4s var(--ease-out)}
 .bmp-dotgrid .d.accent{background:var(--accent);opacity:1}
@@ -434,14 +560,14 @@ section{--tp:0}
 .bmp-col:hover ul li{border-top-color:rgba(209,79,60,0.18)}
 .bmp-col:hover ul li:first-child{border-top:none}
 .levels{border-top:1px solid var(--hair)}
-.level{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);padding:clamp(0.95rem,1.5vw,1.25rem) 0;border-bottom:1px solid var(--hair);align-items:center;position:relative;transition:padding-left 0.7s cubic-bezier(0.22,1,0.36,1),border-color 0.7s var(--ease-out);cursor:default;overflow:hidden;isolation:isolate}
+.level{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);padding:clamp(0.95rem,1.5vw,1.25rem) 0;border-bottom:1px solid var(--hair);align-items:center;position:relative;transition:padding-left 0.5s cubic-bezier(0.22,1,0.36,1),border-color 0.5s var(--ease-out);cursor:default;overflow:hidden;isolation:isolate}
 .level:hover{padding-left:clamp(0.75rem,1.5vw,1.25rem);border-bottom-color:var(--accent)}
-.level .ln{grid-column:1 / 2;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.12em;text-transform:uppercase;color:var(--mute);font-weight:500;transition:color 0.4s var(--ease-out),transform 0.7s var(--ease-out),opacity 0.7s var(--ease-out);position:relative;z-index:1;transform-origin:left center}
+.level .ln{grid-column:1 / 2;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.12em;text-transform:uppercase;color:var(--mute);font-weight:500;transition:color 0.35s var(--ease-out),transform 0.5s var(--ease-out),opacity 0.5s var(--ease-out);position:relative;z-index:1;transform-origin:left center}
 .level:hover .ln{color:var(--accent);transform:scale(0.88);opacity:0.55}
-.level .ltitle{grid-column:4 / 6;font-family:var(--serif);font-weight:400;font-size:clamp(1.25rem,1.6vw,1.5rem);letter-spacing:-0.022em;line-height:1;color:var(--ink);transition:transform 1.55s cubic-bezier(0.22,1,0.36,1),color 0.7s var(--ease-out),letter-spacing 1.55s cubic-bezier(0.22,1,0.36,1);display:inline-block;transform-origin:left 30%;white-space:nowrap;pointer-events:none;position:relative;z-index:0}
-.level:hover .ltitle{color:var(--accent);transform:scale(4.5);letter-spacing:0.012em}
+.level .ltitle{grid-column:4 / 6;font-family:var(--serif);font-weight:400;font-size:clamp(1.25rem,1.6vw,1.5rem);letter-spacing:-0.022em;line-height:1;color:var(--ink);transition:transform 0.7s cubic-bezier(0.22,1,0.36,1),color 0.45s var(--ease-out),letter-spacing 0.7s cubic-bezier(0.22,1,0.36,1);display:inline-block;transform-origin:left 30%;white-space:nowrap;pointer-events:none;position:relative;z-index:0}
+.level:hover .ltitle{color:var(--accent);transform:scale(2.6);letter-spacing:0.01em}
 .level .ltitle em{font-style:italic;color:var(--accent);font-weight:300;display:block;margin-bottom:0.25rem}
-.level .ldesc{grid-column:7 / 11;color:var(--ink-2);max-width:34ch;line-height:1.45;font-size:0.9375rem;padding-top:0.25rem;transition:color 0.35s var(--ease-out),transform 1.55s cubic-bezier(0.22,1,0.36,1),opacity 0.9s var(--ease-out);will-change:transform,opacity;transform-origin:left center}
+.level .ldesc{grid-column:7 / 11;color:var(--ink-2);max-width:34ch;line-height:1.45;font-size:0.9375rem;padding-top:0.25rem;transition:color 0.35s var(--ease-out),transform 0.7s cubic-bezier(0.22,1,0.36,1),opacity 0.55s var(--ease-out);transform-origin:left center}
 .level:hover .ldesc{color:var(--accent);transform:translateX(clamp(1.25rem,2.5vw,2.5rem)) scale(0.96);opacity:0.85}
 @media (max-width:1024px){
   .level{grid-template-columns:1fr auto;gap:0.4rem 1.5rem;padding:1.25rem 0}
@@ -520,62 +646,10 @@ section{--tp:0}
 .svc-row:hover .svc-name{color:var(--accent)}
 .svc-row .svc-text{grid-column:7 / -1;color:var(--mute);max-width:48ch;line-height:1.45;font-size:0.9375rem;transition:color 0.35s var(--ease-out);padding-top:0.2rem}
 .svc-row:hover .svc-text{color:var(--accent)}
-/* Results — Variant D: asymmetric editorial mosaic */
-.rs-mosaic{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2.5rem,4vw,3.5rem);margin-top:clamp(1.5rem,3vw,2.5rem)}
-.rs-tile{display:flex;flex-direction:column;gap:0.85rem;padding-top:clamp(1.25rem,2vw,1.75rem);border-top:1px solid var(--hair);position:relative;margin:0}
-.rs-tile .rt-num{font-family:var(--mono);font-size:var(--t-mono-sm);font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);line-height:1;transition:color 0.35s var(--ease-out)}
-.rs-tile .rt-title{font-family:var(--serif);font-weight:400;letter-spacing:-0.03em;line-height:1.05;color:var(--ink);margin:0;text-wrap:balance;transition:color 0.35s var(--ease-out);cursor:default}
-.rs-tile .rt-desc{font-family:var(--sans);font-weight:400;font-style:normal;font-size:1.0625rem;line-height:1.55;color:var(--mute);margin:0;max-width:42ch;transition:color 0.35s var(--ease-out)}
-.rs-tile .rt-tag{font-family:var(--mono);font-size:var(--t-mono-sm);font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--mute);line-height:1.4;margin-top:auto;padding-top:1rem;transition:color 0.35s var(--ease-out)}
-.rs-tile:hover .rt-title,.rs-tile:hover .rt-desc,.rs-tile:hover .rt-tag,.rs-tile:hover .rt-num{color:var(--accent)}
-/* Hero — 01 — large statement */
-.rs-tile--hero{grid-column:1 / 8;grid-row:1}
-.rs-tile--hero .rt-title{font-size:clamp(2.5rem,4.5vw,4rem)}
-.rs-tile--hero .rt-desc{font-size:1.25rem;max-width:48ch;line-height:1.5}
-.rs-tile--hero .rt-tag{color:var(--accent)}
-/* Medium — 02 (top right), 05 (bottom right) */
-.rs-tile--m{grid-column:8 / -1}
-.rs-tile--m .rt-title{font-size:clamp(1.5rem,2.1vw,1.875rem);min-height:calc(2 * 1.05 * clamp(1.5rem,2.1vw,1.875rem))}
-.rs-tile--m:first-of-type{grid-row:1}
-/* Small — 03 (bottom left), 04 (bottom center) */
-.rs-tile--s .rt-title{font-size:clamp(1.5rem,2.1vw,1.875rem);min-height:calc(2 * 1.05 * clamp(1.5rem,2.1vw,1.875rem))}
-.rs-tile:nth-child(3){grid-column:1 / 5;grid-row:2}
-.rs-tile:nth-child(4){grid-column:5 / 8;grid-row:2}
-.rs-tile:nth-child(5){grid-column:8 / -1;grid-row:2}
-.rs-quote em{color:var(--accent);font-style:italic;font-weight:400}
-@media (max-width:900px){
-  .rs-tile--hero,.rs-tile--m,.rs-tile--s,.rs-tile:nth-child(3),.rs-tile:nth-child(4),.rs-tile:nth-child(5){grid-column:1 / -1;grid-row:auto}
-  .rs-tile--hero .rt-title{font-size:clamp(2rem,8vw,3rem)}
-  .rs-quote{max-width:none}
-}
 /* Mark square at bottom-left of team-system section */
-.ts-mark{position:absolute;left:var(--gutter);bottom:clamp(13rem,22vh,18rem);color:var(--accent);width:clamp(0.625rem,0.9vw,0.875rem);z-index:5}
-.ts-mark svg{width:100%;height:auto;display:block}
+.ts-mark{position:absolute;left:var(--gutter);bottom:clamp(13rem,22vh,18rem);width:clamp(0.625rem,0.9vw,0.875rem);aspect-ratio:1;background:var(--accent);z-index:5}
 section.dark > .ts-mark{position:absolute}
-.svc-mark{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);margin-top:clamp(2.5rem,4.5vw,4rem);align-items:start}
-.svc-mark-line{grid-column:8 / -1;height:1px;background:var(--accent);margin-bottom:clamp(1.25rem,2vw,1.75rem);align-self:start}
-.svc-mark-text{grid-column:8 / -1;display:flex;flex-direction:column;gap:0.85rem;justify-self:end;text-align:right;max-width:30ch}
-.svc-mark-q{font-family:var(--serif);font-weight:300;font-style:italic;font-size:clamp(1.625rem,2.4vw,2.125rem);line-height:1.1;color:var(--accent);letter-spacing:-0.025em;margin:0}
-.svc-mark-d{font-family:var(--mono);font-size:var(--t-mono-sm);color:var(--mute);letter-spacing:0.02em;line-height:1.55;margin:0}
-@media (max-width:900px){
-  .svc-mark-line,.svc-mark-text{grid-column:1 / -1}
-  .svc-mark-text{justify-self:start;text-align:left;max-width:none}
-}
 @media (max-width:720px){.svc-row{grid-template-columns:60px 1fr;gap:1rem}.svc-row .svc-text{grid-column:1 / -1;padding-top:0.5rem}}
-.outcomes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(2.5rem,4vw,4rem) clamp(2.5rem,4vw,4rem);margin-top:clamp(1rem,3vw,2rem)}
-.outcome{padding:0 0 1.5rem 0;background:transparent;min-height:180px;display:flex;flex-direction:column;position:relative;border-bottom:1px solid var(--hair)}
-.outcome:first-child{grid-column:span 2}
-.outcome::after{content:'';position:absolute;left:0;bottom:-1px;width:0;height:1px;background:var(--accent);transition:width 0.6s var(--ease-out)}
-.outcome:hover::after{width:100%}
-.outcome:hover{background:transparent}
-.outcome::before{display:none}
-.outcome .o-num{font-family:var(--serif);font-style:italic;font-weight:300;color:var(--accent);font-size:1.5rem;line-height:1;margin-bottom:1rem}
-.outcome .o-title{font-family:var(--serif);font-weight:400;font-size:clamp(1.375rem,1.9vw,1.625rem);letter-spacing:-0.03em;line-height:1.15;color:var(--ink);margin-top:auto;margin-bottom:0.85rem}
-.outcome:first-child .o-title{font-size:clamp(1.625rem,2.4vw,2.1rem);max-width:30ch}
-.outcome .o-desc{color:var(--mute);line-height:1.5;font-size:1rem;max-width:32ch}
-.outcome:first-child .o-desc{font-size:1.0625rem;max-width:40ch}
-@media (max-width:1100px){.outcomes-grid{grid-template-columns:repeat(2,1fr)}.outcome:first-child{grid-column:span 2}}
-@media (max-width:720px){.outcomes-grid{grid-template-columns:1fr;gap:1.75rem}.outcome,.outcome:first-child{grid-column:auto;min-height:0;padding-bottom:1rem}.outcome:first-child .o-title{font-size:clamp(1.375rem,5.5vw,1.625rem)}}
 .co-list{border-top:1px solid var(--hair)}
 .co{display:grid;grid-template-columns:110px 1.4fr 2.5fr auto;gap:clamp(1rem,3vw,2.5rem);padding:clamp(1.85rem,3vw,2.5rem) 0;border-bottom:1px solid var(--hair);align-items:start;position:relative;transition:padding-left 0.45s var(--ease-out);cursor:default}
 .co:hover{padding-left:0.5rem}
@@ -602,15 +676,6 @@ section.dark > .ts-mark{position:absolute}
 .cta-title{grid-column:1 / -1;font-family:var(--serif);font-weight:400;font-size:var(--t-h1);line-height:1.02;letter-spacing:-0.035em;color:#fff;margin-bottom:clamp(1.5rem,3vw,2.5rem);text-wrap:balance;text-align:center}
 .cta-title em{font-style:italic;color:var(--accent)}
 .cta-lead{grid-column:1 / -1;font-family:var(--serif);font-weight:300;font-style:italic;font-size:clamp(1.25rem,2vw,1.625rem);color:#d8d4c8;max-width:56ch;line-height:1.35;margin:0 auto clamp(2.5rem,5vw,4rem);text-align:center}
-.cta-buttons{grid-column:4 / -1;display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:clamp(2.5rem,5vw,4rem)}
-.cta-btn{display:inline-flex;align-items:center;gap:0.85rem;padding:1.05rem 1.85rem;background:var(--accent);color:#fff;border-radius:6px;font-family:var(--sans);font-size:1.0625rem;font-weight:500;letter-spacing:-0.005em;border:1px solid transparent;transition:background 0.35s var(--ease-out),transform 0.35s var(--ease-out),color 0.35s var(--ease-out),border-color 0.35s var(--ease-out),box-shadow 0.35s var(--ease-out)}
-.cta-btn::after{content:'→';font-family:var(--sans);font-size:1.1rem;font-weight:400;line-height:1;transition:transform 0.35s var(--ease-out)}
-.cta-btn:hover{background:var(--accent-2);color:#fff;transform:translateY(-1px);box-shadow:0 8px 24px -8px rgba(220,68,46,0.45)}
-.cta-btn:hover::after{transform:translateX(3px)}
-.cta-btn.secondary{background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.22);box-shadow:none}
-.cta-btn.secondary:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.42);color:#fff;transform:translateY(-1px);box-shadow:none}
-.cta-btn.secondary:hover::after{transform:translateX(3px)}
-.cta-meta{display:none}
 
 /* ─────────────── CTA MEGA — wow-block ─────────────── */
 .cta-mega{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--hair-dk);margin-top:clamp(2rem,4vw,3rem)}
@@ -632,8 +697,6 @@ section.dark > .ts-mark{position:absolute}
   .cta-mega-item{border-right:none;min-height:auto}
   .cta-mega-name{font-size:clamp(2rem,7vw,3rem);margin-top:clamp(1.5rem,3vw,2rem)}
 }
-.cta-meta .item .l{font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.11em;text-transform:uppercase;color:var(--mute-2);margin-bottom:0.65rem;font-weight:500}
-.cta-meta .item .v{font-size:1.0625rem;color:#fff;line-height:1.45;word-break:break-word}
 @media (max-width:900px){
   .cta-head,.cta-title,.cta-lead,.cta-mega{grid-column:1 / -1}
 }
@@ -655,8 +718,8 @@ section.dark .has-tip::after{background:color-mix(in srgb,#1a1c22 88%,transparen
 .tip-num-block.is-active{z-index:200}
 .has-tip:hover{z-index:200}
 section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,transparent);border-color:var(--hair-dk);color:#d0d3d8}
-@media (max-width:1100px){.numbers-grid{grid-template-columns:repeat(3,1fr)}.brand-steps{grid-template-columns:repeat(2,1fr)}.pain-grid,.aud-grid{grid-template-columns:repeat(2,1fr)}.bmp-cols{grid-template-columns:1fr}.partner-compare{grid-template-columns:1fr}section{min-height:clamp(60vh,75vh,90vh);padding-top:clamp(7rem,11vh,10rem);padding-bottom:clamp(4.5rem,8vh,7rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(8rem,14vh,12rem)}section.dark+section:not(.dark){padding-top:clamp(8rem,14vh,12rem)}}
-@media (max-width:720px){section{min-height:auto;padding-top:clamp(5.5rem,9vh,8rem);padding-bottom:clamp(3.5rem,7vh,6rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(6rem,11vh,9rem)}section.dark+section:not(.dark){padding-top:clamp(6rem,11vh,9rem)}.pain-cell,.outcome,.principle,.bstep,.ds-layer,.aud-cell{min-height:0}[data-reveal],[data-reveal-num]{transform:translateY(28px);filter:blur(4px);transition-duration:1.2s,1.15s,0.8s}.stagger>[data-stagger]{transform:translateY(20px);filter:blur(4px);transition-duration:1.0s,0.95s,0.7s}.intro-grid{grid-template-columns:1fr}.numbers-grid{grid-template-columns:repeat(2,1fr)}.principles-grid{grid-template-columns:1fr}.pain-grid{grid-template-columns:1fr}.aud-grid{grid-template-columns:1fr}.brand-steps{grid-template-columns:1fr}.level{grid-template-columns:1fr auto;gap:0.5rem 1.25rem;padding:1.5rem 0}.level .ltitle{grid-column:1;grid-row:1}.level .ln{grid-column:2;grid-row:1;text-align:right;padding-top:0.65rem;align-self:start;white-space:nowrap}.level .ldesc{grid-column:1 / -1;grid-row:2;margin-top:0.5rem}.level .lq{grid-column:1 / -1;grid-row:3;text-align:left;padding-top:0.5rem}.ds-layers{grid-template-columns:1fr}.co{grid-template-columns:1fr;gap:0.85rem}.co .award{text-align:left}.hero-bottom{grid-template-columns:1fr;gap:1.5rem}.cta-meta{grid-template-columns:1fr 1fr}.sec-head{grid-template-columns:1fr}.numbers-head{grid-template-columns:1fr;gap:1.5rem}.bmp-split{grid-template-columns:1fr}.bmp-split .vs{display:none}.bmp-dotgrid{grid-template-columns:repeat(12,1fr)}.bmp-top > *{grid-column:1 / -1}}
+@media (max-width:1100px){.numbers-grid{grid-template-columns:repeat(3,1fr)}.brand-steps{grid-template-columns:repeat(2,1fr)}.bmp-cols{grid-template-columns:1fr}.partner-compare{grid-template-columns:1fr}section{min-height:clamp(60vh,75vh,90vh);padding-top:clamp(7rem,11vh,10rem);padding-bottom:clamp(4.5rem,8vh,7rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(8rem,14vh,12rem)}section.dark+section:not(.dark){padding-top:clamp(8rem,14vh,12rem)}}
+@media (max-width:720px){section{min-height:auto;padding-top:clamp(5.5rem,9vh,8rem);padding-bottom:clamp(3.5rem,7vh,6rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(6rem,11vh,9rem)}section.dark+section:not(.dark){padding-top:clamp(6rem,11vh,9rem)}.principle,.bstep,.ds-layer,[data-reveal],[data-reveal-num]{transform:translateY(36px);filter:blur(6px);transition-duration:1.4s,1.3s,0.9s}.stagger>[data-stagger]{transform:translateY(28px);filter:blur(5px);transition-duration:1.2s,1.15s,0.85s}.numbers-grid{grid-template-columns:repeat(2,1fr)}.principles-grid{grid-template-columns:1fr}.brand-steps{grid-template-columns:1fr}.level{grid-template-columns:1fr auto;gap:0.5rem 1.25rem;padding:1.5rem 0}.level .ltitle{grid-column:1;grid-row:1}.level .ln{grid-column:2;grid-row:1;text-align:right;padding-top:0.65rem;align-self:start;white-space:nowrap}.level .ldesc{grid-column:1 / -1;grid-row:2;margin-top:0.5rem}.level .lq{grid-column:1 / -1;grid-row:3;text-align:left;padding-top:0.5rem}.ds-layers{grid-template-columns:1fr}.co{grid-template-columns:1fr;gap:0.85rem}.co .award{text-align:left}.hero-bottom{grid-template-columns:1fr;gap:1.5rem}.sec-head{grid-template-columns:1fr}.bmp-split{grid-template-columns:1fr}.bmp-split .vs{display:none}.bmp-dotgrid{grid-template-columns:repeat(20,1fr)}.bmp-top > *{grid-column:1 / -1}}
 
 /* ─── WOW EFFECTS ─── */
 .scroll-progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;z-index:200;pointer-events:none;transition:width 0.1s linear;opacity:0.7}
@@ -728,33 +791,45 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
 .brand-marquee-row .brand-item::after{content:'·';color:var(--accent);opacity:0.55}
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .brand-marquee-track:hover .brand-marquee-row{animation-play-state:paused}
-.cta-btn{position:relative}
-.hero-bottom .value a,.cta-meta .v a{position:relative;display:inline-block}
-.hero-bottom .value a::after,.cta-meta .v a::after{content:'';position:absolute;left:0;right:0;bottom:-3px;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform 0.4s var(--ease-out)}
-.hero-bottom .value a:hover::after,.cta-meta .v a:hover::after{transform:scaleX(1)}
+.hero-bottom .value a,
+.hero-bottom .value a::after,
+.hero-bottom .value a:hover::after,
 .cta-title .word{display:inline-block;opacity:0;transform:translateY(65px);transition:opacity 1.3s var(--ease-out),transform 1.45s var(--ease-out);transition-delay:calc(var(--w-i,0) * 0.1s);filter:blur(7px)}
 .cta-title.in-view .word{opacity:1;transform:translateY(0);filter:blur(0)}
-.sec-head .num-block .num{display:inline-block;transform-origin:left center}
-.sec-head.in-view .num-block .num{animation:num-pop 1.6s var(--ease-out)}
+.sec-head
+.sec-head.in-view
 @keyframes num-pop{0%{transform:translateY(45px) scale(0.78);opacity:0;filter:blur(5px)}100%{transform:translateY(0) scale(1);opacity:1;filter:blur(0)}}
 .stat-counter{display:inline-block;font-variant-numeric:tabular-nums}
-.bstep,.principle,.aud-cell,.ds-layer{will-change:transform}
+.hero .container{will-change:auto}
 .hero-title{transition:filter 0.6s var(--ease-out)}
 .h2-line{display:inline-block;opacity:0;transform:translateY(40px);transition:opacity 1s var(--ease-out),transform 1.1s var(--ease-out);transition-delay:calc(var(--li,0) * 0.12s + 0.05s)}
 .h2-in .h2-line{opacity:1;transform:translateY(0)}
-.sec-head .num-block .num{transform:translate(var(--mx,0),var(--my,0));transition:transform 0.6s var(--ease-out)}
-.hero .container{will-change:auto}
-@media (prefers-reduced-motion:reduce){.scroll-progress{display:none}.brand-marquee-row{animation:none}.hero-title .word,.cta-title .word{opacity:1;transform:none}.hero-title .dot{animation:none}.hero-title em.is-typing::after{animation:none;opacity:0}.sec-head.in-view .num-block .num{animation:none}.bmp-dotgrid.in-view .d{animation:none;opacity:0.35}.bmp-dotgrid.in-view .d.accent{opacity:1}.has-tip::after,.tip-num-block::after,.ft-top .arr{transition:none!important}.bicon-spark-core,.bicon-spark-sat,.bicon-compass,.bicon-pos-dot,.bicon-eq,.bicon-aa-letter,.bicon-sys-ray,.bicon-ripple,.numbers-grid .cell .big{animation:none}.h2-line{opacity:1;transform:none}.sec-aside{opacity:1;transform:none}.principle,.aud-cell,.rs-tile,.ds-layer,.bstep,.pain-cell,.cta-btn{transform:none!important}}
+.sec-head
+@media (prefers-reduced-motion:reduce){.scroll-progress{display:none}.brand-marquee-row{animation:none}.hero-title .word,.cta-title .word{opacity:1;transform:none}.hero-title .dot{animation:none}.hero-title em.is-typing::after{animation:none;opacity:0}.sec-head.in-view.bmp-dotgrid.in-view .d{animation:none;opacity:0.35}.bmp-dotgrid.in-view .d.accent{opacity:1}.has-tip::after,.tip-num-block::after,.ft-top .arr{transition:none!important}.bicon-spark-core,.bicon-spark-sat,.bicon-compass,.bicon-pos-dot,.bicon-eq,.bicon-aa-letter,.bicon-sys-ray,.bicon-ripple,.numbers-grid .cell .big{animation:none}.h2-line{opacity:1;transform:none}.sec-aside{opacity:1;transform:none}.principle,.ds-layer,.bstep,}
 @media (max-width:720px){.brand-marquee-row{animation-duration:35s}}
 
 /* ─── LANGUAGE SWITCHER ─── */
 .nav-right{display:flex;align-items:center;gap:clamp(1.1rem,2.4vw,2rem)}
+/* Center contact group in nav — absolute centering so it stays put regardless of side widths */
+.nav-center{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  display:flex;align-items:center;gap:0.7rem;
+  font-family:var(--mono);font-size:var(--t-mono-sm);
+  letter-spacing:0.1em;text-transform:uppercase;font-weight:500;
+  color:var(--mute);pointer-events:auto;
+}
+nav.top.on-dark .nav-center{color:var(--mute-2)}
+.nav-center a{color:inherit;transition:color 0.3s var(--ease-out);position:relative;display:inline-block;padding:0.25rem 0}
+.nav-center a:hover{color:var(--accent)}
+.nav-center .nav-sep{opacity:0.5}
+@media (max-width:720px){
+  .nav-center{display:none}
+}
 .lang-switch{display:inline-flex;align-items:center;gap:0.55rem;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.1em;text-transform:uppercase;font-weight:500;line-height:1;user-select:none}
 .lang-switch button{background:none;border:0;padding:0.15rem 0;margin:0;color:var(--mute);cursor:pointer;font:inherit;letter-spacing:inherit;text-transform:inherit;font-weight:inherit;line-height:inherit;transition:color 0.4s var(--ease-out),opacity 0.4s var(--ease-out);position:relative;opacity:0.78}
 .lang-switch button:hover{color:var(--ink);opacity:1}
 .lang-switch button.active{color:var(--accent);opacity:1}
 .lang-switch button:focus-visible{outline:1px solid var(--accent);outline-offset:4px;border-radius:2px}
-.cta-btn:focus-visible,.ft-top:focus-visible,#navHome:focus-visible,.side-progress__menu-item:focus-visible,a:focus-visible,button:focus-visible{outline:1.5px solid var(--accent);outline-offset:3px;border-radius:2px}
 section.dark .cta-btn:focus-visible,section.dark a:focus-visible,section.dark button:focus-visible{outline-color:var(--accent)}
 .lang-switch .sep{color:var(--mute);opacity:0.4;pointer-events:none;font-weight:400}
 nav.top.on-dark .lang-switch button{color:var(--mute-2)}
@@ -779,46 +854,10 @@ nav.top.on-dark .lang-switch .sep{color:var(--mute-2);opacity:0.35}
    Canonical style based on .pdesc — applied to all descriptive/body text
    for consistent typographic voice across the manifesto.
    Sans (Inter) · 400 weight · 1.0625rem · line-height 1.6 · color mute */
-.principle .pdesc,
-.intro-grid .right p,
-.numbers-head .right,
-.partner-compare .col ul li,
-.partner-compare .col.partner-col ul li,
-.aud-cell .adesc,
-.bstep .bdesc,
-.bmp-col ul li,
-.level .ldesc,
-.svc-row .svc-text,
-.outcome .o-desc,
-.outcome:first-child .o-desc,
-.co .desc{
-  font-family:var(--sans);
-  font-weight:400;
-  font-style:normal;
-  font-size:1.0625rem;
-  line-height:1.6;
-  color:var(--mute);
-}
-/* Inside dark sections — lighter mute for contrast on dark bg */
-section.dark .tblock .td{
-  font-family:var(--sans);
-  font-weight:400;
-  font-style:normal;
-  font-size:1.0625rem;
-  line-height:1.6;
-  color:var(--mute-2);
-}
-/* Inline emphasis stays accent-coloured italic — keep editorial expressiveness */
-.intro-grid .right p em,
-.bmp-col ul li em,
-.level .ldesc em,
-.svc-row .svc-text em,
-.outcome .o-desc em,
-.co .desc em{color:var(--accent);font-style:italic}
+.principle .pdesc{font-family:var(--sans);font-weight:400;font-size:1.0625rem;line-height:1.6;color:var(--mute)}
 /* Numbers/inline accents inside reading paragraphs */
 .co .desc .num{color:var(--accent);font-family:var(--serif);font-style:italic;font-weight:400}
 /* Strong stays slightly bolder + ink-coloured for emphasis */
-.intro-grid .right p strong{font-weight:500;color:var(--ink)}
 /* ── Unified section header — index1 reference pattern ──
    Both asides inside a single absolute bar at top of section.
    This is the most robust positioning — no fighting with flex/grid parents. */
@@ -829,11 +868,30 @@ section.dark > .sec-asides-bar{position:absolute}
 .sec-aside.kicker-in{opacity:1;transform:translateY(0)}
 .sec-aside--left.kicker-in{transition-delay:0.15s}
 .sec-aside--right.kicker-in{transition-delay:0.25s}
-.sec-aside--left{max-width:32ch;font-family:var(--serif);font-style:italic;font-weight:300;color:var(--mute);letter-spacing:-0.005em;flex:0 1 auto}
+.sec-aside--left{max-width:32ch;font-family:var(--serif);font-style:italic;font-weight:300;color:var(--mute);letter-spacing:-0.005em;flex:0 1 auto;transform-origin:left top}
 .sec-aside--right{font-family:var(--mono);font-size:var(--t-mono-sm);font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--mute);line-height:1.4;text-align:right;flex:0 0 auto;white-space:nowrap}
 .sec-aside--right b{font-weight:500;color:var(--accent)}
 section.dark .sec-aside--left{color:var(--mute-2)}
 section.dark .sec-aside--right{color:var(--mute-2)}
+/* Whisper hover — scales up to comfortable reading size (desktop only) */
+@media (hover:hover) and (pointer:fine){
+  .sec-aside--left{
+    cursor:default;
+    transition:opacity 1.2s var(--ease-out),
+               transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+               color 0.4s var(--ease-out);
+    will-change:transform;
+  }
+  .sec-aside--left.kicker-in:hover{
+    transform:scale(1.65);
+    color:var(--ink);
+    z-index:25;
+    position:relative;
+  }
+  section.dark .sec-aside--left.kicker-in:hover{
+    color:#fff;
+  }
+}
 /* When dark follows dark (team-system after team-intro), padding-top shrinks — keep bar compact */
 section.dark+section.dark .sec-asides-bar{top:clamp(3.25rem,5vh,4.5rem)}
 /* Per-section override for longer whispers */
@@ -887,10 +945,6 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   .svc-row .svc-text{grid-column:1;max-width:none;padding-top:0.25rem}
 
   /* Results mosaic */
-  .rs-tile,.rs-tile--hero,.rs-tile--m,.rs-tile--s{grid-column:1 / -1 !important;grid-row:auto !important}
-  .rs-tile--hero .rt-title{font-size:clamp(1.5rem,6vw,2rem)}
-  .rs-tile .rt-title{font-size:clamp(1.25rem,4.5vw,1.625rem)}
-  .rs-tile .rt-desc{font-size:1rem}
 }
 /* ═══════════════════════════════════════════════════════════════════
    FINAL MOBILE POLISH — comprehensive overrides for ≤900px and ≤480px
@@ -901,7 +955,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 /* —— TOUCH STATES — feedback on tap for all interactive elements —— */
 @media (hover:none) and (pointer:coarse){
   a:active, button:active, .cta-mega-item:active, .side-progress__menu-item:active,
-  .principle:active, .aud-cell:active, .rs-tile:active, .ds-layer:active, .bstep:active,
+  .principle:active:active, .ds-layer:active, .bstep:active,
   .pain-list li:active, .level:active, .svc-row:active{
     transition:transform 0.1s ease-out, color 0.15s ease-out;
   }
@@ -977,9 +1031,6 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
     text-align:left;justify-self:start;margin-top:0.5rem;padding-left:0;letter-spacing:0.06em;line-height:1.5}
 
   /* Audience cells — better padding */
-  .aud-cell{padding:1.25rem 0 1.5rem !important}
-  .aud-cell .aud-n{font-size:1.125rem !important;margin-bottom:0.5rem}
-  .aud-cell .aud-d{font-size:0.9375rem}
 
   /* Brand steps — vertical stack with proper spacing */
   .brand-steps{gap:1.5rem !important}
@@ -994,8 +1045,16 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   .bmp-split .label{margin-left:auto;margin-right:auto;text-align:center;max-width:30ch}
   .bmp-cols{gap:1.5rem !important}
   .bmp-col{padding:1rem 0}
-  .bmp-dotgrid{grid-template-columns:repeat(8,1fr) !important;gap:5px}
-  .bmp-dotgrid .d{width:5px;height:5px}
+  .bmp-dotgrid{grid-template-columns:repeat(20,1fr) !important;gap:7px !important;width:100% !important;max-width:none !important;margin-left:0 !important;margin-right:0 !important}
+  .bmp-dotgrid .d{aspect-ratio:1;width:100%;height:auto;max-width:none}
+  /* bmp-split — 69% left aligned, 31% right aligned on mobile */
+  .bmp-split{grid-template-columns:1fr !important;gap:1.75rem !important;align-items:start !important}
+  .bmp-split .side{display:flex;flex-direction:column}
+  .bmp-split .side:nth-child(1){align-items:flex-start;text-align:left}
+  .bmp-split .side:nth-child(1) .label{text-align:left;margin-left:0;margin-right:auto}
+  .bmp-split .side:nth-child(3){align-items:flex-end;text-align:right}
+  .bmp-split .side:nth-child(3) .pct{text-align:right}
+  .bmp-split .side:nth-child(3) .label{text-align:right;margin-left:auto;margin-right:0}
 
   /* Evaluation levels — clean stack, no explosion */
   .level{grid-template-columns:auto 1fr !important;gap:0.4rem 1rem !important;padding:1.5rem 0;overflow:visible;align-items:start}
@@ -1020,22 +1079,11 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   .svc-row{padding:1.25rem 0 !important;grid-template-columns:1fr !important;gap:0.5rem !important}
   .svc-row .svc-num{font-size:0.6875rem !important;margin-bottom:0.25rem}
   .svc-row .svc-name{font-size:1.25rem !important;margin-bottom:0.4rem}
-  .svc-row .svc-desc{font-size:0.9375rem;line-height:1.5;max-width:none}
 
   /* Results — clean vertical tiles */
-  .rs-tile{padding-top:1.5rem !important}
-  .rs-tile--hero .rt-title{font-size:clamp(1.75rem,8vw,2.75rem) !important;line-height:1.1}
-  .rs-tile--m .rt-title, .rs-tile--s .rt-title{font-size:clamp(1.375rem,6vw,1.75rem) !important;
-    min-height:auto !important;line-height:1.15}
-  .rs-tile .rt-desc{font-size:0.9375rem;line-height:1.5;max-width:none}
-  .rs-tile .rt-tag{font-size:0.6875rem;padding-top:0.75rem}
-  .rs-quote{font-size:clamp(1.25rem,6vw,1.625rem) !important;line-height:1.3}
 
   /* Companies — clean rows, better hierarchy */
   .co{padding:1.5rem 0 !important;gap:0.65rem !important}
-  .co .co-name{font-size:1.5rem !important;line-height:1.1}
-  .co .co-role{font-size:0.875rem;margin-top:0.25rem}
-  .co .co-desc{font-size:0.9375rem;line-height:1.5;margin-top:0.5rem;max-width:none}
   .co .award{font-size:0.6875rem;margin-top:0.75rem;text-align:left}
 
   /* CTA mega — comfortable vertical stack */
@@ -1049,15 +1097,9 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   .cta-lead{font-size:1rem !important;line-height:1.55;max-width:none}
   .cta-eyebrow{font-size:0.6875rem}
   .cta-head{flex-direction:column;align-items:flex-start;gap:0.5rem}
-  .cta-meta{grid-template-columns:1fr !important;gap:1rem !important}
-  .cta-meta .item{padding:0.5rem 0}
-  .cta-meta .item .l{font-size:0.6875rem;margin-bottom:0.3rem}
-  .cta-meta .item .v{font-size:0.9375rem;word-break:break-word}
 
   /* Section titles — readable scale */
   .sec-title{font-size:clamp(1.75rem,7vw,2.75rem) !important;line-height:1.1}
-  .sec-head .sub{font-size:0.9375rem;line-height:1.5;max-width:none}
-  .sec-head .kicker{font-size:0.6875rem;letter-spacing:0.12em}
 
   /* Footer — flex-wrap, smaller letters */
   footer.foot{flex-wrap:wrap;justify-content:space-between;gap:0.75rem 1rem;
@@ -1077,22 +1119,13 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   /* Team blocks — clean vertical, no awkward column splits */
   .team-blocks-4{grid-template-columns:1fr !important;gap:1.5rem}
   .team-blocks-4 .tblock{grid-column:1 !important;padding:1rem 0}
-  .tblock-num{font-size:0.6875rem}
-  .tblock-title{font-size:1.0625rem;margin:0.4rem 0 0.5rem}
-  .tblock-desc{font-size:0.9375rem;line-height:1.5}
 
   /* Partner compare — clean stacked cards */
   .partner-compare{gap:1.5rem !important}
-  .partner-card{padding:1.25rem !important}
-  .partner-card .ptag{font-size:0.6875rem;margin-bottom:0.5rem}
-  .partner-card .ptitle{font-size:1.25rem;margin-bottom:0.85rem;line-height:1.2}
-  .partner-card .plist{font-size:0.9375rem;line-height:1.5}
   .partner-final{font-size:clamp(1.25rem,6vw,1.625rem) !important;line-height:1.35;text-align:left}
 
   /* Principles — clean stack */
   .principle{padding:1.25rem 0 1.5rem !important}
-  .principle .pr-t{font-size:1.25rem !important;margin-bottom:0.65rem;line-height:1.25}
-  .principle .pr-d{font-size:0.9375rem;line-height:1.5}
 
   /* Marquee — keep flowing on mobile, just smaller */
   .brand-marquee-row .brand{font-size:1.125rem;letter-spacing:-0.01em}
@@ -1104,7 +1137,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 
 /* —— EXTRA-SMALL (≤480px) — iPhone SE & narrow phones —— */
 @media (max-width:480px){
-  :root{--gutter:1rem;--col-gap:0.65rem}
+  
   .hero-title{font-size:clamp(2.25rem,12vw,3.25rem) !important}
   .hero-sub{font-size:1rem !important;margin-top:1.25rem}
   .sec-title{font-size:clamp(1.5rem,8vw,2rem) !important}
@@ -1113,7 +1146,6 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   .cta-mega-item{min-height:7rem !important;padding:1.25rem 1rem 1.5rem !important}
   .numbers-grid .cell .big{font-size:clamp(2.25rem,12vw,3.25rem) !important}
   .level .ltitle{font-size:clamp(1.25rem,7vw,1.5rem) !important}
-  .rs-tile--hero .rt-title{font-size:clamp(1.5rem,9vw,2.25rem) !important}
   .ds-layer .lyr-name{font-size:1.25rem !important}
   footer.foot{font-size:0.625rem;padding:0.85rem var(--gutter)}
   /* Prevent any horizontal overflow safety */
@@ -1172,13 +1204,519 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   .hero .hero-sub{opacity:1 !important; transform:none !important}
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   RS HORIZONTAL CINEMA — "Что получает бизнес"
+   Pin-wrap: flex column. Header on top, track center, indicator bottom.
+   Header stays visible during the full 5-panel sweep.
+   Cards: clean typography, no backgrounds.
+   ═══════════════════════════════════════════════════════════════════ */
+#results{
+  overflow:visible !important;
+  display:block;
+  min-height:auto;
+  padding:0;
+  position:relative;
+}
+.rs-pin-outer{
+  position:relative;
+  height:250vh;
+}
+.rs-pin-wrap{
+  position:sticky;
+  top:0;
+  width:100%;
+  height:100vh;
+  overflow:hidden;
+  /* EXPLICIT single-column grid prevents track's wide content (250vw)
+     from blowing out the column — minmax(0,1fr) forces strict 100% width. */
+  display:grid;
+  grid-template-rows:auto auto 1fr auto;
+  grid-template-columns:minmax(0,1fr);
+  align-items:start;
+  row-gap:clamp(1rem,2vh,1.5rem);
+  padding:clamp(5rem,8vh,7rem) 0 clamp(2rem,4vh,3rem);
+}
+.rs-pin-wrap > *{min-width:0;max-width:100%}
+
+.rs-asides{
+  position:static !important;
+  padding:0 var(--gutter);
+  padding-right:calc(var(--gutter) + var(--nav-safe-right));
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:1.5rem;
+  z-index:5;
+  pointer-events:none;
+}
+.rs-pin-header{position:relative;z-index:5}
+.rs-pin-header .sec-head--new{margin-bottom:0}
+
+.rs-track{
+  align-self:center;
+  display:flex;
+  align-items:center;
+  width:100%;
+  min-height:0;
+  padding:0 25vw;
+  will-change:transform;
+}
+.rs-panel{
+  flex:0 0 50vw;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  padding:0 0.5vw;
+  will-change:transform,opacity;
+  transform-origin:center center;
+}
+.rs-card{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:clamp(1.25rem,2vw,1.75rem);
+  padding:0;
+}
+.rs-card__num{
+  font-family:var(--serif);
+  font-weight:300;
+  /* Base font-size, scaled by --p-prox via transform for fluid GPU animation */
+  font-size:clamp(5rem,11vw,10rem);
+  line-height:0.85;
+  color:var(--accent);
+  letter-spacing:-0.04em;
+  display:inline-block;
+  transform-origin:left bottom;
+  /* Scale from 0.85 (off-center) → 1.18 (centered) — extra emphasis at center */
+  transform:scale(calc(0.85 + var(--p-prox, 1) * 0.33));
+  transition:transform 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+.rs-card__body{
+  display:flex;
+  flex-direction:column;
+  gap:clamp(0.65rem,1vw,1rem);
+  max-width:36ch;
+  transform-origin:left center;
+  /* Subtle: body slides slightly forward as panel approaches center */
+  transform:translateY(calc((1 - var(--p-prox, 1)) * 0.5rem));
+  transition:transform 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+.rs-card__label{
+  font-family:var(--mono);
+  font-size:0.72rem;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  color:var(--accent);
+  font-weight:600;
+  position:relative;
+  padding-left:2.25rem;
+}
+.rs-card__label::before{
+  content:'';
+  position:absolute;
+  left:0;
+  top:50%;
+  width:1.75rem;
+  height:1px;
+  background:var(--accent);
+}
+.rs-card__title{
+  font-family:var(--serif);
+  font-weight:400;
+  font-size:clamp(2rem,4.2vw,3.5rem);
+  line-height:1.02;
+  letter-spacing:-0.025em;
+  color:var(--ink);
+  margin:0;
+}
+.rs-card__desc{
+  font-family:var(--sans);
+  font-size:clamp(0.95rem,1.1vw,1.0625rem);
+  line-height:1.5;
+  color:var(--mute);
+  margin:0;
+  max-width:38ch;
+}
+/* Steps — lines only, no numbers, no "scroll" text. Active = longest line */
+.rs-steps{
+  display:flex;
+  gap:clamp(0.75rem,1.5vw,1.25rem);
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  align-self:center;
+}
+.rs-step{
+  display:block;
+  width:1.5rem;
+  height:2px;
+  background:var(--mute-2);
+  opacity:0.45;
+  transition:width 0.55s cubic-bezier(0.22,1,0.36,1),background-color 0.4s var(--ease-out),opacity 0.4s var(--ease-out);
+  pointer-events:none;
+}
+.rs-step.is-past{
+  background:var(--mute);
+  opacity:0.6;
+}
+.rs-step.is-active{
+  width:clamp(2.75rem,5vw,4rem);
+  background:var(--accent);
+  opacity:1;
+}
+
+@media (max-width:900px){
+  .rs-pin-outer{height:auto}
+  .rs-pin-wrap{position:static;height:auto;overflow:visible;display:block;padding:clamp(5.5rem,9vh,8rem) 0 clamp(3.5rem,7vh,6rem)}
+  .rs-asides{margin-bottom:1.5rem;flex-direction:column;gap:0.75rem}
+  .rs-pin-header{margin-bottom:clamp(2rem,4vh,3rem)}
+  .rs-track{flex-direction:column;height:auto;padding:0 var(--gutter);gap:2.5rem;transform:none !important}
+  .rs-panel{flex:auto;width:100%;padding:0;transform:none !important;opacity:1 !important}
+  .rs-card__num{font-size:clamp(3.5rem,9vw,5rem)}
+  .rs-card__title{font-size:clamp(1.5rem,5vw,2rem)}
+  .rs-steps{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .rs-pin-outer{height:auto}
+  .rs-pin-wrap{position:static;height:auto;overflow:visible;display:block;padding:clamp(5.5rem,9vh,8rem) 0 clamp(3.5rem,7vh,6rem)}
+  .rs-track{flex-direction:column;height:auto;padding:0 var(--gutter);gap:2.5rem;transform:none !important}
+  .rs-panel{flex:auto;width:100%;padding:0;transform:none !important;opacity:1 !important}
+  .rs-steps{display:none}
+}
+
+
+/* ─── Entry curtain — first-load only ─── */
+.hero-curtain{
+  position:fixed;inset:0;
+  background:var(--accent);
+  z-index:9999;
+  pointer-events:none;
+  transform:translateY(0);
+  will-change:transform;
+}
+.hero-curtain.lift{
+  animation:curtain-up 1150ms cubic-bezier(0.62, 0.02, 0.18, 1) forwards;
+}
+@keyframes curtain-up{
+  0%   { transform:translateY(0%); }
+  56%  { transform:translateY(-58%); }
+  68%  { transform:translateY(-62%); }   /* micro-pause: same velocity slowdown */
+  100% { transform:translateY(-101%); }
+}
+@media (prefers-reduced-motion:reduce){
+  .hero-curtain{display:none !important}
+}
+
+/* ─── Hero v1.5: typography split into corners ─── */
+.visually-hidden{
+  position:absolute;width:1px;height:1px;
+  margin:-1px;padding:0;border:0;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
+}
+.hero{overflow:hidden;--p1:1 !important;--p2:1 !important;--hp:0 !important;
+  --hero-wght:300;
+  --hero-soft:30;
+  --hero-opsz:144;
+  --hero-scalex:1;
+  --hero-opacity:1;
+  --tilt-x:0deg;
+  --tilt-y:0deg;
+  perspective:1500px;
+  perspective-origin:50% 50%;
+}
+.hero .container{
+  position:relative;
+  padding:0;
+  min-height:100vh;min-height:100svh;
+  display:block;
+  max-width:none;
+  width:100%;
+  transform:rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transform-style:preserve-3d;
+}
+.hero-static,
+.hero-title--corner{
+  /* will-change applied dynamically in JS during fit; idle state is layer-free */
+}
+/* When hero scrolls out of view: free 3D context, stop perspective compute, hint compositor */
+.hero.hero--idle{
+  perspective:none;
+  contain:layout paint style;
+}
+.hero.hero--idle .container{
+  transform:none !important;
+  transform-style:flat !important;
+}
+@media (prefers-reduced-motion:reduce){
+  .hero .container{transform:none !important}
+}
+.hero .hero-title,
+.hero .hero-title--corner{transform:none !important}
+/* Static part — top-left */
+.hero-static{
+  position:absolute;
+  top:clamp(4rem,8vh,6rem);
+  left:6px;
+  font-family:var(--serif);
+  font-style:italic;
+  line-height:0.86;
+  letter-spacing:-0.03em;
+  color:#fff;
+  opacity:var(--hero-opacity);
+  font-variation-settings:"opsz" var(--hero-opsz),"wght" var(--hero-wght),"SOFT" var(--hero-soft);
+  z-index:20;
+  white-space:nowrap;
+}
+.hero-title--corner{
+  position:absolute;
+  bottom:clamp(8rem,15vh,11rem);
+  right:6px;
+  margin:0;
+  font-family:var(--serif);
+  font-style:italic;
+  line-height:0.86;
+  letter-spacing:-0.03em;
+  text-align:right;
+  z-index:20;
+  opacity:var(--hero-opacity);
+  font-variation-settings:"opsz" var(--hero-opsz),"wght" var(--hero-wght),"SOFT" var(--hero-soft);
+  white-space:nowrap;
+}
+.hero-title--corner em{
+  font-style:italic;
+  font-variation-settings:inherit;
+}
+
+/* RU only: Playfair Display becomes the display serif across the whole site */
+html[lang="ru"]{
+  --serif:'Playfair Display','Fraunces',serif;
+}
+/* RU: keep numerical figures in the previous serif (Fraunces) */
+html[lang="ru"] .numbers-grid .big,
+html[lang="ru"] .stat-counter,
+html[lang="ru"] .pct,
+html[lang="ru"] .num,
+html[lang="ru"] .rs-card__num,
+html[lang="ru"] .principle .pnum,
+html[lang="ru"] .aud-list .an,
+html[lang="ru"] .pain-list .pn,
+html[lang="ru"] .svc-row .svc-num,
+html[lang="ru"] .ds-layer .lyr-num{
+  font-family:'Fraunces',serif;
+}
+/* RU: optical letter-spacing compensation for italic cyrillic outside hero
+   (Playfair italic Cyrillic reads visually tight at body sizes) */
+html[lang="ru"] p em,
+html[lang="ru"] p i,
+html[lang="ru"] .desc em,
+html[lang="ru"] .ldesc em,
+html[lang="ru"] .ltitle em,
+html[lang="ru"] .label em,
+html[lang="ru"] .item em,
+html[lang="ru"] .copy em,
+html[lang="ru"] .lab em,
+html[lang="ru"] .pain-list .pn,
+html[lang="ru"] .aud-list .an,
+html[lang="ru"] .principle .pnum,
+html[lang="ru"] .bmp-col .clabel,
+html[lang="ru"] .ds-layer .lyr-num,
+html[lang="ru"] .svc-row .svc-num{
+  letter-spacing:0.015em;
+}
+/* Hero-specific tightening only — keep the rest of the site at default tracking */
+html[lang="ru"] .hero-static,
+html[lang="ru"] .hero-title--corner,
+html[lang="ru"] .hero-title--corner em{
+  letter-spacing:-0.05em;
+}
+/* Hollow / outline variant */
+.hero[data-fx="hollow"] .hero-static,
+.hero[data-fx="hollow"] .hero-title--corner,
+.hero[data-fx="hollow"] .hero-title--corner em{
+  color:transparent;
+  -webkit-text-stroke:1px #fff;
+  text-stroke:1px #fff;
+}
+.hero-title--corner em.is-typing::after{
+  content:'';display:inline-block;
+  width:0.045em;height:0.72em;background:var(--accent);
+  margin-left:0.07em;vertical-align:-0.04em;
+  animation:hero-blink 1.05s step-end infinite;
+}
+
+/* Force-show hero-bottom anchors (global rule hides them via opacity:0) */
+.hero .hero-bottom{
+  position:relative;
+  z-index:10;       /* above the large hero-static / hero-title / hero-sub layers */
+}
+.hero .hero-static,
+.hero .hero-title--corner,
+.hero .hero-sub--hidden{
+  pointer-events:none;   /* large display text is decorative — never blocks hover/clicks */
+}
+.hero .hero-bottom .value a{
+  opacity:1 !important;
+  transform:none !important;
+  filter:none !important;
+  /* Hover-stabilising hit-area expansion — recovers precision under tilt-3D */
+  position:relative;
+  display:inline-block;
+  z-index:5;
+}
+.hero .hero-bottom .value a::before{
+  content:'';
+  position:absolute;
+  inset:-12px -18px;
+  /* invisible — but pseudo participates in pointer hit testing, so the
+     interactive zone is widened by ~16-18px without altering visual layout */
+}
+
+/* Centered mono caption between top/bottom titles */
+.hero-sub--hidden{
+  display:block;
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  margin:auto;
+  width:max-content;
+  max-width:min(44ch, 64vw);
+  height:max-content;
+  font-family:var(--mono);
+  font-style:normal;
+  font-weight:400;
+  font-size:clamp(0.6875rem,0.82vw,0.8125rem);
+  letter-spacing:0.1em;
+  line-height:1.55;
+  text-transform:uppercase;
+  text-align:center;
+  color:var(--mute-2);
+  z-index:3;
+}
+.hero-sub--hidden em{
+  font-style:normal;
+  color:#fff;
+}
+
+/* Bottom row — pinned to bottom, original 12-col grid restored */
+.hero .hero-bottom{
+  position:absolute;
+  left:0;right:0;bottom:0;
+  margin-top:0;
+  padding:1.75rem clamp(1rem,2.5vw,2.5rem) clamp(1.5rem,3vw,2.5rem);
+  width:100%;
+  border-top:1px solid var(--hair-dk);
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  column-gap:var(--col-gap);
+}
+.hero .hero-eyebrow-bottom{
+  position:static;
+  grid-column:1 / 4;
+  align-self:end;
+  margin:0;
+  text-align:left;
+}
+
+@media (max-width:900px){
+  .hero-static{font-size:clamp(3rem,13vw,5rem);top:clamp(3.5rem,8vh,5rem);max-width:90%}
+  .hero-title--corner{font-size:clamp(3rem,13vw,5rem);bottom:clamp(9rem,18vh,12rem)}
+}
+
+/* ─── Mobile hero (≤720px) — clean linear layout, no desktop tricks ─── */
+@media (max-width:720px){
+  .hero{perspective:none;overflow:visible}
+  .hero .container{
+    display:flex;flex-direction:column;
+    padding:5.5rem 1.25rem 1.25rem;
+    min-height:100vh;min-height:100svh;
+    transform:none !important;transform-style:flat !important;
+  }
+  /* Reset all absolute-positioning from desktop */
+  .hero-static,
+  .hero-title--corner,
+  .hero-sub--hidden{
+    position:static !important;
+    inset:auto !important;
+    top:auto !important;left:auto !important;right:auto !important;bottom:auto !important;
+    max-width:100% !important;
+    width:auto !important;
+    height:auto !important;
+    z-index:auto !important;
+    white-space:normal !important;
+    text-align:left !important;
+    margin:0;
+  }
+  /* Title block: "Как я строю" + italic typeword, stacked, left-aligned */
+  .hero-static{
+    font-size:clamp(2.4rem,12vw,3.8rem) !important;
+    line-height:0.98;letter-spacing:-0.025em;
+    margin-bottom:0.15rem;
+  }
+  .hero-title--corner{
+    font-size:clamp(2.4rem,12vw,3.8rem) !important;
+    line-height:0.98;letter-spacing:-0.025em;
+  }
+  /* Quote: small mono, uppercase, sits in middle of vertical space */
+  .hero-sub--hidden{
+    margin-top:2.5rem;
+    font-family:var(--mono) !important;
+    font-weight:400 !important;
+    font-style:normal !important;
+    font-size:0.7rem !important;
+    line-height:1.7;letter-spacing:0.09em;
+    text-transform:uppercase;
+    color:var(--mute-2);
+  }
+  /* Footer row pinned to bottom, divider above the meta items */
+  .hero-bottom{
+    margin-top:auto;
+    padding-top:1.5rem;padding-bottom:0;
+    border-top:1px solid var(--hair-dk);
+    border-bottom:none;
+    display:flex;flex-direction:column;gap:1.25rem;
+    grid-template-columns:none !important;
+  }
+  .hero-bottom-items{
+    display:flex;flex-direction:column;gap:1.1rem;
+  }
+  .hero-bottom .item .label{
+    font-size:0.65rem;margin-bottom:0.35rem;
+  }
+  .hero-bottom .item .value{
+    font-size:0.9rem;line-height:1.5;
+  }
+}
 </style>
 </head>
 <body>
+<div class="hero-curtain" id="heroCurtain"></div>
+<script>
+/* Entry curtain — full-screen accent, lifts up to reveal hero. First load only. */
+(function curtainEntry(){
+  const c = document.getElementById('heroCurtain');
+  if(!c) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ c.remove(); return; }
+  if(sessionStorage.getItem('hero-curtain-seen')){ c.remove(); return; }
+  sessionStorage.setItem('hero-curtain-seen','1');
+  /* Lift after the first paint + a short hold so user actually sees the solid color */
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      c.classList.add('lift');
+      c.addEventListener('animationend', () => c.remove(), { once:true });
+    }, 220);
+  }, { once:true });
+})();
+</script>
 <div class="cursor-dot" aria-hidden="true"></div>
 <a href="#hero" class="skip-link" data-i18n="skip">Перейти к&nbsp;содержанию</a>
 <nav class="top" id="nav">
 <button class="brand" type="button" id="navHome" data-i18n="nav.brand" aria-label="На главную">Сергей Лукин <b>—</b> Head of Design</button>
+<div class="nav-center">
+<a href="https://t.me/Lookin_Sergey" class="nav-contact" data-i18n="nav.tg">Telegram</a>
+<span class="nav-sep" aria-hidden="true">·</span>
+<a href="mailto:lookindn@gmail.com" class="nav-contact" data-i18n="nav.em">Email</a>
+<span class="nav-sep" aria-hidden="true">·</span>
+<a href="https://sergeylookin.framer.website/" target="_blank" rel="noopener" class="nav-contact" data-i18n="nav.pf">Портфолио</a>
+</div>
 <div class="nav-right">
 <div class="lang-switch" id="langSwitch" role="group" aria-label="Язык" data-aria-ru="Язык" data-aria-en="Language">
 <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
@@ -1190,16 +1728,17 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 </nav>
 <section class="hero dark" id="hero">
 <div class="container">
-<div data-reveal-num>
-<h1 class="hero-title" data-i18n="hero.title">Как я&nbsp;строю<br><em>дизайн.</em></h1>
-<p class="hero-sub" data-i18n="hero.sub">Бренд&nbsp;· Маркетинг&nbsp;· Веб&nbsp;· Продукт<br>И&nbsp;команда, которая держит это вместе.</p>
-</div>
+<div class="hero-static" data-i18n="hero.title.static">Как я&nbsp;строю</div>
+<h1 class="hero-title hero-title--corner">
+  <em>дизайн.</em>
+</h1>
+<p class="hero-sub hero-sub--hidden" data-i18n="hero.center">Эстетика&nbsp;— это не&nbsp;украшение. Это короткий путь к&nbsp;доверию. Когда красиво&nbsp;— человек слушает. Когда нет&nbsp;— уходит, не&nbsp;дослушав.</p>
 <div class="hero-bottom" data-reveal>
 <span class="eyebrow hero-eyebrow-bottom" data-i18n="hero.issue">№ 01 · 2026</span>
 <div class="hero-bottom-items">
 <div class="item"><div class="label" data-i18n="hero.author.l">Автор</div><div class="value" data-i18n="hero.author.v">Сергей Лукин<br>Head of Design / Art Director</div></div>
 <div class="item"><div class="label" data-i18n="hero.today.l">Признание</div><div class="value" data-i18n="hero.today.v">Best New Fintech APAC<br>Tagline Awards</div></div>
-<div class="item"><div class="label" data-i18n="hero.contact.l">Контакт</div><div class="value"><a href="https://t.me/Lookin_Sergey">@Lookin_Sergey</a><br><a href="mailto:lookindn@gmail.com">lookindn@gmail.com</a></div></div>
+<div class="item"><div class="label" data-i18n="hero.focus.l">Фокус</div><div class="value" data-i18n="hero.focus.v">Бренд&nbsp;· Маркетинг<br>Веб&nbsp;· Продукт</div></div>
 </div>
 </div>
 </div>
@@ -1218,11 +1757,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 <p class="intro-p" data-reveal data-i18n="intro.p1">Я&nbsp;прошёл путь от&nbsp;графического дизайнера до&nbsp;<strong>Head of Design</strong>&nbsp;— от&nbsp;федеральной <strong>enterprise</strong>-студии до&nbsp;глобального финтеха в&nbsp;Юго-Восточной Азии.</p>
 <p class="intro-p" data-reveal data-i18n="intro.p2">Моя зона&nbsp;— бренд, маркетинг, веб и&nbsp;продуктовая коммуникация. Собираю их&nbsp;в&nbsp;единую систему, чтобы компания звучала цельно во&nbsp;всех каналах.</p>
 </div>
-<div class="intro-mark" aria-hidden="true">
-<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-<rect width="16" height="16" fill="currentColor"/>
-</svg>
-</div>
+<div class="intro-mark shape-cycle" aria-hidden="true"></div>
 <div class="intro-stamp" data-i18n="intro.stamp">12+ лет · 3 страны · 3 компании</div>
 </div>
 </div>
@@ -1314,7 +1849,10 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 </ul>
 </div>
 </div>
-<p class="partner-final" data-reveal data-i18n="partner.final">Дизайн&nbsp;— соавтор бизнеса.<br>Голос за&nbsp;столом,<br>где принимают решения.</p>
+<div class="partner-final-row" data-reveal>
+<p class="partner-final" data-i18n="partner.final">Дизайн&nbsp;— соавтор бизнеса.<br>Голос за&nbsp;столом,<br>где принимают решения.</p>
+<div class="partner-mark shape-cycle" aria-hidden="true"></div>
+</div>
 </div>
 </div>
 </section>
@@ -1400,7 +1938,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 <div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path class="bicon-spark-core" d="M 32 12 Q 32 30 46 32 Q 32 34 32 52 Q 32 34 18 32 Q 32 30 32 12 Z"/><path class="bicon-spark-sat bicon-spark-a-fill" d="M 52 6 Q 52 10.5 57 11 Q 52 11.5 52 16 Q 52 11.5 47 11 Q 52 10.5 52 6 Z"/><path class="bicon-spark-sat bicon-spark-a-line" d="M 52 6 Q 52 10.5 57 11 Q 52 11.5 52 16 Q 52 11.5 47 11 Q 52 10.5 52 6 Z" fill="none" stroke="currentColor" stroke-width="1.3"/><path class="bicon-spark-sat bicon-spark-b-fill" d="M 12 48 Q 12 52.5 17 53 Q 12 53.5 12 58 Q 12 53.5 7 53 Q 12 52.5 12 48 Z"/><path class="bicon-spark-sat bicon-spark-b-line" d="M 12 48 Q 12 52.5 17 53 Q 12 53.5 12 58 Q 12 53.5 7 53 Q 12 52.5 12 48 Z" fill="none" stroke="currentColor" stroke-width="1.3"/><path class="bicon-spark-sat bicon-spark-c-fill" d="M 14 15 Q 14 17.5 17 18 Q 14 18.5 14 21 Q 14 18.5 11 18 Q 14 17.5 14 15 Z"/><path class="bicon-spark-sat bicon-spark-c-line" d="M 14 15 Q 14 17.5 17 18 Q 14 18.5 14 21 Q 14 18.5 11 18 Q 14 17.5 14 15 Z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></div><div class="bname" data-i18n="br.1.n">Контекст</div><p class="bdesc" data-i18n="br.1.d">Рынок, конкуренты, аудитория, цели бизнеса. Что знаем точно, а&nbsp;что только предполагаем.</p></div>
 <div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle class="bicon-pos-dot bicon-pos-d1"  cx="57"    cy="32"    r="1.4"/><circle class="bicon-pos-dot bicon-pos-d2"  cx="53.65" cy="44.5"  r="1.4"/><circle class="bicon-pos-dot bicon-pos-d3"  cx="44.5"  cy="53.65" r="1.4"/><circle class="bicon-pos-dot bicon-pos-d4"  cx="32"    cy="57"    r="1.4"/><circle class="bicon-pos-dot bicon-pos-d5"  cx="19.5"  cy="53.65" r="1.4"/><circle class="bicon-pos-dot bicon-pos-d6"  cx="10.35" cy="44.5"  r="1.4"/><circle class="bicon-pos-dot bicon-pos-d7"  cx="7"     cy="32"    r="1.4"/><circle class="bicon-pos-dot bicon-pos-d8"  cx="10.35" cy="19.5"  r="1.4"/><circle class="bicon-pos-dot bicon-pos-d9"  cx="19.5"  cy="10.35" r="1.4"/><circle class="bicon-pos-dot bicon-pos-d10" cx="32"    cy="7"     r="1.4"/><circle class="bicon-pos-dot bicon-pos-d11" cx="44.5"  cy="10.35" r="1.4"/><circle class="bicon-pos-dot bicon-pos-d12" cx="53.65" cy="19.5"  r="1.4"/><path class="bicon-compass" d="M 32 22 L 40 42 L 32 38 L 24 42 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></div><div class="bname" data-i18n="br.2.n">Позиция</div><p class="bdesc" data-i18n="br.2.d">Для кого мы, против кого, и&nbsp;о&nbsp;чём мы&nbsp;принципиально молчим. Без второго первое не&nbsp;работает.</p></div>
 <div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect class="bicon-eq bicon-eq-1" x="7" y="28" width="2.5" height="8" rx="1.25"/><rect class="bicon-eq bicon-eq-2" x="14" y="23" width="2.5" height="18" rx="1.25"/><rect class="bicon-eq bicon-eq-3" x="21" y="18" width="2.5" height="28" rx="1.25"/><rect class="bicon-eq bicon-eq-4" x="28" y="25" width="2.5" height="14" rx="1.25"/><rect class="bicon-eq bicon-eq-5" x="35" y="20" width="2.5" height="24" rx="1.25"/><rect class="bicon-eq bicon-eq-6" x="42" y="27" width="2.5" height="10" rx="1.25"/><rect class="bicon-eq bicon-eq-7" x="49" y="23" width="2.5" height="18" rx="1.25"/><rect class="bicon-eq bicon-eq-8" x="56" y="29" width="2.5" height="6" rx="1.25"/></svg></div><div class="bname" data-i18n="br.3.n">Голос</div><p class="bdesc" data-i18n="br.3.d">Как звучит бренд в&nbsp;письме, в&nbsp;баннере, в&nbsp;техподдержке. Тон, который узнают.</p></div>
-<div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><text class="bicon-aa-letter" x="22" y="46" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="44" fill="currentColor">A</text><text class="bicon-aa-letter" x="44" y="46" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="32" font-style="italic" fill="currentColor">a</text></svg></div><div class="bname" data-i18n="br.4.n">Визуальный язык</div><p class="bdesc" data-i18n="br.4.d">Типографика, цвет, образ, motion, фотостиль. Не&nbsp;«логотип и&nbsp;палитра», а&nbsp;целая грамматика.</p></div>
+<div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><text class="bicon-aa-letter" x="22" y="46" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="44" fill="currentColor">A</text><text class="bicon-aa-letter" x="44" y="46" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="32" fill="currentColor">a</text></svg></div><div class="bname" data-i18n="br.4.n">Визуальный язык</div><p class="bdesc" data-i18n="br.4.d">Типографика, цвет, образ, motion, фотостиль. Не&nbsp;«логотип и&nbsp;палитра», а&nbsp;целая грамматика.</p></div>
 <div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><line class="bicon-sys-ray bicon-sys-r1" x1="54" y1="32" x2="40" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r2" x1="43" y1="13" x2="36" y2="25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r3" x1="21" y1="13" x2="28" y2="25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r4" x1="10" y1="32" x2="24" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r5" x1="21" y1="51" x2="28" y2="39" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r6" x1="43" y1="51" x2="36" y2="39" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="56" cy="32" r="2"/><circle cx="44" cy="11" r="2"/><circle cx="20" cy="11" r="2"/><circle cx="8" cy="32" r="2"/><circle cx="20" cy="53" r="2"/><circle cx="44" cy="53" r="2"/><circle cx="32" cy="32" r="5"/></svg></div><div class="bname" data-i18n="br.5.n">Система</div><p class="bdesc" data-i18n="br.5.d">Как айдентика разворачивается на&nbsp;сайт, соцсети, продукт, презентации, наружку. Без потерь.</p></div>
 <div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle class="bicon-ripple" cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="1.5"/><circle class="bicon-ripple bicon-ripple-2" cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="32" cy="32" r="4"/></svg></div><div class="bname" data-i18n="br.6.n">Запуск</div><p class="bdesc" data-i18n="br.6.d">Замеры, итерации, доля голоса, brand recall. Бренд живой&nbsp;— он&nbsp;меняется.</p></div>
 </div>
@@ -1540,12 +2078,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 </div>
 </div>
 </div>
-</div>
-<div class="ts-mark" aria-hidden="true">
-<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-<rect width="16" height="16" fill="currentColor"/>
-</svg>
-</div>
+<div class="ts-mark shape-cycle" aria-hidden="true"></div>
 </section>
 
 <section id="ds">
@@ -1632,49 +2165,78 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 </section>
 
 <section id="results">
-<div class="sec-asides-bar">
+<div class="rs-pin-outer">
+<div class="rs-pin-wrap">
+<div class="sec-asides-bar rs-asides">
 <div class="sec-aside sec-aside--left" data-i18n="whisper.rs">Сильный дизайн<br>выдерживает реальность.</div>
 <div class="sec-aside sec-aside--right"><b>13</b> / 14 → <span data-i18n="rs.kicker">Результаты</span></div>
 </div>
-<div class="container">
-<div style="width:100%">
-<header class="sec-head sec-head--new" data-reveal>
+<div class="container rs-pin-header">
+<header class="sec-head sec-head--new">
 <div class="sec-title-wrap">
 <h2 class="sec-title" data-i18n="rs.title">Что получает бизнес.</h2>
 <p class="sec-sub" data-i18n="rs.sub">Конкретные эффекты, которые видно по&nbsp;работе команды и&nbsp;по&nbsp;тому, как продукт ощущается снаружи.</p>
 </div>
 </header>
-<div class="rs-mosaic stagger" data-reveal>
-<article class="rs-tile rs-tile--hero" data-stagger>
-<span class="rt-num">01</span>
-<h3 class="rt-title" data-i18n="rs.1.t">Единый визуальный язык</h3>
-<p class="rt-desc" data-i18n="rs.1.d">Все каналы&nbsp;— одним тоном, частью одной системы.</p>
-<span class="rt-tag" data-i18n="rs.1.note">BRAND</span>
+</div>
+<div class="rs-track" id="rsTrack">
+<article class="rs-panel" data-i="0">
+<div class="rs-card">
+<div class="rs-card__num">01</div>
+<div class="rs-card__body">
+<span class="rs-card__label" data-i18n="rs.1.note">BRAND</span>
+<h3 class="rs-card__title" data-i18n="rs.1.t">Один бренд во&nbsp;всех касаниях</h3>
+<p class="rs-card__desc" data-i18n="rs.1.d">Лендинг, продукт, реклама, презентация&nbsp;— части одной системы. Клиент видит зрелость, а&nbsp;не&nbsp;пять разных компаний.</p>
+</div>
+</div>
 </article>
-<article class="rs-tile rs-tile--m" data-stagger>
-<span class="rt-num">02</span>
-<h3 class="rt-title" data-i18n="rs.2.t">Быстрее выход в&nbsp;production</h3>
-<p class="rt-desc" data-i18n="rs.2.d">Меньше согласований, больше продуманных решений.</p>
-<span class="rt-tag" data-i18n="rs.2.note">SPEED</span>
+<article class="rs-panel" data-i="1">
+<div class="rs-card">
+<div class="rs-card__num">02</div>
+<div class="rs-card__body">
+<span class="rs-card__label" data-i18n="rs.2.note">SPEED</span>
+<h3 class="rs-card__title" data-i18n="rs.2.t">Релизы быстрее в&nbsp;разы</h3>
+<p class="rs-card__desc" data-i18n="rs.2.d">Когда команда опирается на&nbsp;систему, дизайн перестаёт быть бутылочным горлом. То, что раньше шло месяц, выходит за&nbsp;неделю.</p>
+</div>
+</div>
 </article>
-<article class="rs-tile rs-tile--s" data-stagger>
-<span class="rt-num">03</span>
-<h3 class="rt-title" data-i18n="rs.3.t">Меньше хаоса в&nbsp;работе</h3>
-<p class="rt-desc" data-i18n="rs.3.d">Маркетинг, продукт и&nbsp;разработка&nbsp;— в&nbsp;одну сторону.</p>
-<span class="rt-tag" data-i18n="rs.3.note">FOCUS</span>
+<article class="rs-panel" data-i="2">
+<div class="rs-card">
+<div class="rs-card__num">03</div>
+<div class="rs-card__body">
+<span class="rs-card__label" data-i18n="rs.3.note">FOCUS</span>
+<h3 class="rs-card__title" data-i18n="rs.3.t">Команды&nbsp;— в&nbsp;одну сторону</h3>
+<p class="rs-card__desc" data-i18n="rs.3.d">Маркетинг, продукт, разработка опираются на&nbsp;одни принципы. Меньше политики&nbsp;— больше работы для рынка.</p>
+</div>
+</div>
 </article>
-<article class="rs-tile rs-tile--s" data-stagger>
-<span class="rt-num">04</span>
-<h3 class="rt-title" data-i18n="rs.5.t">Бренд выглядит дороже</h3>
-<p class="rt-desc" data-i18n="rs.5.d">Доверие появляется там, где бренд выглядит цельно.</p>
-<span class="rt-tag" data-i18n="rs.5.note">TRUST</span>
+<article class="rs-panel" data-i="3">
+<div class="rs-card">
+<div class="rs-card__num">04</div>
+<div class="rs-card__body">
+<span class="rs-card__label" data-i18n="rs.4.note">TRUST</span>
+<h3 class="rs-card__title" data-i18n="rs.4.t">Бренд воспринимается дороже</h3>
+<p class="rs-card__desc" data-i18n="rs.4.d">Когда касания согласованны, цена ощущается оправданной. Премиум&nbsp;— это не&nbsp;позолота, а&nbsp;порядок.</p>
+</div>
+</div>
 </article>
-<article class="rs-tile rs-tile--m" data-stagger>
-<span class="rt-num">05</span>
-<h3 class="rt-title" data-i18n="rs.8.t">Дизайн&nbsp;— это не&nbsp;правки</h3>
-<p class="rt-desc" data-i18n="rs.8.d">Когда есть критерии и&nbsp;логика, обсуждение перестаёт быть про&nbsp;вкус.</p>
-<span class="rt-tag" data-i18n="rs.8.note">CRITERIA</span>
+<article class="rs-panel" data-i="4">
+<div class="rs-card">
+<div class="rs-card__num">05</div>
+<div class="rs-card__body">
+<span class="rs-card__label" data-i18n="rs.5.note">CRITERIA</span>
+<h3 class="rs-card__title" data-i18n="rs.5.t">Решения по&nbsp;критериям, а&nbsp;не по&nbsp;вкусу</h3>
+<p class="rs-card__desc" data-i18n="rs.5.d">Дизайн перестаёт быть личным мнением. Спор переходит из&nbsp;«мне не&nbsp;нравится» в&nbsp;«это работает».</p>
+</div>
+</div>
 </article>
+</div>
+<div class="rs-steps" id="rsSteps" aria-hidden="true">
+<span class="rs-step is-active" data-step="0"></span>
+<span class="rs-step" data-step="1"></span>
+<span class="rs-step" data-step="2"></span>
+<span class="rs-step" data-step="3"></span>
+<span class="rs-step" data-step="4"></span>
 </div>
 </div>
 </div>
@@ -1762,7 +2324,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 <div data-i18n="ft.tag">Дизайн-манифест</div>
 </footer>
 
-<script id="i18n-data" type="application/json">{"ru": {"whisper.intro": "Дизайн&nbsp;— для людей.<br>Не&nbsp;для портфолио.", "whisper.numbers": "Цифры не&nbsp;врут.<br>Но&nbsp;и&nbsp;не&nbsp;всё говорят.", "whisper.pain": "«Просто нарисуйте»&nbsp;—<br>начало слабого проекта.", "whisper.partner": "Самый долгий спор<br>моей карьеры.", "whisper.pr": "Каждый принцип&nbsp;—<br>следствие ошибки.", "whisper.aud": "Впечатление создают<br>не&nbsp;картинки. Дизайн.", "whisper.br": "Раньше думал:<br>бренд&nbsp;— это логотип.", "whisper.bmp": "Работа происходит<br>до&nbsp;первого пикселя.", "whisper.ev": "Работа закончена,<br>когда работает<br>в&nbsp;реальности.", "whisper.tm": "Команда ломается<br>от&nbsp;неясности,<br>не&nbsp;от&nbsp;нагрузки.", "whisper.ts": "Хорошая команда<br>строится дольше,<br>чем хороший интерфейс.", "whisper.ds": "Без системы качество&nbsp;—<br>это настроение.", "whisper.sv": "То, что не&nbsp;помещается<br>в&nbsp;портфолио.", "whisper.rs": "Сильный дизайн<br>выдерживает реальность.", "whisper.co": "Двенадцать лет<br>в&nbsp;трёх главах.", "meta.title": "Манифест · Сергей Лукин", "meta.description": "Манифест Сергея Лукина, Head of Design. О&nbsp;дизайне в&nbsp;бренде, маркетинге и&nbsp;продукте — и&nbsp;о&nbsp;команде вокруг этой работы.", "skip": "Перейти к&nbsp;содержанию", "nav.brand": "Сергей Лукин <b>—</b> Head of Design", "nav.meta": "Манифест · 2026", "hero.eyebrow": "Дизайн-манифест", "hero.issue": "№ 01 · 2026", "hero.title": "Как я&nbsp;строю<br><em>дизайн.</em>", "hero.sub": "Бренд&nbsp;· Маркетинг&nbsp;· Веб&nbsp;· Продукт<br>И&nbsp;команда, которая держит это вместе.", "hero.author.l": "Автор", "hero.author.v": "Сергей Лукин<br>Head of Design / Art Director", "hero.today.l": "Признание", "hero.today.v": "Best New Fintech APAC<br>Tagline Awards", "hero.contact.l": "Контакт", "intro.eyebrow": "00 · Кто я", "intro.kicker": "Начало", "intro.stamp": "12+ лет · 3 страны · 3 компании", "intro.title": "Двенадцать лет дизайна — и&nbsp;всё меньше про&nbsp;макеты.", "intro.p1": "Я&nbsp;прошёл путь от&nbsp;графического дизайнера до&nbsp;<strong>Head of Design</strong>&nbsp;— от&nbsp;федеральной <strong>enterprise</strong>-студии до&nbsp;глобального финтеха в&nbsp;Юго-Восточной Азии.", "intro.p2": "Моя зона&nbsp;— бренд, маркетинг, веб и&nbsp;продуктовая коммуникация. Собираю их&nbsp;в&nbsp;единую систему, чтобы компания звучала цельно во&nbsp;всех каналах.", "numbers.kicker": "В&nbsp;цифрах", "numbers.title": "В&nbsp;цифрах и фактах.", "numbers.right": "Не&nbsp;всё в&nbsp;дизайне измеряется цифрами. Но&nbsp;масштаб помогает понять контекст: 12+ лет, разные команды, продукты и&nbsp;бренды.", "numbers.l.1": "Лет<br>в&nbsp;дизайне", "numbers.l.2": "Запущенных<br>продуктов", "numbers.l.3": "Брендов<br>и&nbsp;айдентик", "numbers.l.4": "Запущенных<br>систем", "numbers.l.5": "Компании<br>на&nbsp;уровне Head", "numbers.l.6": "Дизайнеров<br>в&nbsp;командах", "pain.kicker": "Симптомы", "pain.title": "Знакомая ситуация?", "pain.sub": "Симптомы, по&nbsp;которым видно:<br>дизайн перестал работать на&nbsp;бизнес.", "pain.1": "Маркетинг, продукт и&nbsp;разработка работают в&nbsp;разные стороны.", "pain.2": "Каждый запуск собирают с&nbsp;нуля — и&nbsp;каждый занимает столько&nbsp;же.", "pain.3": "Команда занята, но&nbsp;система не&nbsp;становится сильнее.", "pain.4": "Бренд теряется в&nbsp;каналах. Стиль зависит от&nbsp;исполнителя.", "pain.5": "Руководитель тонет в&nbsp;правках. Стратегии остаётся всё меньше.", "pain.1.note": "Размывает фокус.<br>Замедляет запуск.", "pain.2.note": "Темп не&nbsp;превращается в&nbsp;скорость.", "pain.3.note": "Знание не&nbsp;превращается в&nbsp;систему.", "pain.4.note": "Узнаваемость падает, доверие&nbsp;тает.", "pain.5.note": "Стратегические решения откладываются.", "pain.quote": "Хаос редко выглядит как хаос.<br>Чаще&nbsp;— как временное решение,<br>которое осталось навсегда.", "pain.foot": "Это не&nbsp;лечится одной кнопкой.<br>И&nbsp;не&nbsp;парой макетов.", "partner.kicker": "Подход", "partner.title": "Соавтор, а&nbsp;не&nbsp;подрядчик.", "partner.sub": "Дизайн вступает в&nbsp;задачу до&nbsp;того, как написан бриф.<br>Иначе он&nbsp;уже исправляет, а&nbsp;не&nbsp;решает.", "partner.svc.tag": "Сервис", "partner.svc.title": "Получает задачу<br>и&nbsp;возвращает макет", "partner.svc.1": "Получает бриф «в&nbsp;финальной упаковке»", "partner.svc.2": "Спрашивает «как», не «зачем»", "partner.svc.3": "Решает то, что ему дали", "partner.svc.4": "Стоит на&nbsp;конце пайплайна", "partner.prt.tag": "Партнёр", "partner.prt.title": "Влияет на&nbsp;решение<br>от&nbsp;идеи до&nbsp;запуска", "partner.prt.1": "Влияет на&nbsp;постановку задачи", "partner.prt.2": "Идёт к&nbsp;маркетингу, продукту, владельцу", "partner.prt.3": "Меняет «что делаем», а&nbsp;не&nbsp;только «как»", "partner.prt.4": "Стоит в&nbsp;начале пайплайна", "partner.final": "Дизайн&nbsp;— соавтор бизнеса.<br>Голос за&nbsp;столом,<br>где принимают решения.", "pr.kicker": "Принципы", "pr.title": "Во&nbsp;что я&nbsp;верю.", "pr.sub": "Четыре утверждения, на&nbsp;которых стоит всё остальное.", "pr.1.t": "Форма не&nbsp;спасает<br><em>слабую мысль</em>", "pr.1.d": "Сначала задача, контекст и&nbsp;решение. Потом визуальный язык, который делает это точным и&nbsp;видимым.", "pr.2.t": "Система работает<br><em>без автора</em>", "pr.2.d": "Правила, компоненты и&nbsp;логика должны выдерживать новые задачи, новых людей и&nbsp;новые каналы.", "pr.3.t": "Красиво&nbsp;— это не&nbsp;цель.<br><em>Цель&nbsp;— чтобы работало</em>", "pr.3.d": "Дизайн должен помогать доверию, скорости выбора, конверсии, узнаваемости и&nbsp;росту системы.", "pr.4.t": "Команда понимает не&nbsp;только<br>что, но&nbsp;и&nbsp;<em>почему</em>", "pr.4.d": "Команда должна понимать критерии, язык, ограничения и&nbsp;причину каждого решения.", "aud.kicker": "Аудитория", "aud.title": "Это люди, а&nbsp;не&nbsp;цифры.", "aud.sub": "У&nbsp;аналитики нет настроения. У&nbsp;человека — есть.", "aud.lead": "Человек чувствует раньше, чем&nbsp;читает.<br>Если первое ощущение слабое, функциям<br>приходится заново доказывать <em>доверие</em>.", "aud.1.n": "Первое впечатление", "aud.1.d": "Что человек чувствует до&nbsp;слов и&nbsp;функций. Это решают типографика, цвет, ритм и&nbsp;плотность.", "aud.2.n": "Удобство в&nbsp;моменте", "aud.2.d": "Человек не&nbsp;смотрит на&nbsp;хороший дизайн&nbsp;— он&nbsp;его ощущает.", "aud.3.n": "Что расскажет другому", "aud.3.d": "Что человек запомнит и&nbsp;сможет пересказать. Здесь делается узнаваемость бренда.", "aud.1.note": "Решает за&nbsp;секунды.", "aud.2.note": "Не&nbsp;заметно&nbsp;—<br>значит работает.", "aud.3.note": "Узнаваемость<br>и&nbsp;доверие.", "br.kicker": "Бренд-стратегия", "br.title": "Как складывается бренд.", "br.sub": "Бренд складывается не&nbsp;из&nbsp;логотипа. Он&nbsp;складывается из&nbsp;повторяемых решений: как звучим, как выглядим,<br>как двигаемся и&nbsp;как держим качество в&nbsp;каждом канале.", "br.1.n": "Контекст", "br.1.d": "Рынок, конкуренты, аудитория, цели бизнеса. Что знаем точно, а&nbsp;что только предполагаем.", "br.2.n": "Позиция", "br.2.d": "Для кого мы, против кого, и&nbsp;о&nbsp;чём мы&nbsp;принципиально молчим. Без второго первое не&nbsp;работает.", "br.3.n": "Голос", "br.3.d": "Как звучит бренд в&nbsp;письме, в&nbsp;баннере, в&nbsp;техподдержке. Тон, который узнают.", "br.4.n": "Визуальный язык", "br.4.d": "Типографика, цвет, образ, motion, фотостиль. Не&nbsp;«логотип и&nbsp;палитра», а&nbsp;целая грамматика.", "br.5.n": "Система", "br.5.d": "Как айдентика разворачивается на&nbsp;сайт, соцсети, продукт, презентации, наружку.", "br.6.n": "Запуск", "br.6.d": "Замеры, итерации, доля голоса, brand recall.<br>Бренд живой&nbsp;— он&nbsp;меняется.", "bmp.kicker": "Что стоит за&nbsp;визуалом", "bmp.title": "Дизайн — это<br>верхушка системы.", "bmp.sub": "То, что видят пользователи, — финальная форма.<br>Всё остальное — то, на&nbsp;чём она держится.", "bmp.s1.label": "Стратегия, процессы, команда&nbsp;— то, что делает визуал возможным", "bmp.s2.label": "Визуал&nbsp;— финальная форма того, что было сделано до", "bmp.caption": "31%&nbsp;— это то, что видит человек.<br>69%&nbsp;— то, что делает эту форму точной.", "bmp.c1.lbl": "Стратегия", "bmp.c1.t": "Что и&nbsp;зачем.", "bmp.c1.l1": "Позиционирование", "bmp.c1.l2": "Tone of voice", "bmp.c1.l3": "Цели и&nbsp;горизонты", "bmp.c1.l4": "Карта аудитории", "bmp.c2.lbl": "Процессы", "bmp.c2.t": "Как.", "bmp.c2.l1": "Ритуалы команды", "bmp.c2.l2": "Контракт с&nbsp;инженерией", "bmp.c2.l3": "Контроль качества", "bmp.c2.l4": "Скорость production", "bmp.c3.lbl": "Система", "bmp.c3.t": "На&nbsp;чём держится.", "bmp.c3.l1": "Токены и&nbsp;компоненты", "bmp.c3.l2": "Гайды и&nbsp;правила", "bmp.c3.l3": "Метрика adoption", "bmp.c3.l4": "Готовность к&nbsp;масштабу", "ev.kicker": "Оценка", "ev.title": "Как оцениваю работу.", "ev.sub": "Четыре уровня. Решение проходит проверку<br>только если работает на&nbsp;всех четырёх.", "ev.1.ln": "Уровень 1", "ev.1.t": "Логика", "ev.1.d": "Пользователь понимает: куда нажать, что произойдёт, зачем это нужно. Если требует объяснения — решение слабое.", "ev.1.q": "Понял?", "ev.2.ln": "Уровень 2", "ev.2.t": "Форма", "ev.2.d": "Иерархия, контраст, ритм, типографика, баланс. Здесь живёт ремесло — и&nbsp;здесь работает экспрессия.", "ev.2.q": "Сделано?", "ev.3.ln": "Уровень 3", "ev.3.t": "Система", "ev.3.d": "Можно ли&nbsp;развернуть на&nbsp;десять каналов? Выдержит ли&nbsp;новые сценарии? Насколько решение едино с&nbsp;брендом?", "ev.3.q": "Выдержит?", "ev.4.ln": "Уровень 4", "ev.4.t": "Бизнес", "ev.4.d": "Помогает ли&nbsp;это бизнесу? Конверсии, CTR, retention, узнаваемость, скорость production, восприятие.", "ev.4.q": "Сработало?", "tm.kicker": "Команда", "tm.tag1": "Подход", "tm.tag2": "В&nbsp;работе", "tm.tag3": "Принцип", "tm.title": "Как работаю с&nbsp;командой.", "tm.lead": "Я веду команду&nbsp;—<br>и остаюсь <em>дизайнером</em>.", "tm.sub1": "Остаюсь внутри работы: смотрю макеты, собираю систему, спорю за&nbsp;решения,<br>помогаю команде расти и&nbsp;держу связь с&nbsp;бизнесом.", "tm.sub2": "Команда, которая понимает принципы, не&nbsp;ждёт<br><em>согласований</em> на&nbsp;каждый шаг.", "ts.kicker": "Ритм", "ts.title": "Ритм и менторство.", "ts.sub": "Регулярность — невидимый каркас, на&nbsp;котором держится качество.", "ts.b1.lbl": "Ритуалы", "ts.b1.1n": "Короткая утренняя сверка", "ts.b1.1d": "Что в&nbsp;работе, что блокирует, где нужна помощь.", "ts.b1.2n": "Недельный обзор", "ts.b1.2d": "Приоритеты, риски и&nbsp;статус по&nbsp;ключевым задачам.", "ts.b1.3n": "Разбор работ", "ts.b1.3d": "Командное ревью: учимся видеть сильное и&nbsp;слабое.", "ts.b1.4n": "Ретроспектива", "ts.b1.4d": "Меняем процессы, чтобы ошибки не&nbsp;стали привычкой.", "ts.b2.lbl": "Обучение", "ts.b2.1n": "Лекции", "ts.b2.1d": "Темы выбирает команда.", "ts.b2.2n": "Домашние задания", "ts.b2.2d": "Практика на&nbsp;конкретный навык. Не&nbsp;для галочки.", "ts.b2.3n": "Индивидуальное ревью", "ts.b2.3d": "Один на&nbsp;один: что сильно, что слабо, что менять.", "ts.b2.4n": "Открытые показы", "ts.b2.4d": "Дизайн перестаёт быть «чёрным ящиком».", "ts.b3.lbl": "Менторство", "ts.b3.1n": "1:1 каждую неделю", "ts.b3.1d": "Не&nbsp;статус-апдейт, а&nbsp;контекст и&nbsp;точки роста.", "ts.b3.2n": "Точечный фидбек", "ts.b3.2d": "На&nbsp;работу, не&nbsp;на&nbsp;человека.", "ts.b3.3n": "Сильные стороны → задачи", "ts.b3.3d": "Развиваю там, где уже сильное.", "ts.b3.4n": "Прозрачные критерии", "ts.b3.4d": "Дизайнер знает, что нужно для следующего грейда.", "ts.b4.lbl": "Путь от&nbsp;Junior до&nbsp;Lead", "ts.b4.1n": "Junior — старт", "ts.b4.1d": "Гайды, наставник и&nbsp;короткие задачи с&nbsp;понятным критерием качества.", "ts.b4.2n": "Middle — автономия", "ts.b4.2d": "Самостоятельные задачи, защита решений и&nbsp;первые зоны ответственности.", "ts.b4.3n": "Senior — влияние", "ts.b4.3d": "Стандарты, ревью, влияние на&nbsp;продукт и&nbsp;дизайн от&nbsp;цели бизнеса.", "ts.b4.4n": "Lead — стратегия", "ts.b4.4d": "Кросс-функция, метрики, процессы и&nbsp;культура принятия решений.", "ds.kicker": "Дизайн-системы", "ds.title": "Не&nbsp;библиотека. Язык.", "ds.sub": "Дизайн-система&nbsp;— это не&nbsp;библиотека компонентов. Это способ не&nbsp;пересобирать одно и&nbsp;то&nbsp;же&nbsp;каждый раз и&nbsp;держать качество без ручного контроля.", "ds.1.num": "Слой 01", "ds.1.n": "Основа", "ds.1.l1": "Цвет", "ds.1.l2": "Типографика", "ds.1.l3": "Отступы и&nbsp;сетка", "ds.1.l4": "Motion", "ds.1.l5": "Токены", "ds.1.note": "Источник правды. Меняется здесь&nbsp;— меняется везде.", "ds.2.num": "Слой 02", "ds.2.n": "Компоненты", "ds.2.l1": "Переиспользуемые", "ds.2.l2": "Предсказуемые", "ds.2.l3": "Состояния и&nbsp;анимация", "ds.2.l4": "Документированные", "ds.2.l5": "С&nbsp;учётом масштаба", "ds.2.note": "Разработка продолжает решение, а&nbsp;не&nbsp;пересобирает.", "ds.3.num": "Слой 03", "ds.3.n": "Управление", "ds.3.l1": "Кто принимает решения", "ds.3.l2": "Как обновляется", "ds.3.l3": "Roadmap системы", "ds.3.l4": "Как держится единый язык", "ds.3.l5": "Метрика — adoption", "ds.3.note": "Главная метрика — не «сколько компонентов», а&nbsp;какая доля экранов их использует.", "sv.kicker": "Работа", "sv.title": "Где я&nbsp;полезен.", "sv.sub": "Шесть зон ответственности&nbsp;— от&nbsp;смысла до&nbsp;реализации.", "sv.1.n": "Бренд и&nbsp;айдентика", "sv.1.d": "Бренд, который не&nbsp;распадается между сайтом, маркетингом и&nbsp;продуктом. Один голос, один язык.", "sv.2.n": "Веб и&nbsp;коммуникации", "sv.2.d": "Сайты, лендинги, кампании. Коммуникации, которые быстро объясняют ценность продукта.", "sv.3.n": "Дизайн-системы", "sv.3.d": "Система, которая ускоряет команду и&nbsp;держит качество. Один источник правды для дизайна и&nbsp;кода.", "sv.4.n": "Арт-дирекшн", "sv.4.d": "Держу визуальный уровень: бренд не&nbsp;распадается между сайтом, маркетингом, продуктом и&nbsp;презентациями.", "sv.5.n": "UI/UX супервизия", "sv.5.d": "Ревью интерфейсов и&nbsp;связка с&nbsp;разработкой: чтобы в&nbsp;коде сохранилось то, что задумано в&nbsp;дизайне.", "sv.6.n": "Команда и&nbsp;процессы", "sv.6.d": "Найм, онбординг, грейды, ритм. Команда, которая растёт без потери качества и&nbsp;не&nbsp;выгорает.", "sv.mark.q": "А&nbsp;что нужно вам?", "sv.mark.d": "Эти зоны редко работают по&nbsp;одной. Сильнее всего&nbsp;— когда складываются в&nbsp;систему.", "rs.kicker": "Результаты", "rs.title": "Что получает бизнес.", "rs.sub": "Конкретные эффекты, которые видно по&nbsp;работе команды и&nbsp;по&nbsp;тому, как продукт ощущается снаружи.", "rs.1.t": "Единый визуальный язык", "rs.1.d": "Все каналы&nbsp;— одним тоном, частью одной системы.", "rs.2.t": "Быстрее выход в&nbsp;production", "rs.2.d": "Меньше согласований, больше продуманных решений.", "rs.3.t": "Меньше хаоса в&nbsp;работе", "rs.3.d": "Маркетинг, продукт и&nbsp;разработка&nbsp;— в&nbsp;одну сторону.", "rs.5.t": "Бренд выглядит дороже", "rs.5.d": "Доверие появляется там, где бренд выглядит цельно.", "rs.8.t": "Дизайн&nbsp;— это не&nbsp;правки", "rs.8.d": "Когда есть критерии и&nbsp;логика, обсуждение перестаёт быть про&nbsp;вкус.", "rs.1.note": "BRAND", "rs.2.note": "SPEED", "rs.3.note": "FOCUS", "rs.5.note": "TRUST", "rs.8.note": "CRITERIA", "rs.quote": "Дизайн становится частью бизнес-системы.<br>Не&nbsp;отдельной функцией, не&nbsp;этапом, не&nbsp;<em>надстройкой</em>.", "co.kicker": "Опыт", "co.title": "Где работал и&nbsp;над чем.", "co.sub": "Три места работы за&nbsp;12+ лет. От&nbsp;федеральных корпораций до&nbsp;глобального финтеха в&nbsp;ЮВА.", "co.1.role": "Head of Design", "co.1.desc": "Глобальный необанк, штаб-квартира в&nbsp;Сингапуре. Пересобрал команду с&nbsp;<span class=\"num\">2</span> до&nbsp;<span class=\"num\">10+</span>, построил две дизайн-системы и&nbsp;<span class=\"num\">15+</span> бренд-айдентик.", "co.1.aw": "Best New Fintech APAC 2024 · The Next 100 Global Companies", "co.2.role": "Lead Designer", "co.2.desc": "Web3-экосистема: MetaFi-криптобанк, <span class=\"num\">750K+</span> пользователей в&nbsp;<span class=\"num\">170+</span> странах, и&nbsp;Chobies NTO. Ребрендинг Crypterium&nbsp;→ Choise.com без потери аудитории.", "co.2.aw": "CHO-токен: ATH $1,38<br>TOP-500 CoinMarketCap", "co.3.role": "Арт-директор", "co.3.desc": "Московская enterprise-студия. <span class=\"num\">200+</span> проектов для федеральных брендов, аудитория <span class=\"num\">10M+</span> в&nbsp;день. Команда выросла с&nbsp;5 до&nbsp;50+ человек.", "co.3.aw": "Tagline Awards<br>Удержание клиентов&nbsp;— 70%", "co.marquee.lbl": "Бренды, с&nbsp;которыми работал", "cta.eyebrow": "Если зацепил подход", "cta.title": "Давайте <em>поговорим</em>.", "cta.lead": "Не&nbsp;обязательно о&nbsp;работе. Для начала можно просто познакомиться. Без сложных формулировок и&nbsp;лишнего пафоса. Остальное потом.", "cta.btn.tg": "Telegram", "cta.btn.em": "Email", "cta.btn.pf": "Портфолио", "cta.m.1.l": "Автор", "cta.m.1.v": "Автор&nbsp;· Сергей Лукин", "cta.m.2.l": "Telegram", "cta.m.3.l": "Email", "cta.m.4.l": "Портфолио", "ft.copy": "© 2026 Сергей Лукин", "ft.tag": "Дизайн-манифест", "ft.top": "Наверх <span class=\"arr\">↑</span>"}, "en": {"whisper.intro": "Design is for people.<br>Not for portfolios.", "whisper.numbers": "Numbers don't lie.<br>But they don't tell the whole story.", "whisper.pain": "\"Just design it\"&nbsp;—<br>the start of a weak project.", "whisper.partner": "The longest argument<br>of my career.", "whisper.pr": "Every principle came<br>from a mistake.", "whisper.aud": "It's not pictures<br>that create the impression.<br>It's design.", "whisper.br": "I used to think<br>a brand was a logo.", "whisper.bmp": "The work happens<br>before the first pixel.", "whisper.ev": "Work is done<br>when it works<br>in reality.", "whisper.tm": "Teams break<br>from unclarity,<br>not from load.", "whisper.ts": "A good team<br>takes longer to build<br>than a good interface.", "whisper.ds": "Without a system,<br>quality is a mood.", "whisper.sv": "What doesn't fit<br>in a portfolio.", "whisper.rs": "Strong design<br>holds up in reality.", "whisper.co": "Twelve years<br>in three chapters.", "meta.title": "Manifesto · Sergey Lukin", "meta.description": "A design manifesto by Sergey Lukin, Head of Design. On design across brand, marketing and product — and the team that holds it together.", "skip": "Skip to content", "nav.brand": "Sergey Lukin <b>—</b> Head of Design", "nav.meta": "Manifesto · 2026", "hero.eyebrow": "Design manifesto", "hero.issue": "Issue 01 · 2026", "hero.title": "How I build<br><em>design.</em>", "hero.sub": "Brand&nbsp;· Marketing&nbsp;· Web&nbsp;· Product<br>And the team that holds it together.", "hero.author.l": "Author", "hero.author.v": "Sergey Lukin<br>Head of Design / Art Director", "hero.today.l": "Recognition", "hero.today.v": "Best New Fintech APAC<br>Tagline Awards", "hero.contact.l": "Contact", "intro.eyebrow": "00 · About", "intro.kicker": "Beginning", "intro.stamp": "12+ years · 3 countries · 3 companies", "intro.title": "Twelve years in design — and less and less about layouts.", "intro.p1": "I've moved from a graphic designer to <strong>Head of Design</strong> — from a federal-scale <strong>enterprise</strong> studio to a global fintech in Southeast Asia.", "intro.p2": "My territory is brand, marketing, web and product communication. I pull them into one system so the company sounds whole across every channel.", "numbers.kicker": "By the numbers", "numbers.title": "By the numbers.", "numbers.right": "Not everything in design is measurable. But scale gives the context: 12+ years, different teams, products and brands.", "numbers.l.1": "Years<br>in design", "numbers.l.2": "Products<br>shipped", "numbers.l.3": "Brands<br>&amp; identities", "numbers.l.4": "Design systems<br>shipped", "numbers.l.5": "Roles at<br>Head-of-Design level", "numbers.l.6": "Designers<br>led", "pain.kicker": "Symptoms", "pain.title": "Sound familiar?", "pain.sub": "The signs that design has<br>stopped working for the business.", "pain.1": "Marketing, product and engineering pull in different directions.", "pain.2": "Every launch is built from scratch — and every one takes just as long.", "pain.3": "The team is busy, but the system gets no stronger.", "pain.4": "The brand drifts across channels. The look depends on whoever picked it up.", "pain.5": "Leadership is buried in review rounds. There's less and less room for strategy.", "pain.1.note": "Blurs focus.<br>Slows launches.", "pain.2.note": "Effort doesn't become speed.", "pain.3.note": "Knowledge doesn't become a system.", "pain.4.note": "Recognition drops, trust fades.", "pain.5.note": "Strategy keeps slipping.", "pain.quote": "Chaos rarely looks like chaos.<br>More often, it looks like<br>a temporary fix that quietly<br>stayed forever.", "pain.foot": "There's no single button<br>for this. No quick mockup, either.", "partner.kicker": "Approach", "partner.title": "A co-author, not a contractor.", "partner.sub": "Design enters the task before the brief is written.<br>Otherwise it fixes symptoms, not the problem.", "partner.svc.tag": "Service", "partner.svc.title": "Takes the brief,<br>returns the mockup", "partner.svc.1": "Gets the brief already framed", "partner.svc.2": "Asks how, not why", "partner.svc.3": "Solves whatever lands on the desk", "partner.svc.4": "Sits at the end of the pipeline", "partner.prt.tag": "Partner", "partner.prt.title": "Shapes the decision<br>from idea to launch", "partner.prt.1": "Helps frame the brief itself", "partner.prt.2": "Talks directly to marketing, product, leadership", "partner.prt.3": "Changes the what, not just the how", "partner.prt.4": "Sits at the start of the pipeline", "partner.final": "Design is a co-author<br>of the business. A voice<br>at the table where<br>decisions are made.", "pr.kicker": "Principles", "pr.title": "What I stand on.", "pr.sub": "Four statements that hold up the rest.", "pr.1.t": "Form doesn't save<br><em>a weak idea</em>", "pr.1.d": "The problem, context and answer come first. The visual language comes after — to make it precise and visible.", "pr.2.t": "A system works<br><em>without its author</em>", "pr.2.d": "Rules, components and logic should hold up under new briefs, new people and new channels.", "pr.3.t": "Beautiful isn't the goal.<br><em>The goal is that it works</em>", "pr.3.d": "Design has to earn trust, speed up decisions, lift conversion, build recognition and grow the system itself.", "pr.4.t": "The team understands not just what,<br>but <em>why</em>", "pr.4.d": "The team has to understand the criteria, the language, the constraints — and why each decision was made.", "aud.kicker": "Audience", "aud.title": "People, not numbers.", "aud.sub": "Analytics has no mood. A person does.", "aud.lead": "Feeling comes before reading.<br>If the first impression is weak,<br>every feature has to earn <em>trust</em><br>back on its own.", "aud.1.n": "First impression", "aud.1.d": "What someone feels before any words or features. Carried by type, colour, rhythm and density.", "aud.2.n": "Ease in the moment", "aud.2.d": "A person doesn't look at good design — they feel it.", "aud.3.n": "What they'll tell someone else", "aud.3.d": "What stays with a person and gets retold. This is where brand recognition is built.", "aud.1.note": "Decides in seconds.", "aud.2.note": "Unseen — that means it works.", "aud.3.note": "Recognition and trust.", "br.kicker": "Brand strategy", "br.title": "How a brand is built.", "br.sub": "A brand isn't made from a logo. It's made from repeated decisions: how we sound, how we look, how we move and how we hold the bar across every channel.", "br.1.n": "Context", "br.1.d": "Market, competitors, audience, business goals. What we know — and what we're only guessing.", "br.2.n": "Position", "br.2.d": "Who we're for, who we're against, and what we deliberately stay silent on. Without the second, the first doesn't work.", "br.3.n": "Voice", "br.3.d": "How the brand reads in an email, on a banner, in support. The tone people recognise.", "br.4.n": "Visual language", "br.4.d": "Typography, colour, imagery, motion, photography. Not just a logo and palette — a whole grammar.", "br.5.n": "System", "br.5.d": "How the identity scales into web, social, product, decks, OOH.", "br.6.n": "Launch", "br.6.d": "Measurement, iteration, share of voice, brand recall. A brand is alive — it shifts.", "bmp.kicker": "Structure", "bmp.title": "Design is the<br>tip of a system.", "bmp.sub": "What users see is the final form. Everything else is what holds it up.", "bmp.s1.label": "Strategy, process, team — what makes the visual possible", "bmp.s2.label": "Visual — the final form of everything done before it", "bmp.caption": "31% is what people see.<br>69% is what makes that form precise.", "bmp.c1.lbl": "Strategy", "bmp.c1.t": "What and why.", "bmp.c1.l1": "Positioning", "bmp.c1.l2": "Tone of voice", "bmp.c1.l3": "Goals and horizons", "bmp.c1.l4": "Audience map", "bmp.c2.lbl": "Process", "bmp.c2.t": "How.", "bmp.c2.l1": "Team rituals", "bmp.c2.l2": "Contract with engineering", "bmp.c2.l3": "Quality control", "bmp.c2.l4": "Production speed", "bmp.c3.lbl": "System", "bmp.c3.t": "What it stands on.", "bmp.c3.l1": "Tokens and components", "bmp.c3.l2": "Guides and rules", "bmp.c3.l3": "Adoption metric", "bmp.c3.l4": "Readiness to scale", "ev.kicker": "Evaluation", "ev.title": "How I judge the work.", "ev.sub": "Four levels. A solution only passes<br>if it works on all four.", "ev.1.ln": "Level 1", "ev.1.t": "Logic", "ev.1.d": "The user gets it: where to tap, what happens, why it matters. If it needs explaining, the solution is weak.", "ev.1.q": "Got it?", "ev.2.ln": "Level 2", "ev.2.t": "Form", "ev.2.d": "Hierarchy, contrast, rhythm, typography, balance. This is where craft lives — and where expression earns its place.", "ev.2.q": "Made?", "ev.3.ln": "Level 3", "ev.3.t": "System", "ev.3.d": "Will it scale to ten channels? Hold up under new scenarios? Stay aligned with the brand?", "ev.3.q": "Holds?", "ev.4.ln": "Level 4", "ev.4.t": "Business", "ev.4.d": "Does it help the business? Conversion, CTR, retention, recognition, production speed, perception.", "ev.4.q": "Worked?", "tm.kicker": "Team", "tm.tag1": "Подход", "tm.tag2": "В работе", "tm.tag3": "Принцип", "tm.title": "Working with the team.", "tm.lead": "I lead the team —<br>and I'm still a <em>designer</em>.", "tm.sub1": "I stay inside the work: reviewing files, building the system, fighting for decisions,<br>helping the team grow, staying close to the business.", "tm.sub2": "A team that understands the principles doesn't wait<br>for <em>sign-off</em> on every step.", "ts.kicker": "Rhythm", "ts.title": "Rhythm and mentorship.", "ts.sub": "Rhythm is the invisible scaffolding of quality.", "ts.b1.lbl": "Rituals", "ts.b1.1n": "Short morning sync", "ts.b1.1d": "What's moving, what's blocked, where help is needed.", "ts.b1.2n": "Weekly review", "ts.b1.2d": "Priorities, risks and status on the key tasks.", "ts.b1.3n": "Work review", "ts.b1.3d": "Team review: learning to see what's strong and what's weak.", "ts.b1.4n": "Retrospective", "ts.b1.4d": "We change the process so mistakes don't become habits.", "ts.b2.lbl": "Learning", "ts.b2.1n": "Talks", "ts.b2.1d": "The team picks the topics.", "ts.b2.2n": "Assignments", "ts.b2.2d": "Practice aimed at one specific skill. Not box-ticking.", "ts.b2.3n": "One-to-one review", "ts.b2.3d": "One on one: what's strong, what's weak, what to change.", "ts.b2.4n": "Open critiques", "ts.b2.4d": "Design stops being a black box.", "ts.b3.lbl": "Mentorship", "ts.b3.1n": "1:1 every week", "ts.b3.1d": "Not a status update — context and growth points.", "ts.b3.2n": "Targeted feedback", "ts.b3.2d": "On the work, not on the person.", "ts.b3.3n": "Strengths → tasks", "ts.b3.3d": "I grow people where they're already strong.", "ts.b3.4n": "Transparent criteria", "ts.b3.4d": "A designer knows exactly what the next grade asks for.", "ts.b4.lbl": "From Junior to Lead", "ts.b4.1n": "Junior — start", "ts.b4.1d": "Guides, a mentor and short tasks with a clear quality bar.", "ts.b4.2n": "Middle — autonomy", "ts.b4.2d": "Independent work, defending decisions, first areas of ownership.", "ts.b4.3n": "Senior — influence", "ts.b4.3d": "Standards, reviews, influence over the product and design driven by business goals.", "ts.b4.4n": "Lead — strategy", "ts.b4.4d": "Cross-functional work, metrics, process and a decision-making culture.", "ds.kicker": "Design systems", "ds.title": "Not a library. A language.", "ds.sub": "A design system isn't a library of components. It's a way to stop rebuilding the same thing every time — and to hold quality without manual control.", "ds.1.num": "Layer 01", "ds.1.n": "Foundation", "ds.1.l1": "Colour", "ds.1.l2": "Typography", "ds.1.l3": "Spacing and grid", "ds.1.l4": "Motion", "ds.1.l5": "Tokens", "ds.1.note": "The source of truth. Change here — changes everywhere.", "ds.2.num": "Layer 02", "ds.2.n": "Components", "ds.2.l1": "Reusable", "ds.2.l2": "Predictable", "ds.2.l3": "States and animation", "ds.2.l4": "Documented", "ds.2.l5": "Built for scale", "ds.2.note": "Engineering continues the solution instead of rebuilding it.", "ds.3.num": "Layer 03", "ds.3.n": "Governance", "ds.3.l1": "Who decides", "ds.3.l2": "How updates ship", "ds.3.l3": "System roadmap", "ds.3.l4": "How one language is held", "ds.3.l5": "Adoption as the metric", "ds.3.note": "The metric is share of screens using components.", "sv.kicker": "Work", "sv.title": "Where I help.", "sv.sub": "Six areas of responsibility — from meaning to execution.", "sv.1.n": "Brand and identity", "sv.1.d": "A brand that doesn't fall apart between web, marketing and product. One voice, one language.", "sv.2.n": "Web and communication", "sv.2.d": "Sites, landing pages, campaigns. Communication that explains a product's value fast.", "sv.3.n": "Design systems", "sv.3.d": "A system that speeds the team up and holds quality. One source of truth for design and code.", "sv.4.n": "Art direction", "sv.4.d": "Maintaining the visual bar: the brand stays whole across web, marketing, product and decks.", "sv.5.n": "UI/UX supervision", "sv.5.d": "Interface review and a tight loop with engineering — so what was designed makes it into the code.", "sv.6.n": "Team and process", "sv.6.d": "Hiring, onboarding, leveling, rhythm. A team that grows without losing quality — and without burning out.", "sv.mark.q": "What do you need?", "sv.mark.d": "These areas rarely work alone. They're strongest when they fit into one system.", "rs.kicker": "Results", "rs.title": "What the business gets.", "rs.sub": "Concrete shifts — visible in how the team works and in how the product feels from the outside.", "rs.1.t": "One visual language", "rs.1.d": "Every channel in one tone, part of one system.", "rs.2.t": "Faster to production", "rs.2.d": "Fewer approvals, more considered answers.", "rs.3.t": "Less day-to-day chaos", "rs.3.d": "Marketing, product and engineering moving the same way.", "rs.5.t": "The brand looks more premium", "rs.5.d": "Trust shows up where the brand looks whole.", "rs.8.t": "Design isn't a comment thread", "rs.8.d": "With criteria and logic in place, discussion stops being about taste.", "rs.1.note": "BRAND", "rs.2.note": "SPEED", "rs.3.note": "FOCUS", "rs.5.note": "TRUST", "rs.8.note": "CRITERIA", "rs.quote": "Design becomes part of the business system.<br>Not a separate function, not a stage, not an <em>add-on</em>.", "co.kicker": "Experience", "co.title": "Where I've worked, what I've built.", "co.sub": "Three companies over 12+ years. From large federal-scale corporates in Russia to a global fintech in Southeast Asia.", "co.1.role": "Head of Design", "co.1.desc": "Global neobank, headquartered in Singapore. Rebuilt the team from <span class=\"num\">2</span> to <span class=\"num\">10+</span>, shipped two design systems and <span class=\"num\">15+</span> brand identities.", "co.1.aw": "Best New Fintech APAC 2024 · The Next 100 Global Companies", "co.2.role": "Lead Designer", "co.2.desc": "Web3 ecosystem: a MetaFi crypto-bank with <span class=\"num\">750K+</span> users across <span class=\"num\">170+</span> countries, plus Chobies NTO. Rebranded Crypterium → Choise.com without losing the audience.", "co.2.aw": "CHO token: ATH $1.38<br>TOP-500 CoinMarketCap", "co.3.role": "Art Director", "co.3.desc": "Moscow enterprise studio. <span class=\"num\">200+</span> projects for federal-scale brands, reaching <span class=\"num\">10M+</span> people daily. Grew the studio from 5–7 to 50+ specialists.", "co.3.aw": "Tagline Awards<br>70% client retention", "co.marquee.lbl": "Brands I've worked with", "cta.eyebrow": "If the approach lands", "cta.title": "Let's <em>talk</em>.", "cta.lead": "Not necessarily about work. We can just say hello first. No heavy framing, no fanfare. The rest comes later.", "cta.btn.tg": "Telegram", "cta.btn.em": "Email", "cta.btn.pf": "Portfolio", "cta.m.1.l": "Author", "cta.m.1.v": "Author&nbsp;· Sergey Lukin", "cta.m.2.l": "Telegram", "cta.m.3.l": "Email", "cta.m.4.l": "Portfolio", "ft.copy": "© 2026 Sergey Lukin", "ft.tag": "Design manifesto", "ft.top": "Top <span class=\"arr\">↑</span>"}}</script>
+<script id="i18n-data" type="application/json">{"ru": {"whisper.intro": "Дизайн&nbsp;— для людей.<br>Не&nbsp;для портфолио.", "whisper.numbers": "Цифры не&nbsp;врут.<br>Но&nbsp;и&nbsp;не&nbsp;всё говорят.", "whisper.pain": "«Просто нарисуйте»&nbsp;—<br>начало слабого проекта.", "whisper.partner": "Самый долгий спор<br>моей карьеры.", "whisper.pr": "Каждый принцип&nbsp;—<br>следствие ошибки.", "whisper.aud": "Впечатление создают<br>не&nbsp;картинки. Дизайн.", "whisper.br": "Раньше думал:<br>бренд&nbsp;— это логотип.", "whisper.bmp": "Работа происходит<br>до&nbsp;первого пикселя.", "whisper.ev": "Работа закончена,<br>когда работает<br>в&nbsp;реальности.", "whisper.tm": "Команда ломается<br>от&nbsp;неясности,<br>не&nbsp;от&nbsp;нагрузки.", "whisper.ts": "Хорошая команда<br>строится дольше,<br>чем хороший интерфейс.", "whisper.ds": "Без системы качество&nbsp;—<br>это настроение.", "whisper.sv": "То, что не&nbsp;помещается<br>в&nbsp;портфолио.", "whisper.rs": "Сильный дизайн<br>выдерживает реальность.", "whisper.co": "Двенадцать лет<br>в&nbsp;трёх главах.", "meta.title": "Манифест · Сергей Лукин", "meta.description": "Манифест Сергея Лукина, Head of Design. О&nbsp;дизайне в&nbsp;бренде, маркетинге и&nbsp;продукте — и&nbsp;о&nbsp;команде вокруг этой работы.", "skip": "Перейти к&nbsp;содержанию", "nav.brand": "Сергей Лукин <b>—</b> Head of Design", "nav.meta": "Манифест · 2026", "nav.tg": "Telegram", "nav.em": "Email", "nav.pf": "Портфолио", "hero.focus.l": "Фокус", "hero.focus.v": "Бренд&nbsp;· Маркетинг<br>Веб&nbsp;· Продукт", "hero.eyebrow": "Дизайн-манифест", "hero.issue": "№ 01 · 2026", "hero.title": "Как я&nbsp;строю<br><em>дизайн.</em>", "hero.title.static": "Как я&nbsp;строю", "hero.center": "Эстетика&nbsp;— это не&nbsp;украшение. Это короткий путь к&nbsp;доверию. Когда красиво&nbsp;— человек слушает. Когда нет&nbsp;— уходит, не&nbsp;дослушав.", "hero.sub": "Бренд&nbsp;· Маркетинг&nbsp;· Веб&nbsp;· Продукт<br>И&nbsp;команда, которая держит это вместе.", "hero.author.l": "Автор", "hero.author.v": "Сергей Лукин<br>Head of Design / Art Director", "hero.today.l": "Признание", "hero.today.v": "Best New Fintech APAC<br>Tagline Awards", "hero.contact.l": "Контакт", "intro.eyebrow": "00 · Кто я", "intro.kicker": "Начало", "intro.stamp": "12+ лет · 3 страны · 3 компании", "intro.title": "Двенадцать лет дизайна — и&nbsp;всё меньше про&nbsp;макеты.", "intro.p1": "Я&nbsp;прошёл путь от&nbsp;графического дизайнера до&nbsp;<strong>Head of Design</strong>&nbsp;— от&nbsp;федеральной <strong>enterprise</strong>-студии до&nbsp;глобального финтеха в&nbsp;Юго-Восточной Азии.", "intro.p2": "Моя зона&nbsp;— бренд, маркетинг, веб и&nbsp;продуктовая коммуникация. Собираю их&nbsp;в&nbsp;единую систему, чтобы компания звучала цельно во&nbsp;всех каналах.", "numbers.kicker": "В&nbsp;цифрах", "numbers.title": "В&nbsp;цифрах и фактах.", "numbers.right": "Не&nbsp;всё в&nbsp;дизайне измеряется цифрами. Но&nbsp;масштаб помогает понять контекст: 12+ лет, разные команды, продукты и&nbsp;бренды.", "numbers.l.1": "Лет<br>в&nbsp;дизайне", "numbers.l.2": "Запущенных<br>продуктов", "numbers.l.3": "Брендов<br>и&nbsp;айдентик", "numbers.l.4": "Запущенных<br>систем", "numbers.l.5": "Компании<br>на&nbsp;уровне Head", "numbers.l.6": "Дизайнеров<br>в&nbsp;командах", "pain.kicker": "Симптомы", "pain.title": "Знакомая ситуация?", "pain.sub": "Симптомы, по&nbsp;которым видно:<br>дизайн перестал работать на&nbsp;бизнес.", "pain.1": "Маркетинг, продукт и&nbsp;разработка работают в&nbsp;разные стороны.", "pain.2": "Каждый запуск собирают с&nbsp;нуля — и&nbsp;каждый занимает столько&nbsp;же.", "pain.3": "Команда занята, но&nbsp;система не&nbsp;становится сильнее.", "pain.4": "Бренд теряется в&nbsp;каналах. Стиль зависит от&nbsp;исполнителя.", "pain.5": "Руководитель тонет в&nbsp;правках. Стратегии остаётся всё меньше.", "pain.1.note": "Размывает фокус.<br>Замедляет запуск.", "pain.2.note": "Темп не&nbsp;превращается в&nbsp;скорость.", "pain.3.note": "Знание не&nbsp;превращается в&nbsp;систему.", "pain.4.note": "Узнаваемость падает, доверие&nbsp;тает.", "pain.5.note": "Стратегические решения откладываются.", "pain.quote": "Хаос редко выглядит как хаос.<br>Чаще&nbsp;— как временное решение,<br>которое осталось навсегда.", "pain.foot": "Это не&nbsp;лечится одной кнопкой.<br>И&nbsp;не&nbsp;парой макетов.", "partner.kicker": "Подход", "partner.title": "Соавтор, а&nbsp;не&nbsp;подрядчик.", "partner.sub": "Дизайн вступает в&nbsp;задачу до&nbsp;того, как написан бриф.<br>Иначе он&nbsp;уже исправляет, а&nbsp;не&nbsp;решает.", "partner.svc.tag": "Сервис", "partner.svc.title": "Получает задачу<br>и&nbsp;возвращает макет", "partner.svc.1": "Получает бриф «в&nbsp;финальной упаковке»", "partner.svc.2": "Спрашивает «как», не «зачем»", "partner.svc.3": "Решает то, что ему дали", "partner.svc.4": "Стоит на&nbsp;конце пайплайна", "partner.prt.tag": "Партнёр", "partner.prt.title": "Влияет на&nbsp;решение<br>от&nbsp;идеи до&nbsp;запуска", "partner.prt.1": "Влияет на&nbsp;постановку задачи", "partner.prt.2": "Идёт к&nbsp;маркетингу, продукту, владельцу", "partner.prt.3": "Меняет «что делаем», а&nbsp;не&nbsp;только «как»", "partner.prt.4": "Стоит в&nbsp;начале пайплайна", "partner.final": "Дизайн&nbsp;— соавтор бизнеса.<br>Голос за&nbsp;столом,<br>где принимают решения.", "pr.kicker": "Принципы", "pr.title": "Во&nbsp;что я&nbsp;верю.", "pr.sub": "Четыре утверждения, на&nbsp;которых стоит всё остальное.", "pr.1.t": "Форма не&nbsp;спасает<br><em>слабую мысль</em>", "pr.1.d": "Сначала задача, контекст и&nbsp;решение. Потом визуальный язык, который делает это точным и&nbsp;видимым.", "pr.2.t": "Система работает<br><em>без автора</em>", "pr.2.d": "Правила, компоненты и&nbsp;логика должны выдерживать новые задачи, новых людей и&nbsp;новые каналы.", "pr.3.t": "Красиво&nbsp;— это не&nbsp;цель.<br><em>Цель&nbsp;— чтобы работало</em>", "pr.3.d": "Дизайн должен помогать доверию, скорости выбора, конверсии, узнаваемости и&nbsp;росту системы.", "pr.4.t": "Команда понимает не&nbsp;только<br>что, но&nbsp;и&nbsp;<em>почему</em>", "pr.4.d": "Команда должна понимать критерии, язык, ограничения и&nbsp;причину каждого решения.", "aud.kicker": "Аудитория", "aud.title": "Это люди, а&nbsp;не&nbsp;цифры.", "aud.sub": "У&nbsp;аналитики нет настроения. У&nbsp;человека — есть.", "aud.lead": "Человек чувствует раньше, чем&nbsp;читает.<br>Если первое ощущение слабое, функциям<br>приходится заново доказывать <em>доверие</em>.", "aud.1.n": "Первое впечатление", "aud.1.d": "Что человек чувствует до&nbsp;слов и&nbsp;функций. Это решают типографика, цвет, ритм и&nbsp;плотность.", "aud.2.n": "Удобство в&nbsp;моменте", "aud.2.d": "Человек не&nbsp;смотрит на&nbsp;хороший дизайн&nbsp;— он&nbsp;его ощущает.", "aud.3.n": "Что расскажет другому", "aud.3.d": "Что человек запомнит и&nbsp;сможет пересказать. Здесь делается узнаваемость бренда.", "aud.1.note": "Решает за&nbsp;секунды.", "aud.2.note": "Не&nbsp;заметно&nbsp;—<br>значит работает.", "aud.3.note": "Узнаваемость<br>и&nbsp;доверие.", "br.kicker": "Бренд-стратегия", "br.title": "Как складывается бренд.", "br.sub": "Бренд складывается не&nbsp;из&nbsp;логотипа. Он&nbsp;складывается<br>из&nbsp;повторяемых решений: как звучим, как выглядим,<br>как двигаемся и&nbsp;как держим качество в&nbsp;каждом канале.", "br.1.n": "Контекст", "br.1.d": "Рынок, конкуренты, аудитория, цели бизнеса. Что знаем точно, а&nbsp;что только предполагаем.", "br.2.n": "Позиция", "br.2.d": "Для кого мы, против кого, и&nbsp;о&nbsp;чём мы&nbsp;принципиально молчим. Без второго первое не&nbsp;работает.", "br.3.n": "Голос", "br.3.d": "Как звучит бренд в&nbsp;письме, в&nbsp;баннере, в&nbsp;техподдержке. Тон, который узнают.", "br.4.n": "Визуальный язык", "br.4.d": "Типографика, цвет, образ, motion, фотостиль. Не&nbsp;«логотип и&nbsp;палитра», а&nbsp;целая грамматика.", "br.5.n": "Система", "br.5.d": "Как айдентика разворачивается на&nbsp;сайт, соцсети, продукт, презентации, наружку.", "br.6.n": "Запуск", "br.6.d": "Замеры, итерации, доля голоса, brand recall.<br>Бренд живой&nbsp;— он&nbsp;меняется.", "bmp.kicker": "Что стоит за&nbsp;визуалом", "bmp.title": "Дизайн — это<br>верхушка системы.", "bmp.sub": "То, что видят пользователи, — финальная форма.<br>Всё остальное — то, на&nbsp;чём она держится.", "bmp.s1.label": "Стратегия, процессы, команда&nbsp;— то, что делает визуал возможным", "bmp.s2.label": "Визуал&nbsp;— финальная форма того, что было сделано до", "bmp.caption": "31%&nbsp;— это то, что видит человек.<br>69%&nbsp;— то, что делает эту форму точной.", "bmp.c1.lbl": "Стратегия", "bmp.c1.t": "Что и&nbsp;зачем.", "bmp.c1.l1": "Позиционирование", "bmp.c1.l2": "Tone of voice", "bmp.c1.l3": "Цели и&nbsp;горизонты", "bmp.c1.l4": "Карта аудитории", "bmp.c2.lbl": "Процессы", "bmp.c2.t": "Как.", "bmp.c2.l1": "Ритуалы команды", "bmp.c2.l2": "Контракт с&nbsp;инженерией", "bmp.c2.l3": "Контроль качества", "bmp.c2.l4": "Скорость production", "bmp.c3.lbl": "Система", "bmp.c3.t": "На&nbsp;чём держится.", "bmp.c3.l1": "Токены и&nbsp;компоненты", "bmp.c3.l2": "Гайды и&nbsp;правила", "bmp.c3.l3": "Метрика adoption", "bmp.c3.l4": "Готовность к&nbsp;масштабу", "ev.kicker": "Оценка", "ev.title": "Как оцениваю работу.", "ev.sub": "Четыре уровня. Решение проходит проверку<br>только если работает на&nbsp;всех четырёх.", "ev.1.ln": "Уровень 1", "ev.1.t": "Логика", "ev.1.d": "Пользователь понимает: куда нажать, что произойдёт, зачем это нужно. Если требует объяснения — решение слабое.", "ev.1.q": "Понял?", "ev.2.ln": "Уровень 2", "ev.2.t": "Форма", "ev.2.d": "Иерархия, контраст, ритм, типографика, баланс. Здесь живёт ремесло — и&nbsp;здесь работает экспрессия.", "ev.2.q": "Сделано?", "ev.3.ln": "Уровень 3", "ev.3.t": "Система", "ev.3.d": "Можно ли&nbsp;развернуть на&nbsp;десять каналов? Выдержит ли&nbsp;новые сценарии? Насколько решение едино с&nbsp;брендом?", "ev.3.q": "Выдержит?", "ev.4.ln": "Уровень 4", "ev.4.t": "Бизнес", "ev.4.d": "Помогает ли&nbsp;это бизнесу? Конверсии, CTR, retention, узнаваемость, скорость production, восприятие.", "ev.4.q": "Сработало?", "tm.kicker": "Команда", "tm.tag1": "Подход", "tm.tag2": "В&nbsp;работе", "tm.tag3": "Принцип", "tm.title": "Как работаю с&nbsp;командой.", "tm.lead": "Я веду команду&nbsp;—<br>и остаюсь <em>дизайнером</em>.", "tm.sub1": "Остаюсь внутри работы: смотрю макеты, собираю систему,<br>спорю за&nbsp;решения, помогаю команде расти и&nbsp;держу связь с&nbsp;бизнесом.", "tm.sub2": "Команда, которая понимает принципы, не&nbsp;ждёт<br><em>согласований</em> на&nbsp;каждый шаг.", "ts.kicker": "Ритм", "ts.title": "Ритм и менторство.", "ts.sub": "Регулярность — невидимый каркас, на&nbsp;котором держится качество.", "ts.b1.lbl": "Ритуалы", "ts.b1.1n": "Короткая утренняя сверка", "ts.b1.1d": "Что в&nbsp;работе, что блокирует, где нужна помощь.", "ts.b1.2n": "Недельный обзор", "ts.b1.2d": "Приоритеты, риски и&nbsp;статус по&nbsp;ключевым задачам.", "ts.b1.3n": "Разбор работ", "ts.b1.3d": "Командное ревью: учимся видеть сильное и&nbsp;слабое.", "ts.b1.4n": "Ретроспектива", "ts.b1.4d": "Меняем процессы, чтобы ошибки не&nbsp;стали привычкой.", "ts.b2.lbl": "Обучение", "ts.b2.1n": "Лекции", "ts.b2.1d": "Темы выбирает команда.", "ts.b2.2n": "Домашние задания", "ts.b2.2d": "Практика на&nbsp;конкретный навык. Не&nbsp;для галочки.", "ts.b2.3n": "Индивидуальное ревью", "ts.b2.3d": "Один на&nbsp;один: что сильно, что слабо, что менять.", "ts.b2.4n": "Открытые показы", "ts.b2.4d": "Дизайн перестаёт быть «чёрным ящиком».", "ts.b3.lbl": "Менторство", "ts.b3.1n": "1:1 каждую неделю", "ts.b3.1d": "Не&nbsp;статус-апдейт, а&nbsp;контекст и&nbsp;точки роста.", "ts.b3.2n": "Точечный фидбек", "ts.b3.2d": "На&nbsp;работу, не&nbsp;на&nbsp;человека.", "ts.b3.3n": "Сильные стороны → задачи", "ts.b3.3d": "Развиваю там, где уже сильное.", "ts.b3.4n": "Прозрачные критерии", "ts.b3.4d": "Дизайнер знает, что нужно для следующего грейда.", "ts.b4.lbl": "Путь от&nbsp;Junior до&nbsp;Lead", "ts.b4.1n": "Junior — старт", "ts.b4.1d": "Гайды, наставник и&nbsp;короткие задачи с&nbsp;понятным критерием качества.", "ts.b4.2n": "Middle — автономия", "ts.b4.2d": "Самостоятельные задачи, защита решений и&nbsp;первые зоны ответственности.", "ts.b4.3n": "Senior — влияние", "ts.b4.3d": "Стандарты, ревью, влияние на&nbsp;продукт и&nbsp;дизайн от&nbsp;цели бизнеса.", "ts.b4.4n": "Lead — стратегия", "ts.b4.4d": "Кросс-функция, метрики, процессы и&nbsp;культура принятия решений.", "ds.kicker": "Дизайн-системы", "ds.title": "Не&nbsp;библиотека. Язык.", "ds.sub": "Дизайн-система&nbsp;— это не&nbsp;библиотека компонентов. Это способ<br>не&nbsp;пересобирать одно и&nbsp;то&nbsp;же&nbsp;каждый раз и&nbsp;держать качество<br>без ручного контроля.", "ds.1.num": "Слой 01", "ds.1.n": "Основа", "ds.1.l1": "Цвет", "ds.1.l2": "Типографика", "ds.1.l3": "Отступы и&nbsp;сетка", "ds.1.l4": "Motion", "ds.1.l5": "Токены", "ds.1.note": "Источник правды. Меняется здесь&nbsp;— меняется везде.", "ds.2.num": "Слой 02", "ds.2.n": "Компоненты", "ds.2.l1": "Переиспользуемые", "ds.2.l2": "Предсказуемые", "ds.2.l3": "Состояния и&nbsp;анимация", "ds.2.l4": "Документированные", "ds.2.l5": "С&nbsp;учётом масштаба", "ds.2.note": "Разработка продолжает решение, а&nbsp;не&nbsp;пересобирает.", "ds.3.num": "Слой 03", "ds.3.n": "Управление", "ds.3.l1": "Кто принимает решения", "ds.3.l2": "Как обновляется", "ds.3.l3": "Roadmap системы", "ds.3.l4": "Как держится единый язык", "ds.3.l5": "Метрика — adoption", "ds.3.note": "Главная метрика — не «сколько компонентов», а&nbsp;какая доля экранов их использует.", "sv.kicker": "Работа", "sv.title": "Где я&nbsp;полезен.", "sv.sub": "Шесть зон ответственности&nbsp;— от&nbsp;смысла до&nbsp;реализации.", "sv.1.n": "Бренд и&nbsp;айдентика", "sv.1.d": "Бренд, который не&nbsp;распадается между сайтом, маркетингом и&nbsp;продуктом. Один голос, один язык.", "sv.2.n": "Веб и&nbsp;коммуникации", "sv.2.d": "Сайты, лендинги, кампании. Коммуникации, которые быстро объясняют ценность продукта.", "sv.3.n": "Дизайн-системы", "sv.3.d": "Система, которая ускоряет команду и&nbsp;держит качество. Один источник правды для дизайна и&nbsp;кода.", "sv.4.n": "Арт-дирекшн", "sv.4.d": "Держу визуальный уровень: бренд не&nbsp;распадается между сайтом, маркетингом, продуктом и&nbsp;презентациями.", "sv.5.n": "UI/UX супервизия", "sv.5.d": "Ревью интерфейсов и&nbsp;связка с&nbsp;разработкой: чтобы в&nbsp;коде сохранилось то, что задумано в&nbsp;дизайне.", "sv.6.n": "Команда и&nbsp;процессы", "sv.6.d": "Найм, онбординг, грейды, ритм. Команда, которая растёт без потери качества и&nbsp;не&nbsp;выгорает.", "sv.mark.q": "А&nbsp;что нужно вам?", "sv.mark.d": "Эти зоны редко работают по&nbsp;одной. Сильнее всего&nbsp;— когда складываются в&nbsp;систему.", "rs.kicker": "Результаты", "rs.title": "Что получает бизнес.", "rs.sub": "Конкретные эффекты, которые видно по&nbsp;работе команды<br>и&nbsp;по&nbsp;тому, как продукт ощущается снаружи.", "rs.1.t": "Один бренд во&nbsp;всех касаниях", "rs.1.d": "Лендинг, продукт, реклама, презентация&nbsp;— части одной системы. Клиент видит зрелость, а&nbsp;не&nbsp;пять разных компаний.", "rs.2.t": "Релизы быстрее в&nbsp;разы", "rs.2.d": "Когда команда опирается на&nbsp;систему, дизайн перестаёт быть бутылочным горлом. То, что раньше шло месяц, выходит за&nbsp;неделю.", "rs.3.t": "Команды&nbsp;— в&nbsp;одну сторону", "rs.3.d": "Маркетинг, продукт, разработка опираются на&nbsp;одни принципы. Меньше политики&nbsp;— больше работы для рынка.", "rs.5.t": "Решения по&nbsp;критериям, а&nbsp;не по&nbsp;вкусу", "rs.5.d": "Дизайн перестаёт быть личным мнением. Спор переходит из&nbsp;«мне не&nbsp;нравится» в&nbsp;«это работает».", "rs.1.note": "BRAND", "rs.2.note": "SPEED", "rs.3.note": "FOCUS", "rs.5.note": "CRITERIA", "rs.quote": "Дизайн становится частью бизнес-системы.<br>Не&nbsp;отдельной функцией, не&nbsp;этапом, не&nbsp;<em>надстройкой</em>.", "co.kicker": "Опыт", "co.title": "Где работал и&nbsp;над чем.", "co.sub": "Три места работы за&nbsp;12+ лет. От&nbsp;федеральных<br>корпораций до&nbsp;глобального финтеха в&nbsp;ЮВА.", "co.1.role": "Head of Design", "co.1.desc": "Глобальный необанк, штаб-квартира в&nbsp;Сингапуре. Пересобрал команду с&nbsp;<span class=\"num\">2</span> до&nbsp;<span class=\"num\">10+</span>, построил две дизайн-системы и&nbsp;<span class=\"num\">15+</span> бренд-айдентик.", "co.1.aw": "Best New Fintech APAC 2024 · The Next 100 Global Companies", "co.2.role": "Lead Designer", "co.2.desc": "Web3-экосистема: MetaFi-криптобанк, <span class=\"num\">750K+</span> пользователей в&nbsp;<span class=\"num\">170+</span> странах, и&nbsp;Chobies NTO. Ребрендинг Crypterium&nbsp;→ Choise.com без потери аудитории.", "co.2.aw": "CHO-токен: ATH $1,38<br>TOP-500 CoinMarketCap", "co.3.role": "Арт-директор", "co.3.desc": "Московская enterprise-студия. <span class=\"num\">200+</span> проектов для федеральных брендов, аудитория <span class=\"num\">10M+</span> в&nbsp;день. Команда выросла с&nbsp;5 до&nbsp;50+ человек.", "co.3.aw": "Tagline Awards<br>Удержание клиентов&nbsp;— 70%", "co.marquee.lbl": "Бренды, с&nbsp;которыми работал", "cta.eyebrow": "Если зацепил подход", "cta.title": "Давайте <em>поговорим</em>.", "cta.lead": "Не&nbsp;обязательно о&nbsp;работе. Для начала можно просто познакомиться. Без сложных формулировок и&nbsp;лишнего пафоса. Остальное потом.", "cta.btn.tg": "Telegram", "cta.btn.em": "Email", "cta.btn.pf": "Портфолио", "cta.m.1.l": "Автор", "cta.m.1.v": "Автор&nbsp;· Сергей Лукин", "cta.m.2.l": "Telegram", "cta.m.3.l": "Email", "cta.m.4.l": "Портфолио", "ft.copy": "© 2026 Сергей Лукин", "ft.tag": "Дизайн-манифест", "ft.top": "Наверх <span class=\"arr\">↑</span>", "rs.4.note": "TRUST", "rs.4.t": "Бренд воспринимается дороже", "rs.4.d": "Когда касания согласованны, цена ощущается оправданной. Премиум&nbsp;— это не&nbsp;позолота, а&nbsp;порядок."}, "en": {"whisper.intro": "Design is for people.<br>Not for portfolios.", "whisper.numbers": "Numbers don't lie.<br>But they don't tell the whole story.", "whisper.pain": "\"Just design it\"&nbsp;—<br>the start of a weak project.", "whisper.partner": "The longest argument<br>of my career.", "whisper.pr": "Every principle came<br>from a mistake.", "whisper.aud": "It's not pictures<br>that create the impression.<br>It's design.", "whisper.br": "I used to think<br>a brand was a logo.", "whisper.bmp": "The work happens<br>before the first pixel.", "whisper.ev": "Work is done<br>when it works<br>in reality.", "whisper.tm": "Teams break<br>from unclarity,<br>not from load.", "whisper.ts": "A good team<br>takes longer to build<br>than a good interface.", "whisper.ds": "Without a system,<br>quality is a mood.", "whisper.sv": "What doesn't fit<br>in a portfolio.", "whisper.rs": "Strong design<br>holds up in reality.", "whisper.co": "Twelve years<br>in three chapters.", "meta.title": "Manifesto · Sergey Lukin", "meta.description": "A design manifesto by Sergey Lukin, Head of Design. On design across brand, marketing and product — and the team that holds it together.", "skip": "Skip to content", "nav.brand": "Sergey Lukin <b>—</b> Head of Design", "nav.meta": "Manifesto · 2026", "nav.tg": "Telegram", "nav.em": "Email", "nav.pf": "Portfolio", "hero.focus.l": "Focus", "hero.focus.v": "Brand&nbsp;· Marketing<br>Web&nbsp;· Product", "hero.eyebrow": "Design manifesto", "hero.issue": "Issue 01 · 2026", "hero.title": "How I build<br><em>design.</em>", "hero.title.static": "How I&nbsp;build", "hero.center": "Aesthetics aren't decoration. They're a&nbsp;shortcut to&nbsp;trust. When something looks right, people listen. When it&nbsp;doesn't, they're gone before you say a&nbsp;word.", "hero.sub": "Brand&nbsp;· Marketing&nbsp;· Web&nbsp;· Product<br>And the team that ties it together.", "hero.author.l": "Author", "hero.author.v": "Sergey Lukin<br>Head of Design / Art Director", "hero.today.l": "Recognition", "hero.today.v": "Best New Fintech APAC<br>Tagline Awards", "hero.contact.l": "Contact", "intro.eyebrow": "00 · About", "intro.kicker": "Beginning", "intro.stamp": "12+ years · 3 countries · 3 companies", "intro.title": "Twelve years in design — and less and less about layouts.", "intro.p1": "I've moved from a graphic designer to <strong>Head of Design</strong> — from a federal-scale <strong>enterprise</strong> studio to a global fintech in Southeast Asia.", "intro.p2": "My territory is brand, marketing, web and product communication. I pull them into one system so the brand feels coherent across every channel.", "numbers.kicker": "By the numbers", "numbers.title": "By the numbers.", "numbers.right": "Not everything in design is measurable. But scale gives the context: 12+ years, different teams, products and brands.", "numbers.l.1": "Years<br>in design", "numbers.l.2": "Products<br>shipped", "numbers.l.3": "Brands<br>&amp; identities", "numbers.l.4": "Design systems<br>shipped", "numbers.l.5": "Roles at<br>Head-of-Design level", "numbers.l.6": "Designers<br>led", "pain.kicker": "Symptoms", "pain.title": "Sound familiar?", "pain.sub": "The signs that design has<br>stopped working for the business.", "pain.1": "Marketing, product and engineering pull in different directions.", "pain.2": "Every launch is built from scratch — and every one takes just as long.", "pain.3": "The team is busy, but the system gets no stronger.", "pain.4": "The brand drifts across channels. The look depends on whoever picked it up.", "pain.5": "Leadership is buried in review rounds. There's less and less room for strategy.", "pain.1.note": "Blurs focus.<br>Slows launches.", "pain.2.note": "Effort doesn't become speed.", "pain.3.note": "Knowledge doesn't become a system.", "pain.4.note": "Recognition drops, trust fades.", "pain.5.note": "Strategy keeps slipping.", "pain.quote": "Chaos rarely looks like chaos.<br>More often, it looks like<br>a temporary fix that quietly<br>stayed forever.", "pain.foot": "There's no single button<br>for this. No quick mockup, either.", "partner.kicker": "Approach", "partner.title": "A co-author, not a contractor.", "partner.sub": "Design enters the task before the brief is written.<br>Otherwise it fixes symptoms, not the problem.", "partner.svc.tag": "Service", "partner.svc.title": "Receives a brief,<br>returns a mockup", "partner.svc.1": "Gets the brief already framed", "partner.svc.2": "Asks how, not why", "partner.svc.3": "Solves whatever lands on the desk", "partner.svc.4": "Sits at the end of the pipeline", "partner.prt.tag": "Partner", "partner.prt.title": "Shapes the decision<br>from idea to launch", "partner.prt.1": "Helps frame the brief itself", "partner.prt.2": "Talks directly to marketing, product, leadership", "partner.prt.3": "Changes the what, not just the how", "partner.prt.4": "Sits at the start of the pipeline", "partner.final": "Design is a co-author<br>of the business. A voice<br>at the table where<br>decisions are made.", "pr.kicker": "Principles", "pr.title": "What I stand on.", "pr.sub": "Four statements that hold up the rest.", "pr.1.t": "Form doesn't save<br><em>a weak idea</em>", "pr.1.d": "The problem, context and answer come first. The visual language comes after — to make it precise and visible.", "pr.2.t": "A system works<br><em>without its author</em>", "pr.2.d": "Rules, components and logic should hold up under new briefs, new people and new channels.", "pr.3.t": "Beautiful isn't the goal.<br><em>The goal is that it works</em>", "pr.3.d": "Design has to earn trust, speed up decisions, lift conversion, build recognition and grow the system itself.", "pr.4.t": "The team understands<br>not just what, but <em>why</em>", "pr.4.d": "The team has to understand the criteria, the language, the constraints — and why each decision was made.", "aud.kicker": "Audience", "aud.title": "People, not numbers.", "aud.sub": "Analytics has no mood. A person does.", "aud.lead": "Feeling comes before reading.<br>If the first impression is weak,<br>every feature has to earn <em>trust</em><br>back on its own.", "aud.1.n": "First impression", "aud.1.d": "What someone feels before any words or features. Carried by type, colour, rhythm and density.", "aud.2.n": "Ease in the moment", "aud.2.d": "A person doesn't look at good design — they feel it.", "aud.3.n": "What they'll tell someone else", "aud.3.d": "What stays with a person and gets retold. This is where brand recognition is built.", "aud.1.note": "Decides in seconds.", "aud.2.note": "Unseen — that means it works.", "aud.3.note": "Recognition and trust.", "br.kicker": "Brand strategy", "br.title": "How a brand takes shape.", "br.sub": "A brand isn't made from a logo. It's made from repeated decisions: how we sound, how we look, how we move and how we hold the bar across every channel.", "br.1.n": "Context", "br.1.d": "Market, competitors, audience, business goals. What we know — and what we're only guessing.", "br.2.n": "Position", "br.2.d": "Who we're for, who we're against, and what we deliberately stay silent on. Without the second, the first doesn't work.", "br.3.n": "Voice", "br.3.d": "How the brand reads in an email, on a banner, in support. The tone people recognise.", "br.4.n": "Visual language", "br.4.d": "Typography, colour, imagery, motion, photography. Not just a logo and palette — a whole grammar.", "br.5.n": "System", "br.5.d": "How the identity scales into web, social, product, decks, OOH.", "br.6.n": "Launch", "br.6.d": "Measurement, iteration, share of voice, brand recall. A brand is alive — it shifts.", "bmp.kicker": "Structure", "bmp.title": "Design is the system's<br>top layer.", "bmp.sub": "What users see is the final form. Everything else is what holds it up.", "bmp.s1.label": "Strategy, process, team — what makes the visual possible", "bmp.s2.label": "Visual — the final form of everything done before it", "bmp.caption": "31% is what people see.<br>69% is what makes that form precise.", "bmp.c1.lbl": "Strategy", "bmp.c1.t": "What and why.", "bmp.c1.l1": "Positioning", "bmp.c1.l2": "Tone of voice", "bmp.c1.l3": "Goals and horizons", "bmp.c1.l4": "Audience map", "bmp.c2.lbl": "Process", "bmp.c2.t": "How.", "bmp.c2.l1": "Team rituals", "bmp.c2.l2": "Contract with engineering", "bmp.c2.l3": "Quality control", "bmp.c2.l4": "Production speed", "bmp.c3.lbl": "System", "bmp.c3.t": "What it stands on.", "bmp.c3.l1": "Tokens and components", "bmp.c3.l2": "Guides and rules", "bmp.c3.l3": "Adoption metric", "bmp.c3.l4": "Readiness to scale", "ev.kicker": "Evaluation", "ev.title": "How I evaluate the work.", "ev.sub": "Four levels. A solution only passes<br>if it works on all four.", "ev.1.ln": "Level 1", "ev.1.t": "Logic", "ev.1.d": "The user gets it: where to tap, what happens, why it matters. If it needs explaining, the solution is weak.", "ev.1.q": "Got it?", "ev.2.ln": "Level 2", "ev.2.t": "Form", "ev.2.d": "Hierarchy, contrast, rhythm, typography, balance. This is where craft lives — and where expression earns its place.", "ev.2.q": "Made?", "ev.3.ln": "Level 3", "ev.3.t": "System", "ev.3.d": "Will it scale to ten channels? Hold up under new scenarios? Stay aligned with the brand?", "ev.3.q": "Holds?", "ev.4.ln": "Level 4", "ev.4.t": "Business", "ev.4.d": "Does it help the business? Conversion, CTR, retention, recognition, production speed, perception.", "ev.4.q": "Worked?", "tm.kicker": "Team", "tm.tag1": "Approach", "tm.tag2": "In practice", "tm.tag3": "Principle", "tm.title": "Working with the team.", "tm.lead": "I lead the team —<br>and I'm still a <em>designer</em>.", "tm.sub1": "I stay inside the work: reviewing files, building the system, fighting for decisions,<br>helping the team grow, staying close to the business.", "tm.sub2": "A team that understands the principles doesn't wait<br>for <em>sign-off</em> on every step.", "ts.kicker": "Rhythm", "ts.title": "Rhythm and mentorship.", "ts.sub": "Rhythm is the invisible scaffolding of quality.", "ts.b1.lbl": "Rituals", "ts.b1.1n": "Short morning sync", "ts.b1.1d": "What's moving, what's blocked, where help is needed.", "ts.b1.2n": "Weekly review", "ts.b1.2d": "Priorities, risks and status on the key tasks.", "ts.b1.3n": "Work review", "ts.b1.3d": "Team review: learning to see what's strong and what's weak.", "ts.b1.4n": "Retrospective", "ts.b1.4d": "We change the process so mistakes don't become habits.", "ts.b2.lbl": "Learning", "ts.b2.1n": "Talks", "ts.b2.1d": "The team picks the topics.", "ts.b2.2n": "Assignments", "ts.b2.2d": "Practice aimed at one specific skill. Not box-ticking.", "ts.b2.3n": "One-to-one review", "ts.b2.3d": "One on one: what's strong, what's weak, what to change.", "ts.b2.4n": "Open critiques", "ts.b2.4d": "Design stops being a black box.", "ts.b3.lbl": "Mentorship", "ts.b3.1n": "1:1 every week", "ts.b3.1d": "Not a status update — context and growth points.", "ts.b3.2n": "Targeted feedback", "ts.b3.2d": "On the work, not on the person.", "ts.b3.3n": "Strengths → tasks", "ts.b3.3d": "I grow people where they're already strong.", "ts.b3.4n": "Transparent criteria", "ts.b3.4d": "A designer knows exactly what the next grade asks for.", "ts.b4.lbl": "From Junior to Lead", "ts.b4.1n": "Junior — start", "ts.b4.1d": "Guides, a mentor and short tasks with a clear quality bar.", "ts.b4.2n": "Middle — autonomy", "ts.b4.2d": "Independent work, defending decisions, first areas of ownership.", "ts.b4.3n": "Senior — influence", "ts.b4.3d": "Standards, reviews, influence over the product and design driven by business goals.", "ts.b4.4n": "Lead — strategy", "ts.b4.4d": "Cross-functional work, metrics, process and a decision-making culture.", "ds.kicker": "Design systems", "ds.title": "Not a library. A language.", "ds.sub": "A design system isn't a library of components. It's a way to stop rebuilding the same thing every time — and to hold quality without manual control.", "ds.1.num": "Layer 01", "ds.1.n": "Foundation", "ds.1.l1": "Colour", "ds.1.l2": "Typography", "ds.1.l3": "Spacing and grid", "ds.1.l4": "Motion", "ds.1.l5": "Tokens", "ds.1.note": "The source of truth. Change here — changes everywhere.", "ds.2.num": "Layer 02", "ds.2.n": "Components", "ds.2.l1": "Reusable", "ds.2.l2": "Predictable", "ds.2.l3": "States and animation", "ds.2.l4": "Documented", "ds.2.l5": "Built for scale", "ds.2.note": "Engineering continues the solution instead of rebuilding it.", "ds.3.num": "Layer 03", "ds.3.n": "Governance", "ds.3.l1": "Who decides", "ds.3.l2": "How updates ship", "ds.3.l3": "System roadmap", "ds.3.l4": "How one language is held", "ds.3.l5": "Adoption as the metric", "ds.3.note": "The metric is share of screens using components.", "sv.kicker": "Work", "sv.title": "Where I help.", "sv.sub": "Six areas of responsibility — from meaning to execution.", "sv.1.n": "Brand and identity", "sv.1.d": "A brand that doesn't fall apart between web, marketing and product. One voice, one language.", "sv.2.n": "Web and communication", "sv.2.d": "Sites, landing pages, campaigns. Communication that explains a product's value fast.", "sv.3.n": "Design systems", "sv.3.d": "A system that speeds the team up and holds quality. One source of truth for design and code.", "sv.4.n": "Art direction", "sv.4.d": "Maintaining the visual bar: the brand stays whole across web, marketing, product and decks.", "sv.5.n": "UI/UX supervision", "sv.5.d": "Interface review and a tight loop with engineering — so what was designed makes it into the code.", "sv.6.n": "Team and process", "sv.6.d": "Hiring, onboarding, leveling and rhythm. A team that grows without losing quality — and without burning out.", "sv.mark.q": "What do you need?", "sv.mark.d": "These areas rarely work alone. They're strongest when they fit into one system.", "rs.kicker": "Results", "rs.title": "What the business gets.", "rs.sub": "Concrete shifts — visible in how the team works and in how the product feels from the outside.", "rs.1.t": "One brand across every touchpoint", "rs.1.d": "Landing, product, ads, deck — pieces of one system. The customer sees maturity, not five different companies.", "rs.2.t": "Releases ship multiples faster", "rs.2.d": "When the team works from a system, design stops being the bottleneck. What took a month ships in a week.", "rs.3.t": "Teams moving the same way", "rs.3.d": "Marketing, product, engineering lean on the same principles. Less politics — more work for the market.", "rs.5.t": "Decisions by criteria, not by taste", "rs.5.d": "Design stops being personal opinion. The argument shifts from \"I don't like it\" to \"this works.\"", "rs.1.note": "BRAND", "rs.2.note": "SPEED", "rs.3.note": "FOCUS", "rs.5.note": "CRITERIA", "rs.quote": "Design becomes part of the business system.<br>Not a separate function, not a stage, not an <em>add-on</em>.", "co.kicker": "Experience", "co.title": "Where I've worked, what I've built.", "co.sub": "Three companies over 12+ years. From large federal-scale<br>corporates in Russia to a global fintech in Southeast Asia.", "co.1.role": "Head of Design", "co.1.desc": "Global neobank, headquartered in Singapore. Rebuilt the team from <span class=\"num\">2</span> to <span class=\"num\">10+</span>, shipped two design systems and <span class=\"num\">15+</span> brand identities.", "co.1.aw": "Best New Fintech APAC 2024 · The Next 100 Global Companies", "co.2.role": "Lead Designer", "co.2.desc": "Web3 ecosystem: a MetaFi crypto-bank with <span class=\"num\">750K+</span> users across <span class=\"num\">170+</span> countries, plus Chobies NTO. Rebranded Crypterium → Choise.com without losing the audience.", "co.2.aw": "CHO token: ATH $1.38<br>TOP-500 CoinMarketCap", "co.3.role": "Art Director", "co.3.desc": "Moscow enterprise studio. <span class=\"num\">200+</span> projects for federal-scale brands, reaching <span class=\"num\">10M+</span> people daily. Grew the studio from 5–7 to 50+ specialists.", "co.3.aw": "Tagline Awards<br>70% client retention", "co.marquee.lbl": "Brands I've worked with", "cta.eyebrow": "If the approach lands", "cta.title": "Let's <em>talk</em>.", "cta.lead": "Not necessarily about work. We can just say hello first. No heavy framing, no fanfare. The rest comes later.", "cta.btn.tg": "Telegram", "cta.btn.em": "Email", "cta.btn.pf": "Portfolio", "cta.m.1.l": "Author", "cta.m.1.v": "Author&nbsp;· Sergey Lukin", "cta.m.2.l": "Telegram", "cta.m.3.l": "Email", "cta.m.4.l": "Portfolio", "ft.copy": "© 2026 Sergey Lukin", "ft.tag": "Design manifesto", "ft.top": "Top <span class=\"arr\">↑</span>", "rs.4.note": "TRUST", "rs.4.t": "The brand reads more expensive", "rs.4.d": "When touchpoints are coherent, price feels earned. Premium isn't gold trim. It's order."}}</script>
 <script>
 /* ─────────────── i18n ─────────────── */
 const I18N = JSON.parse(document.getElementById('i18n-data').textContent);
@@ -1779,6 +2341,7 @@ let currentLang = detectLang();
 
 /* helpers — re-applied whenever language changes */
 function wrapWords(el){
+  if(el.classList && el.classList.contains('hero-title--corner')) return; /* preview: don't split */
   const html = el.innerHTML;
   const segs = html.split(/<br\s*\/?>/i);
   const isHero = el.classList.contains('hero-title');
@@ -1937,7 +2500,7 @@ function applyLang(lang){
   /* Re-observe reveal elements that may have lost state during innerHTML replacement.
      Ensures fade-in continues to work after language toggle.
      Wrapped in try-catch: on initial applyLang() call, io may not be declared yet (TDZ). */
-  try { if(typeof observeReveals === 'function') observeReveals(); } catch(_e) {}
+  try { if(typeof observeReveals === 'function') observeReveals(); }catch(e){}
 
   /* update active state of switcher (works for .lang-btn or bare buttons inside .lang-switch) */
   document.querySelectorAll('.lang-switch button[data-lang], .lang-btn[data-lang]').forEach(b=>{
@@ -1966,6 +2529,155 @@ langButtons.forEach(btn=>{
 
 /* first paint */
 applyLang(currentLang);
+
+/* fit "Как я строю" to full viewport width; mirror size to bottom title.
+   Canvas measureText is the only reliable way to get true italic glyph bounds
+   (DOM scrollWidth, Range bounds, and getBoundingClientRect all clip italic
+   overhang in various browsers, which is why the text kept getting cropped). */
+const _heroMeasureCanvas = document.createElement('canvas');
+const _heroMeasureCtx = _heroMeasureCanvas.getContext('2d');
+
+function measureTrueWidth(text, fontFamily, fontStyle, fontWeight, fontSize, letterSpacingRatio){
+  _heroMeasureCtx.font = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
+  const m = _heroMeasureCtx.measureText(text);
+  /* actualBoundingBoxLeft/Right are the true visible glyph extents from the
+     drawing origin — they INCLUDE italic overhang on both sides. */
+  const left  = m.actualBoundingBoxLeft  || 0;
+  const right = m.actualBoundingBoxRight || m.width;
+  let width = left + right;
+  /* Canvas measureText ignores CSS letter-spacing, so add it manually */
+  if (letterSpacingRatio && text.length > 1) {
+    width += letterSpacingRatio * fontSize * (text.length - 1);
+  }
+  return width;
+}
+
+function fitHero(){
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+  /* On mobile, hero uses CSS clamp() in a flex-stack layout — JS-fitting would oversize */
+  if (window.innerWidth <= 720) {
+    const s = hero.querySelector('.hero-static');
+    const t = hero.querySelector('.hero-title--corner');
+    if (s) s.style.fontSize = '';
+    if (t) t.style.fontSize = '';
+    return;
+  }
+  const s = hero.querySelector('.hero-static');
+  const t = hero.querySelector('.hero-title--corner');
+  if (!s) return;
+  const cs = getComputedStyle(s);
+  const ff = cs.fontFamily.replace(/["']/g, '').split(',')[0].trim();
+  const fw = cs.fontWeight || '400';
+  const text = s.textContent.trim();
+  if (!text) return;
+  /* letter-spacing as ratio of font-size (so it scales with the final size) */
+  const lsRaw = cs.letterSpacing;
+  let lsRatio = 0;
+  if (lsRaw && lsRaw !== 'normal') {
+    const cur = parseFloat(cs.fontSize) || 1;
+    lsRatio = parseFloat(lsRaw) / cur;
+  }
+  const ref = 500;
+  const trueW = measureTrueWidth(text, ff, 'italic', fw, ref, lsRatio);
+  if (!trueW) { requestAnimationFrame(fitHero); return; }
+  const sideGap = 6;
+  const target = window.innerWidth - 2 * sideGap;
+  const px = ref * (target / trueW);
+  s.style.fontSize = px + 'px';
+  if (t) t.style.fontSize = px + 'px';
+}
+let _fitRaf = null, _fitTimeout = null;
+function scheduleFit(){
+  if (_fitTimeout) clearTimeout(_fitTimeout);
+  _fitTimeout = setTimeout(() => {
+    _fitTimeout = null;
+    if (_fitRaf) return;
+    _fitRaf = requestAnimationFrame(()=>{ _fitRaf = null; fitHero(); });
+  }, 90);
+}
+window.addEventListener('resize', scheduleFit, {passive:true});
+
+function fitWhenReady(){
+  if (document.fonts && document.fonts.load) {
+    Promise.all([
+      document.fonts.load('italic 500px "Fraunces"'),
+      document.fonts.load('italic 500px "Playfair Display"'),
+    ]).then(()=>{
+      fitHero();
+      requestAnimationFrame(fitHero);
+    }).catch(()=>fitHero());
+  } else {
+    fitHero();
+  }
+}
+fitWhenReady();
+window.addEventListener('load', fitHero);
+
+/* ─── Hero FX: 3D parallax tilt ─── */
+(function heroFx(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  /* Skip tilt on touch / coarse-pointer devices — no mouse to track, just glitches */
+  if(!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  const hero = document.querySelector('.hero');
+  if(!hero) return;
+
+  const MAX_TILT = 9;
+  const LERP_TILT = 0.055;
+
+  let tiltXTarget = 0, tiltYTarget = 0;
+  let tiltX = 0, tiltY = 0;
+  let tiltPaused = false;
+  let heroVisible = true;
+  let rafId = null;
+
+  function onMove(e){
+    if(tiltPaused || !heroVisible) return;
+    const nx = (e.clientX / window.innerWidth) - 0.5;
+    const ny = (e.clientY / window.innerHeight) - 0.5;
+    tiltYTarget = nx * MAX_TILT * 2;
+    tiltXTarget = -ny * MAX_TILT * 2;
+    ensureTicking();
+  }
+  function onLeave(){ tiltXTarget = 0; tiltYTarget = 0; ensureTicking(); }
+
+  document.addEventListener('mousemove', onMove, {passive:true});
+  document.addEventListener('mouseleave', onLeave, {passive:true});
+
+  function tick(){
+    tiltX += (tiltXTarget - tiltX) * LERP_TILT;
+    tiltY += (tiltYTarget - tiltY) * LERP_TILT;
+    hero.style.setProperty('--tilt-x', tiltX.toFixed(2) + 'deg');
+    hero.style.setProperty('--tilt-y', tiltY.toFixed(2) + 'deg');
+    /* Stop the rAF loop entirely once we've settled — saves cost on every frame */
+    if (Math.abs(tiltX - tiltXTarget) < 0.04 && Math.abs(tiltY - tiltYTarget) < 0.04) {
+      tiltX = tiltXTarget; tiltY = tiltYTarget;
+      hero.style.setProperty('--tilt-x', tiltX.toFixed(2) + 'deg');
+      hero.style.setProperty('--tilt-y', tiltY.toFixed(2) + 'deg');
+      rafId = null;
+      return;
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+  function ensureTicking(){
+    if (rafId == null) rafId = requestAnimationFrame(tick);
+  }
+
+  /* Pause everything when hero is off-screen — frees compositor layer and 3D context */
+  const io = new IntersectionObserver(entries => {
+    heroVisible = entries[0].isIntersecting;
+    hero.classList.toggle('hero--idle', !heroVisible);
+    if (!heroVisible) {
+      tiltXTarget = 0; tiltYTarget = 0;
+      ensureTicking();   /* run a few frames to settle to zero, then stop */
+    }
+  }, { threshold: 0 });
+  io.observe(hero);
+
+  const container = hero.querySelector('.container');
+  if(container) container.style.transition = 'none';
+  ensureTicking();
+})();
 
 /* ─────────────── nav scroll & dark-section detection ─────────────── */
 const nav=document.getElementById('nav');
@@ -2003,6 +2715,8 @@ if(dgWave){
 }
 
 /* ─────────────── reveal IO ─────────────── */
+/* Bidirectional: adds .in-view on enter, removes on exit so animation
+   re-triggers every time the element comes back into viewport. */
 const io=new IntersectionObserver((entries)=>{
   entries.forEach(e=>{
     if(e.isIntersecting){
@@ -2011,12 +2725,14 @@ const io=new IntersectionObserver((entries)=>{
         const items=e.target.querySelectorAll('[data-stagger]');
         items.forEach((el,i)=>{el.style.transitionDelay=(60+i*80)+'ms';});
       }
-      io.unobserve(e.target);
+    } else {
+      /* Reset when element fully leaves viewport — animation re-plays on re-entry */
+      e.target.classList.remove('in-view');
     }
   });
 },{threshold:0,rootMargin:'0px 0px 10% 0px'});
 function observeReveals(){
-  document.querySelectorAll('[data-reveal]:not(.in-view), [data-reveal-num]:not(.in-view), .stagger:not(.in-view)').forEach(el=>{
+  document.querySelectorAll('[data-reveal], [data-reveal-num], .stagger').forEach(el=>{
     io.observe(el);
     /* Immediate fallback: if element is ALREADY in viewport at registration time, mark in-view directly.
        Prevents the race condition where IO callback fires too late after page load with restored scroll. */
@@ -2029,7 +2745,6 @@ function observeReveals(){
             const items=el.querySelectorAll('[data-stagger]');
             items.forEach((it,i)=>{it.style.transitionDelay=(60+i*80)+'ms';});
           }
-          io.unobserve(el);
         }
       });
     }
@@ -2189,7 +2904,7 @@ function startHeroTyper(){
       /* read pause before next backspace */
       await sleep(2400);
     }
-  })().catch(()=>{});
+  })();
 }
 
 /* ─────────────── scroll progress bar ─────────────── */
@@ -2398,144 +3113,6 @@ startHeroTyper();
 requestAnimationFrame(()=>sideProgress.classList.add('is-ready'));
 
 /* ─── Scroll-driven Hero Exit — words diverge as you scroll ─── */
-(function heroScrollPin(){
-  if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
-  if(window.innerWidth<=720)return;
-  const hero=document.querySelector('.hero');
-  if(!hero)return;
-
-  /* === Bidirectional wheel-hijacking pin ===
-        Always active at scrollY = 0. Animation works both ways:
-        - Wheel DOWN at top: virtualScroll grows, title rises, subtitle fades in.
-        - Wheel UP at top:   virtualScroll shrinks, subtitle fades out, title returns down.
-        Page scroll only proceeds once virtualScroll reaches PIN_DISTANCE.
-        Smooth lerp between wheel input and rendered values. */
-  const PIN_DISTANCE=900;
-  /* Phase distribution (overlapping for natural feel):
-        Title    rises:  0    → 60% of pin
-        Subtitle fades:  25%  → 85% of pin (starts mid-title, ends after title) */
-  const P1_END=0.60;
-  const P2_START=0.25;
-  const P2_END=0.85;
-  let virtualScroll=0;
-
-  let p1Target=0, p2Target=0;
-  let p1Current=0, p2Current=0;
-  let smoothRaf=null;
-
-  function smoothLoop(){
-    smoothRaf=null;
-    const lerp=0.12;
-    p1Current+=(p1Target-p1Current)*lerp;
-    p2Current+=(p2Target-p2Current)*lerp;
-    hero.style.setProperty('--p1',p1Current.toFixed(4));
-    hero.style.setProperty('--p2',p2Current.toFixed(4));
-    if(Math.abs(p1Target-p1Current)>0.0005 || Math.abs(p2Target-p2Current)>0.0005){
-      smoothRaf=requestAnimationFrame(smoothLoop);
-    }
-  }
-  function recomputeTargets(){
-    const progress=virtualScroll/PIN_DISTANCE;
-    let p1=Math.max(0,Math.min(1,progress/P1_END));
-    p1=p1*p1*(3-2*p1);
-    let p2=Math.max(0,Math.min(1,(progress-P2_START)/(P2_END-P2_START)));
-    p2=p2*p2*(3-2*p2);
-    p1Target=p1;
-    p2Target=p2;
-    if(!smoothRaf)smoothRaf=requestAnimationFrame(smoothLoop);
-  }
-
-  /* Reload while scrolled past hero: jump virtualScroll to MAX, no animation */
-  if(window.scrollY>0){
-    virtualScroll=PIN_DISTANCE;
-    p1Target=p1Current=1;
-    p2Target=p2Current=1;
-    hero.style.setProperty('--p1','1');
-    hero.style.setProperty('--p2','1');
-  }
-
-  /* === Wheel handler — hijacks only at scrollY = 0 === */
-  function onWheel(e){
-    if(window.scrollY!==0)return;
-    if(e.deltaY>0){
-      /* Scroll down */
-      const room=PIN_DISTANCE-virtualScroll;
-      if(room>0){
-        e.preventDefault();
-        if(e.deltaY<=room){
-          virtualScroll+=e.deltaY;
-        }else{
-          /* Forward overflow to page scroll */
-          virtualScroll=PIN_DISTANCE;
-          window.scrollBy(0,e.deltaY-room);
-        }
-        recomputeTargets();
-      }
-      /* else: pin complete, allow normal scroll */
-    }else if(e.deltaY<0){
-      /* Scroll up */
-      if(virtualScroll>0){
-        e.preventDefault();
-        virtualScroll=Math.max(0,virtualScroll+e.deltaY);
-        recomputeTargets();
-      }
-      /* else: already at start, browser ignores */
-    }
-  }
-  window.addEventListener('wheel',onWheel,{passive:false});
-
-  /* === Touch support (trackpad swipes, tablets ≥721px) === */
-  let touchLastY=null;
-  function onTouchStart(e){if(e.touches&&e.touches.length===1)touchLastY=e.touches[0].clientY;}
-  function onTouchMove(e){
-    if(touchLastY===null||!e.touches||e.touches.length!==1)return;
-    if(window.scrollY!==0){touchLastY=e.touches[0].clientY;return;}
-    const y=e.touches[0].clientY;
-    const deltaY=touchLastY-y;
-    touchLastY=y;
-    if(deltaY>0 && virtualScroll<PIN_DISTANCE){
-      e.preventDefault();
-      virtualScroll=Math.min(PIN_DISTANCE,virtualScroll+deltaY);
-      recomputeTargets();
-    }else if(deltaY<0 && virtualScroll>0){
-      e.preventDefault();
-      virtualScroll=Math.max(0,virtualScroll+deltaY);
-      recomputeTargets();
-    }
-  }
-  function onTouchEnd(){touchLastY=null;}
-  window.addEventListener('touchstart',onTouchStart,{passive:true});
-  window.addEventListener('touchmove',onTouchMove,{passive:false});
-  window.addEventListener('touchend',onTouchEnd,{passive:true});
-
-  /* === Sync on non-wheel scrolling (Home key, scrollbar drag, Tab focus) === */
-  function onScroll(){
-    if(window.scrollY>0 && virtualScroll<PIN_DISTANCE){
-      virtualScroll=PIN_DISTANCE;
-      recomputeTargets();
-    }
-    if(exitRaf)return;
-    exitRaf=requestAnimationFrame(exitUpdate);
-  }
-
-  /* === Existing exit behavior — kicks in once user scrolls past pin === */
-  let exitRaf=null;
-  let lastHp=-1;
-  function exitUpdate(){
-    exitRaf=null;
-    const r=hero.getBoundingClientRect();
-    if(r.bottom<0){
-      if(lastHp!==1){hero.style.setProperty('--hp','1');lastHp=1;}
-      return;
-    }
-    const h=hero.offsetHeight||1;
-    let p=Math.max(0,Math.min(1,-r.top/h));
-    p=p*p*(3-2*p);
-    const pStr=p.toFixed(4);
-    if(pStr!==lastHp){hero.style.setProperty('--hp',pStr);lastHp=pStr;}
-  }
-  window.addEventListener('scroll',onScroll,{passive:true});
-})();
 
 /* ─── Scroll-driven BMP — numbers grow with section progress ─── */
 (function bmpScrollScale(){
@@ -2580,6 +3157,8 @@ requestAnimationFrame(()=>sideProgress.classList.add('is-ready'));
     return s.querySelector('.sec-title em');
   });
   if(!sections.length)return;
+  /* Per-section last value cache to avoid redundant setProperty */
+  const lastVal=new WeakMap();
   let raf=null;
   function update(){
     raf=null;
@@ -2587,7 +3166,10 @@ requestAnimationFrame(()=>sideProgress.classList.add('is-ready'));
     for(const sec of sections){
       const r=sec.getBoundingClientRect();
       if(r.bottom<-200||r.top>vh+200){
-        sec.style.setProperty('--tp','0');
+        if(lastVal.get(sec)!=='0'){
+          sec.style.setProperty('--tp','0');
+          lastVal.set(sec,'0');
+        }
         continue;
       }
       const center=r.top+r.height/2;
@@ -2595,7 +3177,11 @@ requestAnimationFrame(()=>sideProgress.classList.add('is-ready'));
       const maxDist=vh/2+r.height/2;
       let p=1-Math.min(1,dist/maxDist);
       p=p*p*(3-2*p);
-      sec.style.setProperty('--tp',p.toFixed(4));
+      const pStr=p.toFixed(3);
+      if(lastVal.get(sec)!==pStr){
+        sec.style.setProperty('--tp',pStr);
+        lastVal.set(sec,pStr);
+      }
     }
   }
   window.addEventListener('scroll',()=>{
@@ -2654,7 +3240,7 @@ if(document.fonts&&document.fonts.ready){
     buildSideNavigation();
     _lastCurrentId=null;
     updateProgress();
-  }).catch(()=>{});
+  });
 }
 
 /* recompute tick positions on resize (section heights may change) */
@@ -2667,7 +3253,18 @@ window.addEventListener('resize',()=>{
 /* re-read labels when language switches (kickers get new text) */
 document.addEventListener('click',(e)=>{
   if(e.target.closest('[data-lang]')){
-    setTimeout(()=>{currentSideLabel='';buildSideNavigation();_lastCurrentId=null;updateProgress();applyTooltips();startHeroTyper();},80);
+    setTimeout(()=>{
+      const em=document.querySelector('.hero-title em');
+      if(em){
+        const lang=(document.documentElement.lang||'ru').slice(0,2);
+        const words=HERO_WORDS[lang]||HERO_WORDS.ru;
+        em.textContent=words[0];
+        em.classList.remove('is-typing');
+      }
+      currentSideLabel='';buildSideNavigation();_lastCurrentId=null;updateProgress();applyTooltips();startHeroTyper();
+      /* Wait for the language-specific font to load before re-fitting */
+      if(typeof fitWhenReady==='function') fitWhenReady();
+    },80);
   }
 });
 
@@ -2732,7 +3329,7 @@ const statIO=new IntersectionObserver(entries=>{
       statIO.unobserve(span);
     }
   });
-},{threshold:0.5});
+},{threshold:0.3,rootMargin:'0px 0px -10% 0px'});
 document.querySelectorAll('.stat-counter').forEach(s=>statIO.observe(s));
 
 /* ─────────────── cta title reveal trigger ─────────────── */
@@ -2749,14 +3346,21 @@ if(ctaTitleEl) wordIO.observe(ctaTitleEl);
 
 /* ─────────────── giant section number parallax ─────────────── */
 const giantNums=document.querySelectorAll('.sec-head .num-block .num');
+const giantLastY=new WeakMap();
 function updateParallax(){
   const vh=window.innerHeight;
   giantNums.forEach(n=>{
     const r=n.getBoundingClientRect();
+    /* Early-exit if not near viewport */
+    if(r.bottom<-100||r.top>vh+100)return;
     const center=r.top+r.height/2;
     const dist=(center-vh/2)/vh;
     if(Math.abs(dist)<1.2){
-      n.style.transform=`translateY(${dist*-10}px)`;
+      const y=(dist*-10).toFixed(1);
+      if(giantLastY.get(n)!==y){
+        n.style.transform=`translateY(${y}px)`;
+        giantLastY.set(n,y);
+      }
     }
   });
 }
@@ -2794,11 +3398,15 @@ if(window.matchMedia('(hover:hover)').matches){
 }
 
 /* ─────────────── line-by-line slide reveal for big h2s ─────────────── */
+/* Split happens once (DOM-heavy); h2-in class toggles bidirectionally
+   so the blur+slide animation re-plays every time the h2 re-enters viewport. */
 const lineRevealIO=new IntersectionObserver(entries=>{
   entries.forEach(e=>{
     if(e.isIntersecting){
       splitH2(e.target);
-      lineRevealIO.unobserve(e.target);
+      e.target.classList.add('h2-in');
+    } else {
+      e.target.classList.remove('h2-in');
     }
   });
 },{threshold:0.25});
@@ -2806,7 +3414,7 @@ document.querySelectorAll('.sec-head h2, .intro-title, .numbers-title').forEach(
 
 /* ─────────────── subtle hover lift for content cards ─────────────── */
 if(window.matchMedia('(hover:hover)').matches){
-  const cards = document.querySelectorAll('.principle, .aud-cell, .rs-tile, .ds-layer, .bstep, .pain-cell');
+  const cards = document.querySelectorAll('.principle, .ds-layer, .bstep');
   cards.forEach(card=>{
     card.style.transition = (card.style.transition || '') + 'transform 0.5s var(--ease-out)';
     card.addEventListener('mouseenter', ()=>{ card.style.transform = 'translateY(-3px)'; });
@@ -2847,6 +3455,137 @@ const kickerIO=new IntersectionObserver(entries=>{
   });
 },{threshold:0.5});
 document.querySelectorAll('.sec-asides-bar .sec-aside').forEach(k=>kickerIO.observe(k));
+
+/* ─────────────── PAUSE HEAVY ANIMATIONS WHEN OFFSCREEN ─────────────── */
+(function pauseHeavyAnimsOffscreen(){
+  if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  /* Targets: bicons in br, dotgrid in bmp, marquee in co */
+  const map=new Map();
+  document.querySelectorAll('#br').forEach(sec=>{
+    map.set(sec,sec.querySelectorAll('[class*="bicon-"]'));
+  });
+  document.querySelectorAll('#companies').forEach(sec=>{
+    map.set(sec,sec.querySelectorAll('.brand-marquee-row'));
+  });
+  if(!map.size)return;
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      const state=e.isIntersecting?'running':'paused';
+      const els=map.get(e.target);
+      if(!els)return;
+      els.forEach(el=>{el.style.animationPlayState=state});
+    });
+  },{rootMargin:'200px 0px 200px 0px'});
+  map.forEach((els,sec)=>io.observe(sec));
+})();
+
+/* ─────────────── RS HORIZONTAL CINEMA — "Что получает бизнес" ─────────────── */
+(function rsHorizontalCinema(){
+  if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  if(window.innerWidth<=900)return;
+  const pinOuter=document.querySelector('#results .rs-pin-outer');
+  const track=document.getElementById('rsTrack');
+  if(!pinOuter||!track)return;
+  const panels=Array.from(track.querySelectorAll('.rs-panel'));
+  const steps=Array.from(document.querySelectorAll('#rsSteps .rs-step'));
+  const PANELS=panels.length;
+  if(!PANELS)return;
+
+  const PANEL_STEP=50;
+  const LERP=0.16;
+  const MIN_SCALE=0.55;
+  const MAX_SCALE=1.08;
+  const MIN_OPACITY=0.22;
+
+  let targetX=0;
+  let currentX=0;
+  let smoothRaf=null;
+  let scrollRaf=null;
+  let lastActive=-1;
+  /* Per-panel last-state cache → skip redundant style writes */
+  const panelCache=panels.map(()=>({transform:'',opacity:'',prox:''}));
+  const maxX=-(PANELS-1)*PANEL_STEP;
+
+  function smoothLoop(){
+    smoothRaf=null;
+    const delta=targetX-currentX;
+    currentX+=delta*LERP;
+    track.style.transform='translate3d('+currentX.toFixed(2)+'vw, 0, 0)';
+    const viewportTrackX=-currentX;
+    for(let i=0;i<PANELS;i++){
+      const panelTrackX=i*PANEL_STEP;
+      const dist=Math.abs(panelTrackX-viewportTrackX)/PANEL_STEP;
+      /* Dead zone 0.15 — center stays at MAX_SCALE; smooth roll-off beyond */
+      const adjDist=Math.max(0,(dist-0.15)/0.85);
+      const proximity=Math.max(0,1-Math.min(adjDist,1.3));
+      const scale=MIN_SCALE+(MAX_SCALE-MIN_SCALE)*proximity;
+      const opacity=(MIN_OPACITY+(1-MIN_OPACITY)*proximity).toFixed(3);
+      /* Clean uniform scale — no 3D rotation to avoid horizontal distortion */
+      const transform='scale3d('+scale.toFixed(3)+','+scale.toFixed(3)+',1)';
+      const proxStr=proximity.toFixed(3);
+      const cache=panelCache[i];
+      if(cache.transform!==transform){
+        panels[i].style.transform=transform;
+        cache.transform=transform;
+      }
+      if(cache.opacity!==opacity){
+        panels[i].style.opacity=opacity;
+        cache.opacity=opacity;
+      }
+      if(cache.prox!==proxStr){
+        panels[i].style.setProperty('--p-prox',proxStr);
+        cache.prox=proxStr;
+      }
+    }
+    /* Active step indicator */
+    const active=Math.round(Math.abs(currentX)/PANEL_STEP);
+    const clamped=Math.max(0,Math.min(PANELS-1,active));
+    if(clamped!==lastActive){
+      for(let i=0;i<steps.length;i++){
+        steps[i].classList.remove('is-active','is-past');
+        if(i<clamped)steps[i].classList.add('is-past');
+        else if(i===clamped)steps[i].classList.add('is-active');
+      }
+      lastActive=clamped;
+    }
+    if(Math.abs(delta)>0.02){
+      smoothRaf=requestAnimationFrame(smoothLoop);
+    }
+  }
+
+  function recomputeTarget(){
+    scrollRaf=null;
+    const r=pinOuter.getBoundingClientRect();
+    const vh=window.innerHeight;
+    if(r.bottom<0){
+      targetX=maxX;
+      currentX=maxX;
+      track.style.transform='translate3d('+maxX.toFixed(2)+'vw, 0, 0)';
+      smoothLoop();
+      return;
+    }
+    if(r.top>vh){
+      targetX=0;
+      currentX=0;
+      track.style.transform='translate3d(0vw, 0, 0)';
+      smoothLoop();
+      return;
+    }
+    const total=Math.max(1,pinOuter.offsetHeight-vh);
+    const progress=Math.max(0,Math.min(0.9999,-r.top/total));
+    targetX=progress*maxX;
+    if(!smoothRaf)smoothRaf=requestAnimationFrame(smoothLoop);
+  }
+
+  window.addEventListener('scroll',()=>{
+    if(scrollRaf)return;
+    scrollRaf=requestAnimationFrame(recomputeTarget);
+  },{passive:true});
+  window.addEventListener('resize',()=>{
+    if(!scrollRaf)scrollRaf=requestAnimationFrame(recomputeTarget);
+  },{passive:true});
+  recomputeTarget();
+})();
 
 </script>
 </body>
