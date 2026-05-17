@@ -1685,6 +1685,633 @@ html[lang="ru"] .hero-title--corner em{
     font-size:0.9rem;line-height:1.5;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   MOBILE QUALITY PASS v2 — typography hygiene, no word-breaks,
+   stretched grid items, redesigned 69/31, hidden desktop <br>s.
+   Loaded last so it wins specificity conflicts naturally.
+   ════════════════════════════════════════════════════════════════════ */
+@media (max-width:720px){
+  /* ── 1. NEVER break words mid-glyph — critical for Cyrillic ── */
+  body,
+  .pt, .pdesc, .adesc, .atitle, .bdesc, .bname,
+  .sec-sub, .sec-title, .intro-p, .numbers-lead,
+  .partner-final, .pain-foot, .pain-quote, .aud-quote,
+  .hero-static, .hero-title, .hero-sub,
+  .ctitle, .clabel, .pnote, .anote{
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    hyphens: manual !important;
+    -webkit-hyphens: manual !important;
+  }
+  /* ── 2. Pretty wrapping for prose (avoids orphan words) ── */
+  .sec-sub, .sec-title, .intro-title, .intro-p, .numbers-lead, .numbers-title,
+  .partner-final, .pain-foot, .pain-quote, .aud-quote,
+  .pdesc, .adesc, .bdesc, .ctitle, .pt, .ptitle{
+    text-wrap: pretty;
+  }
+  /* H2 / display titles look best balanced */
+  h1, h2, .sec-title, .intro-title, .numbers-title, .hero-title, .hero-static{
+    text-wrap: balance;
+  }
+  /* ── 3. Pain-list & Aud-list — clean flex column on mobile
+        Pain: stack pn → pt → pnote vertically, full width each.
+        Aud: 2-col grid (number left, title/desc/note stacked right) —
+             more compact, less scrolling.
+        Override the grid completely; <span> grid items had quirks
+        that caused pnote to shrink to longest-word width. ── */
+  .pain-list li{
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    grid-template-columns: none !important;
+    gap: 0 !important;
+    padding: 1.5rem 0 !important;
+    width: 100%;
+  }
+  .aud-list li{
+    display: grid !important;
+    grid-template-columns: auto 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 1.1rem !important;
+    row-gap: 0.35rem !important;
+    align-items: start !important;
+    padding: 1.5rem 0 !important;
+    width: 100%;
+  }
+  .pain-list .pn{
+    display: block;
+    width: 100%;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent);
+    font-size: 1rem;
+    line-height: 1;
+    margin-bottom: 0.85rem;
+  }
+  .aud-list .an{
+    grid-column: 1 !important;
+    grid-row: 1 / span 3 !important;
+    justify-self: start;
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent);
+    font-size: 1.05rem;
+    line-height: 1;
+    padding-top: 0.25rem;
+    align-self: start;
+  }
+  .pain-list .pt{
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    justify-self: stretch !important;
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(1.15rem, 4.6vw, 1.4rem);
+    line-height: 1.22;
+    letter-spacing: -0.02em;
+    text-wrap: pretty;
+    margin: 0;
+  }
+  .aud-list .atitle{
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: stretch !important;
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(1.15rem, 4.6vw, 1.4rem);
+    line-height: 1.22;
+    letter-spacing: -0.02em;
+    text-wrap: pretty;
+    margin: 0;
+  }
+  .aud-list .adesc{
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    max-width: none !important;
+    justify-self: stretch !important;
+    margin: 0.45rem 0 0 !important;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--ink-2);
+    padding-top: 0 !important;
+  }
+  .pain-list .pnote,
+  .aud-list .anote{
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    justify-self: stretch !important;
+    text-align: left !important;
+    margin-top: 0.85rem !important;
+    padding: 0 !important;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.07em;
+    color: var(--mute);
+    line-height: 1.6;
+    text-transform: uppercase;
+    white-space: normal !important;
+  }
+  /* aud .anote sits in column 2 with the rest */
+  .aud-list .anote{
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+  }
+  /* JS removes <br>s; the legacy CSS hide rule no longer matters */
+  .pain-list .pnote br,
+  .aud-list .anote br{display:none}
+  /* preserve magnetic-char styling neutrality on mobile (chars become words) */
+  .pain-list .pt .word{
+    display: inline-block;
+    white-space: nowrap;
+  }
+  .pain-list .pt .char{
+    display: inline !important;
+    transform: none !important;
+    color: var(--ink) !important;
+  }
+  /* ── 4. Brand subtitle — kill its <br> on mobile (also handled by JS) ── */
+  #brand .sec-sub br{display:none}
+
+  /* ── 5. 69 / 31 infographic — keep ORIGINAL dot-grid (per request),
+        just make sure the size is comfortable on mobile (12 cols, 5px gap) ── */
+  #bmp .bmp-split{
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1.75rem !important;
+    margin: 0 0 2rem !important;
+    align-items: start !important;
+  }
+  #bmp .bmp-split .vs{ display: none !important }
+  #bmp .bmp-split .side{
+    display: flex !important;
+    flex-direction: column !important;
+    text-align: left !important;
+  }
+  #bmp .bmp-split .side:nth-child(1){ align-items: flex-start !important }
+  #bmp .bmp-split .side:nth-child(3){ align-items: flex-end !important; text-align: right !important }
+  #bmp .bmp-split .side .pct{
+    font-size: clamp(3.5rem, 16vw, 5rem) !important;
+    line-height: 0.92 !important;
+    letter-spacing: -0.04em !important;
+    transform: none !important;
+  }
+  #bmp .bmp-split .side .label{
+    max-width: 26ch !important;
+    margin-top: 0.8rem !important;
+    font-size: 0.7rem !important;
+    line-height: 1.55 !important;
+    letter-spacing: 0.1em !important;
+  }
+  #bmp .bmp-split .side:nth-child(3) .label{
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    text-align: right !important;
+  }
+  /* Dot grid — restore original 12-col mobile layout with comfortable dot size */
+  #bmp .bmp-dotgrid{
+    display: grid !important;
+    grid-template-columns: repeat(12, 1fr) !important;
+    gap: 5px !important;
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    margin: 0 0 clamp(2rem, 4vw, 3rem) 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+  #bmp .bmp-dotgrid::before,
+  #bmp .bmp-dotgrid::after{ content: none !important; display: none !important }
+  #bmp .bmp-dotgrid .d{
+    display: block !important;
+    aspect-ratio: 1 !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: none !important;
+    border-radius: 50% !important;
+    background: var(--mute-2);
+    opacity: 0.35;
+  }
+  #bmp .bmp-dotgrid .d.accent{
+    background: var(--accent) !important;
+    opacity: 1;
+  }
+
+  /* ── 6. Brand-steps tightening on mobile ── */
+  #brand .bstep{ padding-bottom: 1.5rem }
+  #brand .bdesc{ text-wrap: pretty }
+
+  /* ── 7. Pain-quote refinement — single readable paragraph ── */
+  .pain-quote, .partner-final{
+    font-size: clamp(1rem, 4vw, 1.2rem) !important;
+    line-height: 1.45 !important;
+    text-wrap: pretty;
+  }
+  .aud-quote{
+    font-size: clamp(1.05rem, 4.4vw, 1.3rem) !important;
+    line-height: 1.4 !important;
+    text-wrap: pretty;
+  }
+
+  /* ── 8. Hero typing caret — slightly larger and more prominent on mobile ── */
+  .hero-title--corner em.is-typing::after{
+    width: 0.06em;
+    height: 0.78em;
+    background: var(--accent);
+    margin-left: 0.08em;
+  }
+  /* Caret always visible (not only is-typing) — pulse cue while idle */
+  .hero-title--corner em::after{
+    content: '';
+    display: inline-block;
+    width: 0.06em;
+    height: 0.78em;
+    background: var(--accent);
+    margin-left: 0.08em;
+    vertical-align: -0.04em;
+    animation: hero-blink 1.05s step-end infinite;
+    opacity: 0.85;
+  }
+  .hero-title--corner em.is-typing::after{ opacity: 1 }
+
+  /* ── 9. Section vertical rhythm — UNIFIED across light/dark.
+        One padding value for every section regardless of background.
+        Result: identical visible gap between any two adjacent sections
+        (white↔white, dark↔dark, dark→white, white→dark). ── */
+  section,
+  section.dark,
+  #team-system,
+  #ds,
+  #hero,
+  #intro,
+  #cta,
+  section.dark + section.dark,
+  section.dark + section:not(.dark),
+  section:not(.dark) + section.dark,
+  section:not(.dark):has(+ section.dark){
+    padding-top: clamp(3.25rem, 6.5vh, 4.5rem) !important;
+    padding-bottom: clamp(3.25rem, 6.5vh, 4.5rem) !important;
+  }
+  /* Hero is an exception — it owns 100vh and has its own padding inside */
+  #hero{
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .sec-head{ margin-bottom: clamp(2rem, 5vw, 3rem) !important }
+
+  /* ── 10. Container side padding consistent on mobile ── */
+  .container{
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     v3 — hero scale, CTA split, team flow, brand-step horizontal,
+     equal section padding, dark→light rhythm
+     ════════════════════════════════════════════════════════════════ */
+
+  /* ── A. Hero — bigger title fills viewport, KEEP full-viewport breathing
+        space at bottom (auto-stretches hero-bottom to the bottom edge) ── */
+  .hero{
+    min-height: 100vh !important;
+    min-height: 100svh !important;
+  }
+  .hero .container{
+    padding: 5.5rem 1.25rem 1.5rem !important;
+    min-height: 100vh !important;
+    min-height: 100svh !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .hero-static{
+    font-size: clamp(2.85rem, 15.5vw, 5.5rem) !important;
+    line-height: 0.95 !important;
+    letter-spacing: -0.035em !important;
+    margin-bottom: 0 !important;
+  }
+  .hero-title--corner{
+    font-size: clamp(2.85rem, 15.5vw, 5.5rem) !important;
+    line-height: 0.95 !important;
+    letter-spacing: -0.035em !important;
+  }
+  .hero-sub--hidden{
+    margin-top: 2rem !important;
+    font-size: 0.7rem !important;
+    line-height: 1.7 !important;
+  }
+  /* hero-bottom pinned to bottom; the black space between the title block
+     and this footer is the intentional breathing area (per design). */
+  .hero-bottom{
+    margin-top: auto !important;
+    padding-top: 1.5rem !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* ── B. CTA — eyebrow left, author right (NOT stacked column) ── */
+  .cta-head{
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    flex-wrap: nowrap !important;
+    gap: 1rem !important;
+    margin-bottom: clamp(2rem, 5vw, 3rem) !important;
+  }
+  .cta-head .cta-eyebrow{
+    font-size: 0.6875rem !important;
+    line-height: 1.4 !important;
+    flex: 0 1 auto;
+    max-width: 50%;
+  }
+  .cta-head .cta-eyebrow:first-child{ text-align: left }
+  .cta-head .cta-author{ text-align: right }
+
+  /* ── C. Brand-steps — icon LEFT, title + description on the RIGHT ── */
+  #brand .brand-steps{
+    gap: 0 !important;
+  }
+  #brand .bstep{
+    display: grid !important;
+    grid-template-columns: 56px 1fr !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 1.25rem !important;
+    row-gap: 0.35rem !important;
+    align-items: start !important;
+    padding: 1.4rem 0 !important;
+    border-top: 1px solid var(--hair);
+  }
+  #brand .bstep:first-child{ border-top: none; padding-top: 0.5rem }
+  #brand .bnum{
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    width: 48px !important;
+    height: 48px !important;
+    margin: 0 !important;
+    align-self: start;
+  }
+  #brand .bname{
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+    padding-top: 0.1rem;
+    font-size: 1.0625rem !important;
+    line-height: 1.25 !important;
+  }
+  #brand .bdesc{
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    margin: 0.4rem 0 0 !important;
+    font-size: 0.9375rem !important;
+    line-height: 1.5 !important;
+    color: var(--mute);
+    text-wrap: pretty;
+  }
+
+  /* ── D. Section vertical rhythm — handled above in §9 (unified padding).
+        Only #team-system overshoot bottom override is kept here. ── */
+  #team-system{
+    padding-bottom: clamp(3.25rem, 6.5vh, 4.5rem) !important;
+  }
+
+  /* ── E. Marks placement on mobile.
+        intro-mark and ts-mark → top-right of their section, aligned with
+        the whisper line on the left. Same idea as desktop where they
+        sat in the corner.
+        partner-mark → stays inline below the partner-final text. ── */
+  #intro, #team-system{ position: relative }
+  #intro .intro-mark,
+  #team-system .ts-mark{
+    position: absolute !important;
+    top: clamp(5rem, 8.5vh, 6.5rem) !important;
+    right: 1.25rem !important;
+    left: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    width: 10px !important;
+    height: 10px !important;
+    aspect-ratio: 1;
+    z-index: 5;
+  }
+  /* keep partner-mark inline (it follows the closing line of its section) */
+  .partner-mark{
+    position: relative !important;
+    inset: auto !important;
+    left: auto !important; right: auto !important;
+    top: auto !important; bottom: auto !important;
+    margin: clamp(2rem, 5vh, 3.25rem) auto 0 !important;
+    width: 10px !important;
+    height: 10px !important;
+    aspect-ratio: 1;
+  }
+  /* override the default absolute style for ts-mark too (it was section.dark > .ts-mark) */
+  section.dark > .ts-mark{
+    position: absolute !important;
+  }
+
+  /* ── F. Team manifesto — flatten authored <br>s; text-wrap pretty ── */
+  .team-manifesto .lead-line,
+  .team-manifesto .lead-sub,
+  .team-manifesto .lead-accent{
+    text-wrap: pretty;
+  }
+  .team-manifesto .lead-line br,
+  .team-manifesto .lead-sub br,
+  .team-manifesto .lead-accent br{ display: none }
+  .team-manifesto .lead-line{
+    font-size: clamp(1.65rem, 7vw, 2.4rem) !important;
+    line-height: 1.1 !important;
+  }
+  .team-manifesto .lead-sub{
+    font-size: 0.95rem !important;
+    line-height: 1.55 !important;
+  }
+  .team-manifesto .lead-accent{
+    font-size: clamp(1.15rem, 4.8vw, 1.5rem) !important;
+    line-height: 1.32 !important;
+  }
+
+  /* ── G. SCROLL-ACTIVE: mirror hover states on mobile via .scroll-active.
+        IO sets this class when the element passes the middle band of viewport;
+        the user sees the same accent shift desktop hovers produce, but
+        driven by scroll. Buttons/links are excluded — only narrative rows. ── */
+  /* Principles ("Во что я верю.") */
+  .principle.scroll-active::after{ width: 100% }
+  .principle.scroll-active .ptitle{ color: var(--accent) }
+
+  /* Audience ("Это люди, а не цифры.") */
+  .aud-list li.scroll-active{ padding-left: 0.5rem }
+  .aud-list li.scroll-active .atitle,
+  .aud-list li.scroll-active .adesc,
+  .aud-list li.scroll-active .anote{ color: var(--accent) }
+
+  /* Services ("Где я полезен.") */
+  .svc-row.scroll-active{ padding-left: 0.5rem }
+  .svc-row.scroll-active .svc-name,
+  .svc-row.scroll-active .svc-text{ color: var(--accent) }
+
+  /* ── H. Services row — number left, name+text right (compact 2-col) ── */
+  #services .svc-row{
+    display: grid !important;
+    grid-template-columns: auto 1fr !important;
+    column-gap: 1.1rem !important;
+    row-gap: 0.4rem !important;
+    padding: 1.4rem 0 !important;
+    align-items: start !important;
+  }
+  #services .svc-row .svc-num{
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    font-size: 1.05rem !important;
+    line-height: 1 !important;
+    padding-top: 0.25rem;
+    margin: 0 !important;
+    align-self: start;
+  }
+  #services .svc-row .svc-name{
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: clamp(1.15rem, 4.6vw, 1.4rem) !important;
+    line-height: 1.22 !important;
+    letter-spacing: -0.02em;
+    margin: 0 !important;
+    text-wrap: pretty;
+  }
+  #services .svc-row .svc-text{
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    max-width: none !important;
+    padding-top: 0 !important;
+    margin: 0.4rem 0 0 !important;
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    color: var(--mute);
+    text-wrap: pretty;
+  }
+
+  /* ── I. DS layers — "Слой 01/02/03" right side at heading row ── */
+  #ds .ds-layer{
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 1rem !important;
+    row-gap: 0 !important;
+    padding: 1.4rem 0 !important;
+  }
+  #ds .ds-layer .lyr-name{
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    margin: 0 !important;
+    font-size: clamp(1.4rem, 5.5vw, 1.85rem) !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.02em;
+  }
+  #ds .ds-layer .lyr-num{
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: start;
+    padding-top: 0.5rem;
+    margin: 0 !important;
+    font-size: 0.95rem !important;
+    line-height: 1 !important;
+    text-align: right;
+    white-space: nowrap;
+  }
+  #ds .ds-layer .lyr-items{
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    margin: 1.1rem 0 1rem !important;
+  }
+  #ds .ds-layer .lyr-note{
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    margin: 0 !important;
+  }
+
+  /* ── J. Companies — "2023→" right side at heading row ── */
+  #companies .co{
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 1rem !important;
+    row-gap: 0 !important;
+    padding: 1.5rem 0 !important;
+    align-items: start !important;
+  }
+  /* First child <div class="yrs"> moves to right column row 1 */
+  #companies .co > .yrs{
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: start;
+    padding-top: 0.55rem !important;
+    margin: 0 !important;
+    text-align: right !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.04em !important;
+    white-space: nowrap;
+  }
+  /* Wrapper containing name + role */
+  #companies .co > div:not(.yrs):not(.desc):not(.award){
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+  #companies .co .name{
+    font-size: clamp(1.5rem, 6vw, 2rem) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.025em;
+  }
+  #companies .co .role{
+    margin-top: 0.45rem !important;
+    font-size: 0.65rem !important;
+    letter-spacing: 0.1em !important;
+  }
+  #companies .co .desc{
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    margin-top: 0.9rem !important;
+    max-width: none !important;
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+  }
+  #companies .co .award{
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    text-align: left !important;
+    margin-top: 0.6rem !important;
+    max-width: none !important;
+    font-size: 0.7rem !important;
+    letter-spacing: 0.06em !important;
+    line-height: 1.5 !important;
+  }
+
+  /* ── K. Pain-list — fix hover transform so the pnote does NOT
+        slide off-screen to the left. On mobile it shifts RIGHT
+        (small 6px nudge from left edge) and changes color. ── */
+  .pain-list li:hover .pnote,
+  .pain-list li.scroll-active .pnote{
+    transform: translateX(6px) !important;
+    transform-origin: left center !important;
+    color: var(--accent) !important;
+  }
+  /* Mirror hover state on scroll-active for pain-list too */
+  .pain-list li.scroll-active{
+    padding-left: 0.5rem;
+  }
+  .pain-list li.scroll-active .pt{
+    color: var(--accent);
+  }
+  /* Suppress the right-edge ::before arrow on mobile — was a desktop flourish */
+  .pain-list .pnote::before{ display: none !important }
+}
 </style>
 </head>
 <body>
@@ -2363,16 +2990,25 @@ function splitH2(h2){
   requestAnimationFrame(()=>h2.classList.add('h2-in'));
 }
 
-/* ─── Pain-list enhance — data-num + char wrap for WOW hover ─── */
+/* ─── Pain-list enhance — data-num + char wrap for WOW hover ───
+   Desktop: wrap each char in a span (original behavior, untouched).
+   Mobile: keep clean text — no spans, no inline-block, so words can never
+   break mid-glyph and no risk of unintended layout side-effects. */
 function enhancePainList(){
+  const isMobile = window.innerWidth <= 720 || window.matchMedia('(hover:none)').matches;
   const items = document.querySelectorAll('.pain-list li');
   items.forEach((li, idx) => {
     li.setAttribute('data-num', String(idx + 1).padStart(2, '0'));
-    li.dataset.magBound = '';  /* reset so listeners get re-bound after language switch */
+    li.dataset.magBound = '';
     const pt = li.querySelector('.pt');
     if(!pt) return;
-    /* Получаю чистый текст (без HTML), убираю &nbsp; превращая в обычный пробел для разделения */
     const text = pt.textContent;
+    if(isMobile){
+      pt.textContent = text;
+      pt.setAttribute('aria-label', text);
+      return;
+    }
+    /* Desktop: ORIGINAL char-wrap behavior (one .char span per glyph) */
     let ci = 0;
     pt.innerHTML = Array.from(text).map(ch => {
       if(ch === ' ' || ch === '\u00A0'){
@@ -2516,6 +3152,12 @@ function applyLang(lang){
     const aria = sw.getAttribute(ariaKey);
     if(aria) sw.setAttribute('aria-label', aria);
   }
+
+  /* Typography hygiene — glue prepositions, fix orphans across all text */
+  try { if(typeof clearTypographyFlags === 'function') clearTypographyFlags(); }catch(e){}
+  try { if(typeof fixTypographyOrphans === 'function') fixTypographyOrphans(); }catch(e){}
+  /* Scroll-hover IO targets text content that may have just been replaced */
+  try { if(typeof initScrollHover === 'function') initScrollHover(); }catch(e){}
 }
 
 /* wire up the switcher (works with both .lang-btn and bare buttons inside .lang-switch) */
@@ -2860,6 +3502,123 @@ function applyTooltips(){
   }
 }
 
+/* ─── Typography hygiene: glue short prepositions to next word with NBSP.
+   Runs on mobile only — desktop already has wider columns and many manual
+   &nbsp;'s baked into the source. This is a defensive pass over visible
+   text nodes in prose blocks. Idempotent (NBSPs left alone on re-runs). */
+const RU_PREPS = ['в','на','с','к','о','об','от','до','по','за','у','и','а','но','или','же','ли','бы','не','ни','для','из','со','во','об','обо','перед','через','между','над','под','при','про'];
+const EN_PREPS = ['a','an','the','of','in','on','at','to','for','by','as','is','it','or','and','but','if','not','no'];
+const NBSP = '\u00A0';
+
+/* Elements where authored <br>s look bad on narrow mobile and should
+   become plain whitespace so the text flows naturally with our wrap rules. */
+const BR_TO_SPACE_SEL = [
+  '.sec-sub','.pain-quote','.partner-final','.aud-quote',
+  '.pain-list .pnote','.aud-list .anote',
+  '#brand .sec-sub',
+  /* Team manifesto — flatten <br>s so the words don't merge / orphan */
+  '.team-manifesto .lead-line',
+  '.team-manifesto .lead-sub',
+  '.team-manifesto .lead-accent'
+].join(',');
+
+function convertBrToSpace(root){
+  if(window.innerWidth > 720) return;
+  (root||document).querySelectorAll(BR_TO_SPACE_SEL).forEach(el=>{
+    if(el.dataset.brFlattened === '1') return;
+    el.querySelectorAll('br').forEach(br=>{
+      const space = document.createTextNode(' ');
+      br.parentNode.replaceChild(space, br);
+    });
+    el.dataset.brFlattened = '1';
+  });
+}
+
+function fixTypographyOrphans(root){
+  if(window.innerWidth > 720) return;
+  /* Step 1 — flatten <br>s in target elements first */
+  convertBrToSpace(root);
+  /* Step 2 — glue prepositions */
+  const lang = (document.documentElement.lang||'ru').slice(0,2);
+  const preps = (lang==='en' ? EN_PREPS : RU_PREPS);
+  const selectors = [
+    '.sec-sub','.sec-title',
+    '.pain-list .pt','.pain-list .pnote',
+    '.aud-list .atitle','.aud-list .adesc','.aud-list .anote',
+    '.intro-p','.intro-title','.numbers-lead','.numbers-title',
+    '.partner-final','.pain-foot','.pain-quote','.aud-quote',
+    '.bdesc','.bname',
+    '.pdesc','.ptitle',
+    '.bmp-split .label','.ctitle','.bmp-col li',
+    '.hero-sub','.hero-static','.hero-title',
+    '.hero-bottom .item .value',
+    '.team-manifesto .lead-line',
+    '.team-manifesto .lead-sub',
+    '.team-manifesto .lead-accent',
+    '.tblock .tn','.tblock .td',
+    '.cta-eyebrow','.cta-title','.cta-lead'
+  ];
+  const escaped = preps.map(p=>p.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&'));
+  /* (^|space) + prep + space + (word-start) → (^|space) + prep + NBSP + (word) */
+  const re = new RegExp('(^|[\\s\u00A0])(' + escaped.join('|') + ')([\\s]+)(?=\\S)','giu');
+  (root||document).querySelectorAll(selectors.join(',')).forEach(el=>{
+    if(el.dataset.typoFixed === '1') return;
+    /* Skip elements that already have nested .char/.word spans (pain-list desktop) */
+    if(el.querySelector('.char, .word')) return;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const nodes = [];
+    let n; while((n = walker.nextNode())) nodes.push(n);
+    nodes.forEach(tn=>{
+      if(!tn.nodeValue || !tn.nodeValue.trim()) return;
+      const fixed = tn.nodeValue.replace(re, (m, pre, prep, sp)=>{
+        return pre + prep + NBSP;
+      });
+      if(fixed !== tn.nodeValue) tn.nodeValue = fixed;
+    });
+    el.dataset.typoFixed = '1';
+  });
+}
+function clearTypographyFlags(root){
+  (root||document).querySelectorAll('[data-typo-fixed]').forEach(el=>{
+    delete el.dataset.typoFixed;
+  });
+  (root||document).querySelectorAll('[data-br-flattened]').forEach(el=>{
+    delete el.dataset.brFlattened;
+  });
+}
+
+/* ─── Scroll-hover (mobile only): mirror desktop hover state on rows
+   that enter the middle of the viewport. Lets narrative sections like
+   Principles / Audience / Services breathe the accent shift while
+   scrolling, since there's no real :hover on touch. ─── */
+const SCROLL_HOVER_SEL = '.principle, .aud-list li, .svc-row, .pain-list li';
+let _scrollHoverIO = null;
+function initScrollHover(){
+  /* tear down any prior observer first (e.g. after resize) */
+  if(_scrollHoverIO){
+    _scrollHoverIO.disconnect();
+    _scrollHoverIO = null;
+    document.querySelectorAll('.scroll-active').forEach(el=>el.classList.remove('scroll-active'));
+  }
+  if(window.innerWidth > 720) return;
+  if(window.matchMedia('(hover:hover)').matches) return; /* desktop with mouse — real hover works */
+  const els = document.querySelectorAll(SCROLL_HOVER_SEL);
+  if(!els.length) return;
+  _scrollHoverIO = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting) e.target.classList.add('scroll-active');
+      else e.target.classList.remove('scroll-active');
+    });
+  }, {
+    threshold: 0,
+    /* "Trigger band" = middle ~25% of viewport. Negative top + bottom
+       crops the observation area to roughly the center, so the active
+       row is always the one the user is reading. */
+    rootMargin: '-38% 0px -38% 0px'
+  });
+  els.forEach(el => _scrollHoverIO.observe(el));
+}
+
 /* ─────────────── hero title typewriter cycle ─────────────── */
 const HERO_WORDS={
   ru:['дизайн.','команду.','бренды.','системы.','продукт.'],
@@ -2877,9 +3636,19 @@ function startHeroTyper(){
   if(idx===-1) idx=0;
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   const alive=()=>myToken===heroTyperToken && document.contains(em);
+  const isMobile = window.innerWidth <= 720;
+  /* Mobile: kick the cycle in sooner and shorten dwell time so the
+     typing/deleting effect is actually visible before scroll */
+  const INITIAL_PAUSE = isMobile ? 1400 : 2600;
+  const READ_PAUSE = isMobile ? 1700 : 2400;
+  const BS_BASE = isMobile ? 45 : 55;
+  const BS_RAND = isMobile ? 25 : 30;
+  const TY_BASE = isMobile ? 70 : 80;
+  const TY_RAND = isMobile ? 45 : 55;
+  const HOLD_BEFORE_TYPE = isMobile ? 220 : 280;
   (async()=>{
     /* initial read pause (also gives reveal animation time on first run) */
-    await sleep(2600);
+    await sleep(INITIAL_PAUSE);
     while(alive()){
       em.classList.add('is-typing');
       /* backspace current word */
@@ -2887,22 +3656,22 @@ function startHeroTyper(){
       for(let i=start.length;i>0;i--){
         if(!alive()) return;
         em.textContent=start.slice(0,i-1);
-        await sleep(55+Math.random()*30);
+        await sleep(BS_BASE + Math.random()*BS_RAND);
       }
       if(!alive()) return;
-      await sleep(280);
+      await sleep(HOLD_BEFORE_TYPE);
       /* type next word */
       idx=(idx+1)%words.length;
       const next=words[idx];
       for(let i=1;i<=next.length;i++){
         if(!alive()) return;
         em.textContent=next.slice(0,i);
-        await sleep(80+Math.random()*55);
+        await sleep(TY_BASE + Math.random()*TY_RAND);
       }
       if(!alive()) return;
       em.classList.remove('is-typing');
       /* read pause before next backspace */
-      await sleep(2400);
+      await sleep(READ_PAUSE);
     }
   })();
 }
@@ -3110,6 +3879,26 @@ buildSideNavigation();
 updateProgress();
 applyTooltips();
 startHeroTyper();
+fixTypographyOrphans();
+initScrollHover();
+/* Re-run typography fix on viewport resize (e.g. mobile rotation, desktop resize) */
+let _typoResizeRaf = null;
+let _lastTypoWidth = window.innerWidth;
+window.addEventListener('resize', ()=>{
+  /* Only re-run when crossing the 720 boundary, not on every keyboard pop */
+  const w = window.innerWidth;
+  const wasMobile = _lastTypoWidth <= 720;
+  const isMobile = w <= 720;
+  _lastTypoWidth = w;
+  if(wasMobile === isMobile) return;
+  if(_typoResizeRaf) cancelAnimationFrame(_typoResizeRaf);
+  _typoResizeRaf = requestAnimationFrame(()=>{
+    clearTypographyFlags();
+    fixTypographyOrphans();
+    if(typeof enhancePainList==='function') enhancePainList();
+    initScrollHover();
+  });
+}, {passive:true});
 requestAnimationFrame(()=>sideProgress.classList.add('is-ready'));
 
 /* ─── Scroll-driven Hero Exit — words diverge as you scroll ─── */
@@ -3262,6 +4051,7 @@ document.addEventListener('click',(e)=>{
         em.classList.remove('is-typing');
       }
       currentSideLabel='';buildSideNavigation();_lastCurrentId=null;updateProgress();applyTooltips();startHeroTyper();
+      clearTypographyFlags();fixTypographyOrphans();
       /* Wait for the language-specific font to load before re-fitting */
       if(typeof fitWhenReady==='function') fitWhenReady();
     },80);
