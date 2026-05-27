@@ -86,7 +86,6 @@ section.dark{background:var(--bg-dark);color:#EAEAEA;position:relative}
 section.dark::before{content:'';position:absolute;top:0;left:var(--gutter);right:calc(var(--gutter) + var(--nav-safe-right));height:1px;background:var(--hair-dk);opacity:0.6;z-index:0}
 section.dark::after{content:'';position:absolute;bottom:0;left:var(--gutter);right:calc(var(--gutter) + var(--nav-safe-right));height:1px;background:var(--hair-dk);opacity:0.6;z-index:0}
 section.dark>*{position:relative;z-index:1}
-#team-system{padding-bottom:clamp(12rem,20vh,20rem)}
 section.dark+section.dark{padding-top:7vh}
 section:not(.dark):has(+ section.dark){padding-bottom:clamp(11rem,18vh,17rem)}
 section.dark+section:not(.dark){padding-top:clamp(11rem,18vh,17rem)}
@@ -98,7 +97,6 @@ section.dark h1,section.dark h2{color:#fff}
   .sec-head{grid-template-columns:1fr;row-gap:1rem}
   .sec-head > div:nth-child(2){grid-column:1 / -1}
 }
-#services .sec-head{margin-bottom:clamp(1.5rem,3vw,2.5rem)}
 .eyebrow{font-family:var(--mono);font-size:var(--t-eyebrow);letter-spacing:0.11em;text-transform:uppercase;color:var(--accent);font-weight:500;display:inline-flex;align-items:center;gap:0.6rem}
 [data-reveal]{opacity:0;transform:translateY(40px);filter:blur(6px);transition:opacity 1.6s var(--ease-out),transform 1.5s cubic-bezier(0.22,1,0.36,1),filter 1s var(--ease-out)}
 [data-reveal].in-view{opacity:1;transform:translateY(0);filter:blur(0)}
@@ -108,7 +106,6 @@ section.dark h1,section.dark h2{color:#fff}
 .stagger.in-view>[data-stagger]{opacity:1;transform:translateY(0);filter:blur(0)}
 @media (prefers-reduced-motion:reduce){[data-reveal],[data-reveal-num],.stagger>[data-stagger]{opacity:1;transform:none;filter:none;transition:none}*{animation:none!important}html{scroll-behavior:auto}}
 .hero{align-items:stretch;padding:0;min-height:100vh;min-height:100svh}
-#team-intro{min-height:100vh;min-height:100svh}
 #cta{min-height:100vh;min-height:100svh}
 .hero{align-items:stretch}
 .hero .container{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:0;padding-top:7rem;padding-bottom:2.5rem;position:relative;z-index:2;align-content:space-between;width:100%;min-height:100%}
@@ -146,20 +143,433 @@ section.dark h1,section.dark h2{color:#fff}
   .hero .container > [data-reveal-num]{grid-column:1 / -1}
   .hero-bottom-items{grid-column:1 / -1;grid-template-columns:1fr}
 }
-/* Intro — Variant A (strict Swiss): title cols 4-12, rule, two-column body, mono stamp */
-.intro-spread{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(1.75rem,3.5vw,2.75rem);width:100%}
-.intro-spread .intro-title{grid-column:4 / -1;font-family:var(--serif);font-weight:400;font-size:clamp(2rem,4.5vw,4rem);line-height:1.05;letter-spacing:-0.035em;color:var(--ink);text-wrap:balance;margin:0}
-.intro-spread .intro-rule{grid-column:4 / -1;height:1px;background:var(--hair);border:0;margin:clamp(0.5rem,1.5vw,1.5rem) 0 0 0;width:100%}
-.intro-spread .intro-cols{grid-column:4 / -1;display:grid;grid-template-columns:auto auto;column-gap:clamp(2rem,3vw,3.5rem);row-gap:1.5rem;justify-content:start}
-.intro-spread .intro-p{font-family:var(--sans);font-weight:400;font-style:normal;font-size:1.0625rem;line-height:1.6;color:var(--mute);margin:0;max-width:38ch}
-.intro-spread .intro-p strong{font-weight:500;color:var(--ink)}
-.intro-spread .intro-stamp{grid-column:9 / -1;font-family:var(--mono);font-size:var(--t-mono-sm);font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--mute);text-align:right;line-height:1.4;padding-top:clamp(1.5rem,3vw,2.5rem)}
-.intro-spread .intro-mark{grid-column:1 / 4;width:clamp(0.625rem,0.9vw,0.875rem);aspect-ratio:1;background:var(--accent);justify-self:start;align-self:center;margin-top:clamp(1.5rem,3vw,2.5rem)}
-@media (max-width:900px){
-  .intro-spread .intro-title,.intro-spread .intro-rule,.intro-spread .intro-cols,.intro-spread .intro-stamp{grid-column:1 / -1}
-  .intro-spread .intro-cols{grid-template-columns:1fr}
-  .intro-spread .intro-stamp{text-align:left}
+/* ═══════════════ MENTOR COSMOS — central word + satellite labels + radiating lines ═══════════════ */
+#mentor{
+  position: relative;
+  padding-top: clamp(6rem, 11vw, 8.5rem);
+  padding-bottom: clamp(6rem, 11vw, 8.5rem);
 }
+/* Unique aside placement (breaks the standard left/right grid).
+   Bar elevated above cosmos via z-index 20; whisper/kicker explicitly catch pointer events.
+   Perspective enables 3D tilt parallax on whisper. */
+#mentor > .sec-asides-bar{
+  position: absolute !important;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  display: block;
+  padding: 0;
+  margin: 0;
+  perspective: 1400px;
+}
+#mentor .sec-aside--left,
+#mentor .sec-aside--right{
+  position: absolute;
+  text-align: center;
+  pointer-events: auto;
+  z-index: 21;
+  white-space: nowrap;
+  left: 50%;
+  transform: translateX(-50%);
+}
+#mentor .sec-aside--left{
+  bottom: calc(50% + clamp(7rem, 11vw, 9.5rem) + 1.875rem);
+  top: auto;
+  max-width: none;
+  transform-origin: center bottom;
+  transform-style: preserve-3d;
+  transform: translateX(-50%)
+             rotateX(var(--whisper-tilt-x, 0deg))
+             rotateY(var(--whisper-tilt-y, 0deg));
+  will-change: transform;
+}
+#mentor .sec-aside--right{
+  top: calc(50% + clamp(7rem, 11vw, 9.5rem) + 1.875rem);
+  bottom: auto;
+  max-width: none;
+  transform-origin: center top;
+  transform: translateX(-50%);
+}
+/* Whisper hover — preserves 3D tilt vars + adds scale */
+@media (hover:hover) and (pointer:fine){
+  #mentor .sec-aside--left{ cursor: default; }
+  #mentor .sec-aside--left:hover{
+    transform: translateX(-50%)
+               rotateX(var(--whisper-tilt-x, 0deg))
+               rotateY(var(--whisper-tilt-y, 0deg))
+               scale(1.65);
+    color: #fff;
+    z-index: 50;
+    position: absolute;
+  }
+}
+.mentor-cosmos{
+  position:relative;
+  width:100%;
+  height: min(82vh, 760px);
+  overflow:visible;
+  perspective: 1400px;
+}
+.mentor-core{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  /* Fixed positioning centers relative to viewport/section, not relative parent */
+  transform: translate(-50%, -50%)
+             translate3d(var(--core-shift-x, 0px), var(--core-shift-y, 0px), 0)
+             rotateX(var(--core-tilt-x, 0deg))
+             rotateY(var(--core-tilt-y, 0deg));
+  transform-style: preserve-3d;
+  font-family: var(--serif);
+  font-size: clamp(2.5rem, 6.5vw, 5.5rem);
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  line-height: 1;
+  color: #fff;
+  z-index: 3;
+  margin: 0;
+  text-align: center;
+  text-transform: none;
+  text-wrap: balance;
+  opacity: 0;
+  filter: blur(10px);
+  animation: mentor-core-in 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.25s forwards;
+  animation-play-state: paused;
+  will-change: transform, opacity, filter;
+  pointer-events: none;
+}
+.mentor-cosmos.has-entered .mentor-core{
+  animation-play-state: running;
+}
+@keyframes mentor-core-in {
+  to {
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+.mentor-lines{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+.mentor-lines line{
+  stroke: var(--mute-2);
+  stroke-width: 0.6;
+  opacity: 0.3;
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: mentor-line-draw 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: var(--line-delay, 0s);
+  animation-play-state: paused;
+}
+.mentor-cosmos.has-entered .mentor-lines line{
+  animation-play-state: running;
+}
+@keyframes mentor-line-draw {
+  to { stroke-dashoffset: 0; }
+}
+.mentor-satellites{
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.msat{
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 50%);
+  font-family: var(--mono);
+  font-style: normal;
+  font-weight: 400;
+  font-size: clamp(0.9375rem, 1.05vw, 1.0625rem);
+  color: var(--mute-2);
+  white-space: nowrap;
+  letter-spacing: 0.015em;
+  pointer-events: auto;
+  cursor: default;
+  /* Initial state: AT cosmos center via entry-dx/dy translate, invisible, scaled down */
+  opacity: 0;
+  transform: translate(-50%, -50%)
+             translate(var(--entry-dx, 0px), var(--entry-dy, 0px))
+             scale(0.4);
+  transition: color 0.25s var(--ease-out);
+  animation: msat-burst 2.5s cubic-bezier(0.34, 1.56, 0.64, 1) var(--entry-delay, 0s) forwards,
+             msat-idle 6s ease-in-out var(--idle-delay, 2.5s) infinite;
+  animation-play-state: paused;
+  will-change: transform, opacity;
+}
+.mentor-cosmos.has-entered .msat{
+  animation-play-state: running;
+}
+@keyframes msat-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%)
+               translate(var(--entry-dx, 0px), var(--entry-dy, 0px))
+               scale(0.4);
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%)
+               translate(var(--shift-x, 0px), var(--shift-y, 0px))
+               scale(1);
+  }
+}
+@keyframes msat-idle {
+  0%, 100% {
+    transform: translate(-50%, -50%)
+               translate(var(--shift-x, 0px), var(--shift-y, 0px))
+               scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%)
+               translate(calc(var(--shift-x, 0px) + var(--drift-x, 0px) * 0.6), calc(var(--shift-y, 0px) + var(--drift-y, 0px) * 0.6))
+               scale(1.02);
+  }
+}
+.msat:hover{
+  color: var(--accent);
+}
+@media (max-width: 900px){
+  /* ─── MOBILE: cosmos collapses to a clean stacked list — no radial lines, no parallax ─── */
+  #mentor{
+    padding-top: clamp(3rem, 8vw, 5rem);
+    padding-bottom: clamp(3rem, 8vw, 5rem);
+  }
+  /* Revert unique aside placement — default mobile flow (whisper top-left, kicker top-right) */
+  #mentor > .sec-asides-bar{ position: static !important; }
+  #mentor .sec-aside--left,
+  #mentor .sec-aside--right{
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    text-align: left !important;
+    max-width: none !important;
+  }
+  #mentor .sec-aside--right{ text-align: right !important; }
+  /* Cosmos becomes a normal block */
+  .mentor-cosmos{
+    height: auto !important;
+    display: block !important;
+  }
+  /* Hide radial lines */
+  .mentor-lines{ display: none !important; }
+  /* Core word becomes a heading */
+  .mentor-core{
+    position: static !important;
+    text-align: left !important;
+    font-size: clamp(2rem, 9vw, 3.5rem) !important;
+    margin: 0 0 1.75rem 0 !important;
+    transform: none !important;
+  }
+  /* Satellites as a 2-column grid list — left/right semantic preserved via grid-auto-flow:column */
+  .mentor-satellites{
+    position: static !important;
+    inset: auto !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: repeat(10, auto) !important;
+    grid-auto-flow: column !important;
+    column-gap: clamp(1rem, 3vw, 2rem) !important;
+    row-gap: 0 !important;
+  }
+  .msat{
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+    font-size: 0.8125rem !important;
+    letter-spacing: 0.02em !important;
+    padding: 0.7rem 0 !important;
+    border-bottom: 1px solid var(--hair-dk) !important;
+    will-change: auto !important;
+    white-space: normal !important;
+  }
+}
+@media (max-width: 480px){
+  /* Very narrow viewports — single column */
+  .mentor-satellites{
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+    grid-auto-flow: row !important;
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  .mentor-lines line{ animation: none; stroke-dashoffset: 0; }
+  .msat{ animation: none; opacity: 1; transition: color 0.25s ease; }
+}
+
+/* ═══════════════ INTRO — fluid-vw scale (heatbit/awwwards pattern): design reference at 1440px, scales proportionally between 900-1920px, line count preserved across resolutions ═══════════════ */
+#intro{
+  align-items: flex-start;       /* override section default of center — content sits at consistent position from top regardless of viewport height */
+  padding-top: max(10rem, 11vw); /* clears whisper aside ("Дизайн — для людей…") at all common widths */
+  padding-bottom: 8vw;           /* ≈115px @1440 — breathing room for scroll animation */
+}
+.intro-spread{
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  column-gap: 2.2vw;
+  row-gap: 2.5vw;
+  width:100%;
+  position:relative;
+  --scroll-p:0;
+  /* Multi-stop soft fade — gradient mimics brand-marquee softness (14% fade zone).
+     In static state (scroll-p=0), all alphas = 1 → no visual mask. During dispersion,
+     edges progressively soften so dispersed words fade out gracefully rather than getting clipped sharply. */
+  -webkit-mask-image:linear-gradient(to right,
+    rgba(0,0,0,calc(1 - var(--scroll-p))) 0%,
+    rgba(0,0,0,calc(1 - var(--scroll-p) * 0.8)) 3%,
+    rgba(0,0,0,calc(1 - var(--scroll-p) * 0.5)) 6%,
+    rgba(0,0,0,calc(1 - var(--scroll-p) * 0.2)) 10%,
+    rgba(0,0,0,1) 14%, rgba(0,0,0,1) 86%,
+    rgba(0,0,0,calc(1 - var(--scroll-p) * 0.2)) 90%,
+    rgba(0,0,0,calc(1 - var(--scroll-p) * 0.5)) 94%,
+    rgba(0,0,0,calc(1 - var(--scroll-p) * 0.8)) 97%,
+    rgba(0,0,0,calc(1 - var(--scroll-p))) 100%);
+          mask-image:linear-gradient(to right,
+    rgba(0,0,0,calc(1 - var(--scroll-p))) 0%,
+    rgba(0,0,0,calc(1 - var(--scroll-p) * 0.8)) 3%,
+    rgba(0,0,0,calc(1 - var(--scroll-p) * 0.5)) 6%,
+    rgba(0,0,0,calc(1 - var(--scroll-p) * 0.2)) 10%,
+    rgba(0,0,0,1) 14%, rgba(0,0,0,1) 86%,
+    rgba(0,0,0,calc(1 - var(--scroll-p) * 0.2)) 90%,
+    rgba(0,0,0,calc(1 - var(--scroll-p) * 0.5)) 94%,
+    rgba(0,0,0,calc(1 - var(--scroll-p) * 0.8)) 97%,
+    rgba(0,0,0,calc(1 - var(--scroll-p))) 100%);
+}
+/* Hero — full width, fluid scale */
+.intro-spread .intro-title{
+  grid-column:1 / -1;
+  font-family:var(--serif);
+  font-weight:400;
+  font-size: 5vw;
+  line-height:1.05;
+  letter-spacing:-0.035em;
+  color:var(--ink);
+  margin:0;
+  font-variation-settings:"opsz" 144,"SOFT" 30;
+}
+.intro-spread .intro-rule{
+  grid-column:4 / -1;
+  height:1px;
+  background:var(--hair);
+  border:0;
+  margin: 1.5vw 0 0 0;
+  width:100%;
+}
+.intro-spread .intro-cols{
+  grid-column:4 / -1;
+  display:grid;
+  grid-template-columns:1fr;
+  row-gap: 1.75vw;
+}
+.intro-spread .intro-p{
+  font-family:var(--serif);
+  font-weight:400;
+  font-style:normal;
+  font-size: 3.0vw;            /* ≈43.2px @1440 — slightly reduced for better balance */
+  line-height:1.3;
+  letter-spacing:-0.018em;
+  color:var(--ink-2);
+  margin:0;
+  max-width:none;
+  text-wrap:pretty;
+  font-variation-settings:"opsz" 72,"SOFT" 30;
+}
+.intro-spread .intro-p strong{font-weight:500;color:var(--ink)}
+.intro-spread .intro-stamp{
+  grid-column:9 / -1;
+  font-family:var(--mono);
+  font-size: 0.83vw;
+  font-weight:500;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--mute);
+  text-align:right;
+  line-height:1.4;
+  padding-top: 2.5vw;
+}
+.intro-spread .intro-mark{
+  grid-column:1 / 4;
+  width: 0.97vw;
+  aspect-ratio:1;
+  background:var(--accent);
+  justify-self:start;
+  align-self:center;
+  margin-top: 2.5vw;
+}
+
+/* EXIT-ONLY per-word dispersion — applied ONLY to bio paragraphs (intro-p) */
+.intro-spread .intro-p .iw{
+  display:inline-block;
+  transform:translateX(calc(var(--offset, 0px) * var(--scroll-p)));
+  opacity:calc(1 - var(--scroll-p) * 0.92);
+  filter:blur(calc(var(--scroll-p) * 3px));
+  transition:transform 0.25s linear, opacity 0.2s linear, filter 0.25s linear;
+  will-change:transform,opacity,filter;
+}
+.intro-spread .intro-p .iw__in{
+  display:inline-block;
+  transform-origin:center;
+  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1);
+  cursor:default;
+}
+/* Hover — use scaleX (no layout reflow) instead of letter-spacing (which would change intrinsic width and break line wrapping) */
+.intro-spread .intro-p .iw:hover .iw__in{
+  transform:translateY(-0.04em) scaleX(0.96);
+}
+
+/* Cap at very wide screens (>1920px) — prevents 4K monitors from making text absurdly large */
+@media (min-width: 1920px){
+  #intro{ padding-top: 211.2px; padding-bottom: 153.6px; }
+  .intro-spread{ column-gap: 42.24px; row-gap: 48px; }
+  .intro-spread .intro-title{ font-size: 96px; }
+  .intro-spread .intro-rule{ margin-top: 28.8px; }
+  .intro-spread .intro-cols{ row-gap: 33.6px; }
+  .intro-spread .intro-p{ font-size: 57.6px; }
+  .intro-spread .intro-stamp{ font-size: 16px; padding-top: 48px; }
+  .intro-spread .intro-mark{ width: 18.6px; margin-top: 48px; }
+}
+
+/* Mobile fallback — below 900px switch to rem-based sizes */
+@media (max-width:900px){
+  #intro{
+    align-items: center;
+    padding-top: clamp(4rem, 8vh, 5.5rem);
+    padding-bottom: clamp(5rem, 10vh, 7rem);
+  }
+  .intro-spread{ row-gap: clamp(1.5rem, 4vw, 2rem); column-gap: var(--col-gap); }
+  .intro-spread .intro-title,
+  .intro-spread .intro-rule,
+  .intro-spread .intro-cols,
+  .intro-spread .intro-stamp{grid-column:1 / -1}
+  .intro-spread .intro-cols{grid-template-columns:1fr; row-gap: 1.25rem}
+  .intro-spread .intro-stamp{text-align:left; font-size: 0.6875rem; padding-top: 1.5rem}
+  .intro-spread .intro-title{ font-size: clamp(1.875rem, 7vw, 2.75rem); }
+  .intro-spread .intro-p{ font-size: clamp(1.25rem, 5vw, 1.75rem); }
+  .intro-spread .intro-mark{ width: 0.625rem; margin-top: 1.5rem }
+  .intro-spread .intro-rule{ margin-top: 0.75rem }
+}
+@media (prefers-reduced-motion:reduce){
+  .intro-spread .intro-p .iw{
+    transform:none !important;
+    opacity:1 !important;
+    filter:none !important;
+    transition:none !important;
+  }
+  .intro-spread .intro-p .iw__in{transition:none !important}
+}
+
 .numbers-spread{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(3.5rem,6vw,5rem);align-items:start;width:100%}
 .numbers-text{grid-column:4 / -1;grid-row:1;display:flex;flex-direction:column;gap:clamp(1rem,2vw,1.75rem);max-width:60ch}
 .numbers-title{font-family:var(--serif);font-weight:400;font-size:var(--t-h1);letter-spacing:-0.035em;line-height:1.05;color:var(--ink);margin:0}
@@ -317,6 +727,35 @@ section.dark h1,section.dark h2{color:#fff}
   .partner-final-row{gap:1.25rem}
   .partner-mark{margin-bottom:0.1em}
 }
+/* ─── Partner interstitial: bridges 2-col compare and 3-col strategy/process/system ─── */
+.partner-bridge{
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  column-gap:var(--col-gap);
+  margin:clamp(3rem,5vw,4.5rem) 0 clamp(2rem,3.5vw,3rem);
+  padding-top:clamp(2rem,3.5vw,3rem);
+  border-top:1px solid var(--hair);
+}
+.partner-bridge-text{
+  grid-column:4 / -1;
+  font-family:var(--serif);
+  font-weight:400;
+  font-style:italic;
+  font-size:clamp(1.375rem,2.2vw,1.875rem);
+  line-height:1.3;
+  letter-spacing:-0.022em;
+  color:var(--ink);
+  max-width:48ch;
+  margin:0;
+  text-wrap:balance;
+}
+@media (max-width:900px){.partner-bridge-text{grid-column:1 / -1}}
+/* Bmp-cols when used inside Partner section (after merge) */
+#partner .bmp-cols{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2rem,3.5vw,3rem);margin-top:0}
+#partner .bmp-col{grid-column:span 4}
+@media (max-width:900px){#partner .bmp-col{grid-column:1 / -1}}
+/* ─── Team section: unified rhythm — manifesto rows + practice blocks share grid ─── */
+#team{padding-top:clamp(12rem,20vh,20rem);padding-bottom:clamp(12rem,20vh,20rem)}
 .principles-grid{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2.5rem,5vw,5rem);margin-top:clamp(1rem,3vw,2rem)}
 .principles-grid > .principle:nth-child(odd){grid-column:4 / 8}
 .principles-grid > .principle:nth-child(even){grid-column:8 / -1}
@@ -329,23 +768,266 @@ section.dark h1,section.dark h2{color:#fff}
 .principle:hover .ptitle{color:var(--accent)}
 .principle .ptitle em{font-style:italic;color:var(--accent);font-weight:400}
 .principle .pdesc{color:var(--mute);max-width:42ch;line-height:1.6;font-size:1.0625rem}
-/* Audience — Variant D: pain-style list + final quote */
-.aud-list{margin-top:clamp(1rem,3vw,2rem)}
-.aud-list ol{list-style:none;padding:0;margin:0;border-top:1px solid var(--hair)}
-.aud-list li{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);padding:clamp(0.95rem,1.5vw,1.25rem) 0;border-bottom:1px solid var(--hair);align-items:start;position:relative;transition:padding-left 0.45s var(--ease-out),border-bottom-color 0.4s var(--ease-out);cursor:default}
-.aud-list li:hover{padding-left:0.5rem;border-bottom-color:var(--accent)}
-.aud-list .an{grid-column:1 / 2;font-family:var(--serif);font-style:italic;font-weight:300;color:var(--accent);font-size:clamp(1.875rem,3vw,2.75rem);line-height:1;transition:color 0.35s var(--ease-out)}
-.aud-list .atitle{grid-column:4 / 7;font-family:var(--serif);font-weight:400;font-size:clamp(1.5rem,2.2vw,2rem);line-height:1.2;color:var(--ink);letter-spacing:-0.025em;margin:0;text-wrap:balance;transition:color 0.35s var(--ease-out)}
-.aud-list li:hover .atitle{color:var(--accent)}
-.aud-list .adesc{grid-column:7 / 11;font-family:var(--sans);font-weight:400;font-style:normal;font-size:0.9375rem;line-height:1.45;color:var(--mute);margin:0;max-width:42ch;padding-top:0.2rem;transition:color 0.35s var(--ease-out)}
-.aud-list .anote{grid-column:10 / -1;font-family:var(--mono);font-size:var(--t-mono-sm);color:var(--mute);text-align:right;max-width:24ch;line-height:1.55;letter-spacing:0.02em;justify-self:end;align-self:start;padding-top:0.35rem;transition:color 0.35s var(--ease-out)}
-.aud-quote em{color:var(--accent);font-style:italic;font-weight:400}
+/* ─── Audience: data stays visible; on hover, content lifts slightly and red strip slides up from below flush with row's bottom edge ─── */
+.aud-stack{
+  margin-top:clamp(2rem,4vw,3rem);
+}
+.aud-row{
+  --strip-h:clamp(2.75rem,3.5vw,3.5rem);
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  grid-template-rows:auto auto;
+  column-gap:var(--col-gap);
+  row-gap:clamp(0.65rem,1vw,0.9rem);
+  padding:clamp(1.75rem,2.5vw,2.25rem) 0 var(--strip-h);
+  border-bottom:1px solid var(--hair);
+  position:relative;
+  overflow:hidden;
+}
+
+/* Col 1 — number — matches .pain-list .pn exactly */
+.aud-row .ar-num{
+  grid-column:1 / 2;
+  grid-row:1 / span 2;
+  align-self:center;
+  display:inline-block;
+  font-family:var(--serif);
+  font-style:italic;
+  font-weight:300;
+  color:var(--accent);
+  font-size:clamp(1.875rem,3vw,2.75rem);
+  line-height:1;
+  transform-origin:left center;
+  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1),opacity 0.5s var(--ease-out),color 0.35s var(--ease-out);
+}
+.aud-row:hover .ar-num{transform:translateY(-0.4rem) scale(0.92);opacity:0.6}
+
+/* Row 1 — title and tagline (top) */
+.aud-row .ar-title{
+  grid-column:4 / 10;
+  grid-row:1;
+  font-family:var(--serif);
+  font-style:normal;
+  font-weight:400;
+  font-size:clamp(1.625rem,2.4vw,2.125rem);
+  line-height:1.05;
+  color:var(--ink);
+  letter-spacing:-0.026em;
+  margin:0;
+  text-wrap:balance;
+  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1);
+}
+.aud-row:hover .ar-title{transform:translateY(-0.4rem)}
+
+.aud-row .ar-tag{
+  grid-column:10 / -1;
+  grid-row:1;
+  align-self:end;
+  font-family:var(--serif);
+  font-style:italic;
+  font-weight:400;
+  font-size:clamp(0.9375rem,1.15vw,1.125rem);
+  color:var(--mute);
+  text-align:right;
+  margin:0;
+  line-height:1.35;
+  letter-spacing:-0.012em;
+  max-width:24ch;
+  justify-self:end;
+  text-wrap:balance;
+  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1);
+}
+.aud-row:hover .ar-tag{transform:translateY(-0.4rem)}
+
+/* Row 2 — data line (always visible, never hidden) */
+.aud-row .ar-data{
+  grid-column:4 / -1;
+  grid-row:2;
+  align-self:center;
+  font-family:var(--mono);
+  font-size:var(--t-mono-sm);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  font-weight:400;
+  color:var(--mute);
+  line-height:1.6;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1);
+}
+.aud-row .ar-data .num{color:var(--ink);font-weight:600}
+.aud-row .ar-data .sep{color:var(--mute-2);opacity:0.55;padding:0 0.5em}
+.aud-row:hover .ar-data{transform:translateY(-0.4rem)}
+
+/* Red strip — absolutely positioned at bottom, slides up from below row on hover */
+.aud-row .ar-stream{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:var(--strip-h);
+  background-color:var(--accent);
+  display:flex;
+  align-items:center;
+  overflow:hidden;
+  opacity:0;
+  transform:translateY(100%);
+  transition:transform 0.4s cubic-bezier(0.22,1,0.36,1),opacity 0.25s var(--ease-out);
+  pointer-events:none;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,0.4) 2.5%,rgba(0,0,0,0.75) 5%,#000 7%,#000 93%,rgba(0,0,0,0.75) 95%,rgba(0,0,0,0.4) 97.5%,transparent 100%);
+          mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,0.4) 2.5%,rgba(0,0,0,0.75) 5%,#000 7%,#000 93%,rgba(0,0,0,0.75) 95%,rgba(0,0,0,0.4) 97.5%,transparent 100%);
+}
+.aud-row:hover .ar-stream{opacity:1;transform:translateY(0)}
+
+.aud-row .ar-stream .stream-track{
+  display:flex;
+  gap:clamp(1.75rem,3vw,2.75rem);
+  align-items:center;
+  white-space:nowrap;
+  animation:aud-marquee 38s linear infinite;
+  animation-play-state:paused;
+  padding-left:clamp(1rem,2vw,1.5rem);
+  will-change:transform;
+}
+.aud-row:hover .ar-stream .stream-track{
+  animation-play-state:running;
+  animation-delay:0.5s;
+}
+@keyframes aud-marquee{
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+
+/* Each thought — italic Fraunces white on red, dots centered between items via brand-marquee pattern */
+.aud-row .ar-stream .stream-track > span{
+  display:inline-flex;
+  align-items:center;
+  gap:clamp(1.75rem,3vw,2.75rem);
+  font-family:var(--serif);
+  font-style:italic;
+  font-weight:400;
+  font-size:clamp(1.0625rem,1.35vw,1.3125rem);
+  color:#FFFFFF;
+  letter-spacing:-0.018em;
+  flex-shrink:0;
+  line-height:1.2;
+  font-variation-settings:"opsz" 36,"SOFT" 50;
+  opacity:0;
+  filter:blur(6px);
+  transform:translateY(6px);
+  transition:opacity 0.35s var(--ease-out),filter 0.4s var(--ease-out),transform 0.45s cubic-bezier(0.22,1,0.36,1);
+}
+.aud-row .ar-stream .stream-track > span::after{
+  content:'·';
+  color:#FFFFFF;
+  opacity:0.55;
+}
+.aud-row:hover .ar-stream .stream-track > span{
+  opacity:1;
+  filter:blur(0);
+  transform:translateY(0);
+}
+/* Tight stagger — total window 0.05–0.27s so all phrases visible right as strip arrives */
+.aud-row:hover .ar-stream .stream-track > span:nth-child(1){transition-delay:0.05s}
+.aud-row:hover .ar-stream .stream-track > span:nth-child(2){transition-delay:0.07s}
+.aud-row:hover .ar-stream .stream-track > span:nth-child(3){transition-delay:0.09s}
+.aud-row:hover .ar-stream .stream-track > span:nth-child(4){transition-delay:0.11s}
+.aud-row:hover .ar-stream .stream-track > span:nth-child(5){transition-delay:0.13s}
+.aud-row:hover .ar-stream .stream-track > span:nth-child(6){transition-delay:0.15s}
+.aud-row:hover .ar-stream .stream-track > span:nth-child(7){transition-delay:0.17s}
+.aud-row:hover .ar-stream .stream-track > span:nth-child(8){transition-delay:0.19s}
+.aud-row:hover .ar-stream .stream-track > span:nth-child(9){transition-delay:0.21s}
+.aud-row:hover .ar-stream .stream-track > span:nth-child(10){transition-delay:0.23s}
+.aud-row:hover .ar-stream .stream-track > span:nth-child(11){transition-delay:0.25s}
+.aud-row:hover .ar-stream .stream-track > span:nth-child(12){transition-delay:0.27s}
+
+@media (prefers-reduced-motion:reduce){
+  .aud-row .ar-num,
+  .aud-row .ar-title,
+  .aud-row .ar-data,
+  .aud-row .ar-tag{transition:none}
+  .aud-row .ar-stream{transition:opacity 0.3s var(--ease-out);transform:translateY(100%)}
+  .aud-row:hover .ar-stream{transform:translateY(0)}
+  .aud-row .ar-stream .stream-track{animation:none;transform:translateX(0)}
+  .aud-row .ar-stream .stream-track > span{transition:opacity 0.3s var(--ease-out);transform:none;filter:none;transition-delay:0s !important}
+}
+
+@media (max-width:1280px){
+  .aud-row .ar-tag{font-size:0.875rem;max-width:20ch}
+  .aud-row .ar-stream .stream-track > span{font-size:clamp(1rem,1.2vw,1.1875rem)}
+}
+
+/* Wide screens — slower marquee so text is comfortable to read */
+@media (min-width:1600px){
+  .aud-row .ar-stream .stream-track{animation-duration:48s}
+}
+
+/* Mobile — stack, show thoughts inline below data (no animation) */
 @media (max-width:900px){
-  .aud-list li{row-gap:0.5rem}
-  .aud-list .atitle{grid-column:2 / -1}
-  .aud-list .adesc{grid-column:2 / -1;padding-top:0.5rem}
-  .aud-list .anote{grid-column:2 / -1;text-align:left;padding-bottom:0;justify-self:start;margin-top:0.5rem}
-  .aud-quote{max-width:none}
+  .aud-row{
+    grid-template-columns:1fr;
+    grid-template-rows:auto auto auto auto auto;
+    row-gap:0.7rem;
+    padding:clamp(1.5rem,4vw,2rem) 0;
+    --strip-h:0;
+  }
+  .aud-row .ar-num{grid-column:1;grid-row:1;align-self:start;font-size:clamp(1.5rem,5vw,2rem)}
+  .aud-row .ar-title{grid-column:1;grid-row:2;font-size:clamp(1.375rem,5vw,1.75rem)}
+  .aud-row .ar-tag{grid-column:1;grid-row:3;text-align:left;max-width:none;justify-self:start;font-size:0.9375rem;padding-top:0.25rem;align-self:start}
+  .aud-row .ar-data{grid-column:1;grid-row:4;font-size:0.6875rem;white-space:normal;text-overflow:initial}
+  /* Stream becomes static inline text block under data */
+  .aud-row .ar-stream{
+    display:block;
+    grid-column:1;
+    grid-row:5;
+    position:static;
+    height:auto;
+    background-color:transparent;
+    transform:none;
+    padding:0.85rem 0 0;
+    overflow:visible;
+    -webkit-mask-image:none;
+            mask-image:none;
+    border-top:1px solid var(--hair);
+    margin-top:0.5rem;
+  }
+  .aud-row .ar-stream .stream-track{
+    display:block;
+    animation:none;
+    padding:0;
+    transform:none !important;
+  }
+  .aud-row .ar-stream .stream-track > span{
+    display:inline;
+    color:var(--mute);
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:0.9375rem;
+    opacity:1;
+    filter:none;
+    transform:none;
+    transition:none;
+    line-height:1.6;
+    gap:0;
+  }
+  .aud-row .ar-stream .stream-track > span::after{
+    content:'·';
+    color:var(--accent);
+    opacity:0.7;
+    margin:0 0.35rem;
+  }
+  /* Hide duplicate set (positions 13-24) on mobile */
+  .aud-row .ar-stream .stream-track > span:nth-child(n+13){display:none}
+  /* Last visible span shouldn't have trailing dot */
+  .aud-row .ar-stream .stream-track > span:nth-child(12)::after{display:none}
+
+  .aud-row:hover .ar-num,
+  .aud-row:hover .ar-title,
+  .aud-row:hover .ar-data,
+  .aud-row:hover .ar-tag{transform:none}
+  .aud-row:hover .ar-num{opacity:1}
 }
 .brand-steps{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2.5rem,4vw,4rem);margin-bottom:clamp(2rem,4vw,3rem);margin-top:clamp(1rem,3vw,2rem)}
 .brand-steps > .bstep:nth-child(3n+1){grid-column:4 / 7}
@@ -354,9 +1036,12 @@ section.dark h1,section.dark h2{color:#fff}
 @media (max-width:1100px){
   .principles-grid > .principle:nth-child(odd){grid-column:1 / 7}
   .principles-grid > .principle:nth-child(even){grid-column:7 / -1}
-  .brand-steps > .bstep:nth-child(3n+1){grid-column:1 / 7}
-  .brand-steps > .bstep:nth-child(3n+2){grid-column:7 / -1}
-  .brand-steps > .bstep:nth-child(3n){grid-column:1 / -1}
+  /* Clean 2-up rhythm — drop the 3n full-width orphan that breaks typography */
+  .brand-steps > .bstep:nth-child(3n+1),
+  .brand-steps > .bstep:nth-child(3n+2),
+  .brand-steps > .bstep:nth-child(3n){grid-column:auto}
+  .brand-steps > .bstep:nth-child(2n+1){grid-column:1 / 7}
+  .brand-steps > .bstep:nth-child(2n){grid-column:7 / -1}
 }
 @media (max-width:900px){
   /* ─── Simplified intermediate layout (tablet portrait, narrow tablet) ─── */
@@ -421,16 +1106,9 @@ section.dark h1,section.dark h2{color:#fff}
   /* Team rows full width */
   .team-manifesto .tm-row{grid-template-columns:1fr !important;row-gap:0.75rem !important}
   .team-manifesto .tm-row .tm-tag{grid-column:1 / -1 !important}
-  .team-manifesto .tm-row .lead-line,
-  .team-manifesto .tm-row .lead-sub,
-  .team-manifesto .tm-row .lead-accent{grid-column:1 / -1 !important}
+  .team-manifesto .tm-row .tm-text{grid-column:1 / -1 !important}
   
-  /* Team blocks (4) — single column */
-  .team-blocks-4{grid-template-columns:1fr !important}
-  .team-blocks-4 .tblock:nth-child(1),
-  .team-blocks-4 .tblock:nth-child(2),
-  .team-blocks-4 .tblock:nth-child(3),
-  .team-blocks-4 .tblock:nth-child(4){grid-column:1 / -1 !important}
+  /* Team blocks (4) — single column handled by the main rules below at 1024px */
   
   /* Outcomes grid (results) — single column at this width */
   
@@ -515,27 +1193,46 @@ section.dark h1,section.dark h2{color:#fff}
 .bmp-split .side .label{font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.12em;text-transform:uppercase;color:var(--mute);margin-top:0.85rem;line-height:1.6;max-width:30ch;font-weight:500}
 .bmp-split .vs{font-family:var(--serif);font-style:italic;color:var(--mute-2);font-size:2.5rem;font-weight:300;line-height:1}
 
-/* ─── SCROLL-DRIVEN BMP — numbers grow as section enters ─── */
-#bmp{--bp:0}
-#bmp .bmp-split .side .pct{display:inline-block;transform:scale(calc(0.86 + var(--bp) * 0.26));transform-origin:center;transition:transform 0.05s linear;will-change:transform}
-#bmp .bmp-split .side:nth-child(1) .pct{transform-origin:left center}
-#bmp .bmp-split .side:nth-child(3) .pct{transform-origin:right center}
-#bmp .bmp-split .vs{transform:rotate(calc(var(--bp) * 12deg));transition:transform 0.05s linear;will-change:transform}
-#bmp .sec-title em{transform:scale(calc(0.92 + var(--bp) * 0.16));transition:transform 0.05s linear;will-change:transform;display:inline-block;transform-origin:left center}
+/* ─── SCROLL-DRIVEN BMP — numbers grow as section enters (moved from #evaluation → #evaluation) ─── */
+#evaluation{--bp:0}
+#evaluation .bmp-split .side .pct{display:inline-block;transform:scale(calc(0.86 + var(--bp) * 0.26));transform-origin:center;transition:transform 0.05s linear;will-change:transform}
+#evaluation .bmp-split .side:nth-child(1) .pct{transform-origin:left center}
+#evaluation .bmp-split .side:nth-child(3) .pct{transform-origin:right center}
+#evaluation .bmp-split .vs{transform:rotate(calc(var(--bp) * 12deg));transition:transform 0.05s linear;will-change:transform}
+#evaluation .sec-title em{transform:scale(calc(0.92 + var(--bp) * 0.16));transition:transform 0.05s linear;will-change:transform;display:inline-block;transform-origin:left center}
 
 /* ─── SCROLL-DRIVEN SEC-TITLE EM — italic words scale subtly on viewport pass ─── */
 section{--tp:0}
 .sec-title em{display:inline-block;transform:scale(calc(0.94 + var(--tp) * 0.12));transform-origin:center;transition:transform 0.05s linear;will-change:transform}
 .sec-title em:first-child{transform-origin:left center}
 @media (prefers-reduced-motion:reduce){
-  #bmp{--bp:0 !important}
+  #evaluation{--bp:0 !important}
   section{--tp:0 !important}
 }
 @media (max-width:720px){
-  #bmp{--bp:0 !important}
+  #evaluation{--bp:0 !important}
   section{--tp:0 !important}
 }
 .bmp-dotgrid{display:grid;grid-template-columns:repeat(50,1fr);gap:5px;margin-bottom:clamp(2rem,4vw,3rem);width:100%}
+/* Breathing room between evaluation levels and 69/31 infographic */
+.ev-bmp-spacer{height:clamp(4rem,8vw,7rem)}
+/* Closing summary text — italic Fraunces accent, sits below dotgrid */
+.ev-bmp-foot{
+  grid-column:4 / -1;
+  font-family:var(--serif);
+  font-style:italic;
+  font-weight:300;
+  font-size:clamp(1.375rem,2.4vw,2rem);
+  line-height:1.3;
+  letter-spacing:-0.022em;
+  color:var(--accent);
+  margin:clamp(2rem,4vw,3rem) 0 0 0;
+  max-width:46ch;
+  text-wrap:balance;
+}
+@media (max-width:900px){
+  .ev-bmp-foot{grid-column:1 / -1; font-size:clamp(1.125rem,4vw,1.5rem)}
+}
 .bmp-dotgrid .d{aspect-ratio:1;border-radius:50%;background:var(--mute-2);opacity:0.35;transition:opacity 0.4s var(--ease-out),transform 0.4s var(--ease-out)}
 .bmp-dotgrid .d.accent{background:var(--accent);opacity:1}
 .bmp-dotgrid:hover .d{opacity:0.25}
@@ -573,37 +1270,140 @@ section{--tp:0}
 .level:hover .lq::before{opacity:1;transform:translateX(0)}
 /* Team-intro — Variant F (Swiss stack with mono tags + typographic contrast) */
 #team-intro{padding-top:clamp(7rem,11vh,9.5rem);padding-bottom:clamp(7rem,11vh,9.5rem)}
-.team-manifesto{width:100%}
-.team-manifesto .tm-stack{display:flex;flex-direction:column;border-top:1px solid var(--hair-dk)}
-.team-manifesto .tm-row{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);align-items:start;padding:clamp(2rem,3.5vw,2.75rem) 0;border-bottom:1px solid var(--hair-dk)}
-.team-manifesto .tm-tag{grid-column:1 / 4;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.11em;text-transform:uppercase;color:var(--accent);line-height:1.4;padding-top:0.65rem;font-weight:500;display:block}
-.team-manifesto .lead-line{grid-column:4 / 12;font-family:var(--serif);font-weight:300;font-style:italic;font-size:clamp(2rem,4.5vw,4rem);line-height:1.05;color:#fff;margin:0;max-width:none;letter-spacing:-0.028em;text-wrap:balance}
-.team-manifesto .lead-line em{color:var(--accent);font-style:italic;font-weight:400}
-.team-manifesto .lead-sub{grid-column:4 / 11;font-family:var(--sans);font-weight:400;font-style:normal;font-size:clamp(1.0625rem,1.25vw,1.25rem);color:var(--mute-2);max-width:none;line-height:1.55;margin:0;letter-spacing:-0.005em}
-.team-manifesto .lead-accent{grid-column:4 / 11;font-family:var(--serif);font-weight:300;font-style:italic;font-size:clamp(1.35rem,2vw,1.75rem);color:#fff;margin:0;max-width:none;line-height:1.3;letter-spacing:-0.02em}
-.team-manifesto .lead-accent em{color:var(--accent);font-style:italic;font-weight:400}
-@media (max-width:900px){
-  .team-manifesto .tm-tag{grid-column:1 / -1;padding-top:0;margin-bottom:0.85rem}
-  .team-manifesto .lead-line,.team-manifesto .lead-sub,.team-manifesto .lead-accent{grid-column:1 / -1}
+/* Team manifesto — 2-column layout: title left, content stack right; unified .tm-text style for all 3 rows */
+.team-manifesto{
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  column-gap:var(--col-gap);
+  width:100%;
 }
-.team-blocks-4{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2.5rem,3.5vw,3.5rem);margin-top:clamp(1rem,3vw,2rem)}
-.team-blocks-4 .tblock{grid-column:span 3;padding:0;background:transparent;border:none}
-.team-blocks-4 .tblock:nth-child(1){grid-column:4 / 7}
-.team-blocks-4 .tblock:nth-child(2){grid-column:7 / 10}
-.team-blocks-4 .tblock:nth-child(3){grid-column:10 / -1}
-@media (max-width:1024px){.team-blocks-4{column-gap:clamp(1.5rem,2.5vw,2.5rem)}.team-blocks-4 .tblock:nth-child(1){grid-column:1 / 7}.team-blocks-4 .tblock:nth-child(2){grid-column:7 / -1}.team-blocks-4 .tblock:nth-child(3){grid-column:1 / -1}}
-@media (max-width:640px){.team-blocks-4 .tblock:nth-child(1),.team-blocks-4 .tblock:nth-child(2),.team-blocks-4 .tblock:nth-child(3){grid-column:1 / -1}}
+.team-manifesto .tm-head{
+  grid-column:1 / 6;
+  position:sticky;
+  top:clamp(6rem,12vh,8rem);
+  align-self:start;
+}
+.team-manifesto .tm-head .sec-title{
+  font-family:var(--serif);
+  font-weight:400;
+  font-size:clamp(2.5rem,5vw,4.5rem);
+  color:#fff;
+  line-height:1.02;
+  letter-spacing:-0.035em;
+  margin:0;
+  max-width:11ch;
+}
+.team-manifesto .tm-head .sec-title em{color:var(--accent);font-style:italic;font-weight:400}
+.team-manifesto .tm-stack{
+  grid-column:6 / -1;
+  display:flex;
+  flex-direction:column;
+  border-top:1px solid var(--hair-dk);
+}
+.team-manifesto .tm-row{
+  display:grid;
+  grid-template-columns:9rem 1fr;
+  column-gap:clamp(1.5rem,2.5vw,2.5rem);
+  align-items:start;
+  padding:clamp(1.75rem,3vw,2.5rem) 0;
+  border-bottom:1px solid var(--hair-dk);
+}
+.team-manifesto .tm-tag{
+  font-family:var(--mono);
+  font-size:var(--t-mono-sm);
+  letter-spacing:0.11em;
+  text-transform:uppercase;
+  color:var(--accent);
+  line-height:1.4;
+  padding-top:0.5rem;
+  font-weight:500;
+  white-space:nowrap;
+}
+.team-manifesto .tm-text{
+  font-family:var(--serif);
+  font-weight:400;
+  font-style:normal;
+  font-size:clamp(1.5rem,2.4vw,2.125rem);
+  line-height:1.25;
+  color:#fff;
+  margin:0;
+  max-width:32ch;
+  letter-spacing:-0.022em;
+  text-wrap:balance;
+}
+.team-manifesto .tm-text em{color:var(--accent);font-style:italic;font-weight:400}
+@media (max-width:900px){
+  .team-manifesto{grid-template-columns:1fr}
+  .team-manifesto .tm-head{grid-column:1;position:static;margin-bottom:1.75rem}
+  .team-manifesto .tm-stack{grid-column:1}
+  .team-manifesto .tm-row{grid-template-columns:1fr;row-gap:0.75rem}
+  .team-manifesto .tm-tag{padding-top:0;margin-bottom:0.25rem}
+}
+.team-blocks-4{display:flex;flex-direction:column;margin-top:clamp(4rem,7vw,6rem);border-top:1px solid var(--hair-dk)}
+.team-blocks-4 .tblock{
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  column-gap:var(--col-gap);
+  align-items:start;
+  padding:clamp(2.25rem,3.75vw,3rem) 0;
+  border-bottom:1px solid var(--hair-dk);
+  background:transparent;
+  transition:opacity 0.45s var(--ease-out);
+}
 .team-blocks-4 .tblock:hover{background:transparent}
-.tblock{padding:0;background:transparent;transition:opacity 0.45s var(--ease-out)}
-.tblock:hover{background:transparent}
-.tblock .tlabel{font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.11em;text-transform:uppercase;color:var(--accent);margin-bottom:1.65rem;font-weight:500;display:block}
-.tblock .titem{padding:1.1rem 0;border-top:1px solid var(--hair-dk);cursor:default;transition:border-top-color 0.35s var(--ease-out),padding-left 0.45s var(--ease-out)}
-.tblock .tn{font-family:var(--serif);font-weight:400;font-size:1.375rem;color:#fff;margin-bottom:0.4rem;letter-spacing:-0.022em;transition:color 0.35s var(--ease-out)}
-.tblock .tn em{color:var(--accent);font-style:italic}
-.tblock .tn .time{color:var(--mute-2);font-family:var(--mono);font-size:0.85rem;font-style:normal;letter-spacing:0.06em;margin-left:0.5rem}
-.tblock .td{color:var(--mute-2);font-size:1.0625rem;line-height:1.5;transition:color 0.35s var(--ease-out)}
-.tblock .titem:hover{border-top-color:var(--accent);padding-left:clamp(0.5rem,1vw,0.85rem)}
-.tblock .titem:hover .tn{color:var(--accent)}
+.team-blocks-4 .tlabel{
+  grid-column:1 / 4;
+  font-family:var(--mono);
+  font-size:var(--t-mono-sm);
+  letter-spacing:0.11em;
+  text-transform:uppercase;
+  color:var(--accent);
+  font-weight:500;
+  padding-top:0.65rem;
+  margin-bottom:0;
+  display:block;
+}
+.team-blocks-4 .tblock-items{
+  grid-column:4 / -1;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  column-gap:clamp(1.25rem,2vw,2.25rem);
+  row-gap:1.5rem;
+  align-items:start;
+}
+.team-blocks-4 .titem{
+  padding:0;
+  border:none;
+  cursor:default;
+  transition:none;
+}
+.team-blocks-4 .titem:hover{border:none;padding-left:0;background:transparent}
+.team-blocks-4 .titem .tn{
+  font-family:var(--serif);
+  font-weight:400;
+  font-size:clamp(1.0625rem,1.25vw,1.25rem);
+  color:#fff;
+  margin-bottom:0.55rem;
+  line-height:1.15;
+  letter-spacing:-0.018em;
+  font-variation-settings:"opsz" 24,"SOFT" 30,"WONK" 0;
+  transition:color 0.35s var(--ease-out);
+}
+.team-blocks-4 .titem:hover .tn{color:var(--accent)}
+.team-blocks-4 .titem .td{
+  font-family:var(--sans);
+  font-size:0.9375rem;
+  color:var(--mute-2);
+  line-height:1.5;
+  letter-spacing:-0.003em;
+}
+@media (max-width:1024px){
+  .team-blocks-4 .tlabel{grid-column:1 / -1;margin-bottom:1.5rem;padding-top:0}
+  .team-blocks-4 .tblock-items{grid-column:1 / -1;grid-template-columns:repeat(2,1fr);row-gap:1.75rem}
+}
+@media (max-width:640px){
+  .team-blocks-4 .tblock-items{grid-template-columns:1fr;row-gap:1.25rem}
+}
 .ds-layers{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2.5rem,4vw,5rem);margin-top:clamp(1rem,3vw,2rem)}
 .ds-layers .ds-layer:nth-child(1){grid-column:4 / 7}
 .ds-layers .ds-layer:nth-child(2){grid-column:7 / 10}
@@ -720,16 +1520,24 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
 .side-progress.is-open .side-progress__label{opacity:0}
 .side-progress__label-inner{font-family:var(--mono);font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;white-space:nowrap;line-height:1;writing-mode:vertical-rl;transform:rotate(180deg);transition:opacity 0.3s var(--ease-out)}
 .side-progress__label.is-switching .side-progress__label-inner{opacity:0}
-.side-progress__track{position:relative;width:1px;height:120px;background:var(--hair);overflow:visible;flex-shrink:0}
-.side-progress__fill{position:absolute;top:0;left:0;right:0;height:0;background:var(--accent);transition:height 0.1s linear;pointer-events:none}
+.side-progress__track{position:relative;width:1px;height:120px;background-color:var(--hair);overflow:visible;flex-shrink:0}
+.side-progress__fill{position:absolute;top:0;left:0;right:0;height:0;background-color:var(--accent);transition:height 0.1s linear;pointer-events:none}
 .side-progress__tick{position:absolute;left:50%;transform:translate(-50%,-50%);width:26px;height:14px;background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.side-progress__tick::before{content:'';display:block;width:5px;height:1px;background:var(--mute);opacity:0.5;transition:width 0.3s var(--ease-out),background-color 0.3s var(--ease-out),opacity 0.3s var(--ease-out)}
-.side-progress__tick.is-passed::before{background:var(--accent);opacity:1}
-.side-progress__tick:hover::before{width:11px;background:var(--accent);opacity:1}
-.side-progress__tick.is-current::before{background:var(--accent);width:11px;opacity:1}
-.side-progress.on-dark .side-progress__tick::before{background:#fff;opacity:0.35}
-.side-progress.on-dark .side-progress__tick.is-passed::before{background:var(--accent);opacity:1}
-.side-progress.on-dark .side-progress__tick:hover::before,.side-progress.on-dark .side-progress__tick.is-current::before{background:var(--accent);opacity:1}
+/* Default inactive tick — light bg */
+.side-progress__tick::before{content:'';display:block;width:5px;height:1px;background-color:var(--mute);opacity:0.5;transition:width 0.3s var(--ease-out),background-color 0.3s var(--ease-out),opacity 0.3s var(--ease-out)}
+/* Inactive tick on dark bg */
+.side-progress.on-dark .side-progress__tick::before{background-color:#fff;opacity:0.35}
+/* ACTIVE STATES — always accent red, regardless of background. Using !important to guarantee no cascade override. */
+.side-progress__tick.is-passed::before,
+.side-progress__tick.is-current::before,
+.side-progress__tick:hover::before,
+.side-progress.on-dark .side-progress__tick.is-passed::before,
+.side-progress.on-dark .side-progress__tick.is-current::before,
+.side-progress.on-dark .side-progress__tick:hover::before{background-color:var(--accent) !important;opacity:1 !important}
+.side-progress__tick.is-current::before,
+.side-progress__tick:hover::before,
+.side-progress.on-dark .side-progress__tick.is-current::before,
+.side-progress.on-dark .side-progress__tick:hover::before{width:11px !important}
 .side-progress__percent{height:50px;width:14px;display:flex;align-items:flex-start;justify-content:center;color:var(--mute);transition:color 0.4s var(--ease-out),opacity 0.25s var(--ease-out);pointer-events:none}
 .side-progress.is-open .side-progress__percent{opacity:0}
 .side-progress__percent-inner{font-family:var(--mono);font-size:0.7rem;letter-spacing:0.08em;font-weight:500;font-variant-numeric:tabular-nums;line-height:1;writing-mode:vertical-rl;transform:rotate(180deg)}
@@ -1149,7 +1957,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   /* Hero scroll-driven exit completely off */
   .hero{--hp:0 !important}
   /* BMP scaling off */
-  #bmp{--bp:0 !important}
+  #evaluation{--bp:0 !important}
   /* Section title em scaling off */
   section{--tp:0 !important}
   /* Brand marquee speed limit on small screens */
@@ -1202,6 +2010,8 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   min-height:auto;
   padding:0;
   position:relative;
+  content-visibility:visible !important;
+  contain-intrinsic-size:auto !important;
 }
 .rs-pin-outer{
   position:relative;
@@ -1485,6 +2295,7 @@ html[lang="ru"] .co .desc .num,
 html[lang="ru"] .rs-card__num,
 html[lang="ru"] .principle .pnum,
 html[lang="ru"] .aud-list .an,
+html[lang="ru"] .aud-row .ar-num,
 html[lang="ru"] .pain-list .pn{
   font-family:'Fraunces',serif;
 }
@@ -1826,41 +2637,41 @@ html[lang="ru"] .hero-title--corner em{
 
   /* ── 5. 69 / 31 infographic — keep ORIGINAL dot-grid (per request),
         just make sure the size is comfortable on mobile (12 cols, 5px gap) ── */
-  #bmp .bmp-split{
+  #evaluation .bmp-split{
     display: grid !important;
     grid-template-columns: 1fr !important;
     gap: 1.75rem !important;
     margin: 0 0 2rem !important;
     align-items: start !important;
   }
-  #bmp .bmp-split .vs{ display: none !important }
-  #bmp .bmp-split .side{
+  #evaluation .bmp-split .vs{ display: none !important }
+  #evaluation .bmp-split .side{
     display: flex !important;
     flex-direction: column !important;
     text-align: left !important;
   }
-  #bmp .bmp-split .side:nth-child(1){ align-items: flex-start !important }
-  #bmp .bmp-split .side:nth-child(3){ align-items: flex-end !important; text-align: right !important }
-  #bmp .bmp-split .side .pct{
+  #evaluation .bmp-split .side:nth-child(1){ align-items: flex-start !important }
+  #evaluation .bmp-split .side:nth-child(3){ align-items: flex-end !important; text-align: right !important }
+  #evaluation .bmp-split .side .pct{
     font-size: clamp(3.5rem, 16vw, 5rem) !important;
     line-height: 0.92 !important;
     letter-spacing: -0.04em !important;
     transform: none !important;
   }
-  #bmp .bmp-split .side .label{
+  #evaluation .bmp-split .side .label{
     max-width: 26ch !important;
     margin-top: 0.8rem !important;
     font-size: 0.7rem !important;
     line-height: 1.55 !important;
     letter-spacing: 0.1em !important;
   }
-  #bmp .bmp-split .side:nth-child(3) .label{
+  #evaluation .bmp-split .side:nth-child(3) .label{
     margin-left: auto !important;
     margin-right: 0 !important;
     text-align: right !important;
   }
   /* Dot grid — restore original 12-col mobile layout with comfortable dot size */
-  #bmp .bmp-dotgrid{
+  #evaluation .bmp-dotgrid{
     display: grid !important;
     grid-template-columns: repeat(12, 1fr) !important;
     gap: 5px !important;
@@ -1872,9 +2683,9 @@ html[lang="ru"] .hero-title--corner em{
     background: transparent !important;
     padding: 0 !important;
   }
-  #bmp .bmp-dotgrid::before,
-  #bmp .bmp-dotgrid::after{ content: none !important; display: none !important }
-  #bmp .bmp-dotgrid .d{
+  #evaluation .bmp-dotgrid::before,
+  #evaluation .bmp-dotgrid::after{ content: none !important; display: none !important }
+  #evaluation .bmp-dotgrid .d{
     display: block !important;
     aspect-ratio: 1 !important;
     width: 100% !important;
@@ -1884,7 +2695,7 @@ html[lang="ru"] .hero-title--corner em{
     background: var(--mute-2);
     opacity: 0.35;
   }
-  #bmp .bmp-dotgrid .d.accent{
+  #evaluation .bmp-dotgrid .d.accent{
     background: var(--accent) !important;
     opacity: 1;
   }
@@ -2100,25 +2911,13 @@ html[lang="ru"] .hero-title--corner em{
   }
 
   /* ── F. Team manifesto — flatten authored <br>s; text-wrap pretty ── */
-  .team-manifesto .lead-line,
-  .team-manifesto .lead-sub,
-  .team-manifesto .lead-accent{
+  .team-manifesto .tm-text{
     text-wrap: pretty;
   }
-  .team-manifesto .lead-line br,
-  .team-manifesto .lead-sub br,
-  .team-manifesto .lead-accent br{ display: none }
-  .team-manifesto .lead-line{
-    font-size: clamp(1.65rem, 7vw, 2.4rem) !important;
-    line-height: 1.1 !important;
-  }
-  .team-manifesto .lead-sub{
-    font-size: 0.95rem !important;
-    line-height: 1.55 !important;
-  }
-  .team-manifesto .lead-accent{
-    font-size: clamp(1.15rem, 4.8vw, 1.5rem) !important;
-    line-height: 1.32 !important;
+  .team-manifesto .tm-text br{ display: none }
+  .team-manifesto .tm-text{
+    font-size: clamp(1.25rem, 5vw, 1.65rem) !important;
+    line-height: 1.25 !important;
   }
 
   /* ── G. SCROLL-ACTIVE: mirror hover states on mobile via .scroll-active.
@@ -2355,15 +3154,15 @@ html[lang="ru"] .hero-title--corner em{
 <section id="intro">
 <div class="sec-asides-bar">
 <div class="sec-aside sec-aside--left" data-i18n="whisper.intro">Дизайн&nbsp;— для людей.<br>Не&nbsp;для портфолио.</div>
-<div class="sec-aside sec-aside--right"><b>00</b> / 14 → <span data-i18n="intro.kicker">Начало</span></div>
+<div class="sec-aside sec-aside--right"><b>00</b> / 11 → <span data-i18n="intro.kicker">Начало</span></div>
 </div>
 <div class="container">
 <div class="intro-spread">
 <h2 class="intro-title" data-reveal data-i18n="intro.title">Двенадцать лет дизайна&nbsp;— и&nbsp;всё меньше про&nbsp;макеты.</h2>
 <hr class="intro-rule">
 <div class="intro-cols">
-<p class="intro-p" data-reveal data-i18n="intro.p1">Я&nbsp;прошёл путь от&nbsp;графического дизайнера до&nbsp;<strong>Head of Design</strong>&nbsp;— от&nbsp;федеральной <strong>enterprise</strong>-студии до&nbsp;глобального финтеха в&nbsp;Юго-Восточной Азии.</p>
-<p class="intro-p" data-reveal data-i18n="intro.p2">Моя зона&nbsp;— бренд, маркетинг, веб и&nbsp;продуктовая коммуникация. Собираю их&nbsp;в&nbsp;единую систему, чтобы компания звучала цельно во&nbsp;всех каналах.</p>
+<p class="intro-p" data-reveal data-i18n="intro.p1">От&nbsp;графического дизайнера&nbsp;— до&nbsp;<strong>Head of Design</strong>. От&nbsp;федеральной <strong>enterprise</strong>-студии&nbsp;— до&nbsp;финтеха в&nbsp;Юго-Восточной Азии.</p>
+<p class="intro-p" data-reveal data-i18n="intro.p2">Работаю на&nbsp;стыке бренда, маркетинга, веба и&nbsp;продукта. Собираю их&nbsp;в&nbsp;одну систему, чтобы компания звучала цельно.</p>
 </div>
 <div class="intro-mark shape-cycle" aria-hidden="true"></div>
 <div class="intro-stamp" data-i18n="intro.stamp">12+ лет · 3 страны · 3 компании</div>
@@ -2371,33 +3170,10 @@ html[lang="ru"] .hero-title--corner em{
 </div>
 </section>
 
-<section id="numbers">
-<div class="sec-asides-bar">
-<div class="sec-aside sec-aside--left" data-i18n="whisper.numbers">Цифры не&nbsp;врут.<br>Но&nbsp;и&nbsp;не&nbsp;всё говорят.</div>
-<div class="sec-aside sec-aside--right"><b>01</b> / 13 → <span data-i18n="numbers.kicker">В&nbsp;цифрах</span></div>
-</div>
-<div class="container">
-<div class="numbers-spread">
-<div class="numbers-text" data-reveal>
-<h2 class="numbers-title" data-i18n="numbers.title">В&nbsp;цифрах и&nbsp;фактах.</h2>
-<p class="numbers-lead" data-i18n="numbers.right">Не&nbsp;всё в&nbsp;дизайне измеряется цифрами. Но&nbsp;масштаб помогает понять контекст: 12+ лет, разные команды, продукты и&nbsp;бренды.</p>
-</div>
-<div class="numbers-grid stagger" data-reveal>
-<div class="cell" data-stagger><div class="big">12<em>+</em></div><div class="label" data-i18n="numbers.l.1">Лет<br>в&nbsp;дизайне</div></div>
-<div class="cell" data-stagger><div class="big">300<em>+</em></div><div class="label" data-i18n="numbers.l.2">Запущенных<br>продуктов</div></div>
-<div class="cell" data-stagger><div class="big">10<em>+</em></div><div class="label" data-i18n="numbers.l.4">Запущенных<br>систем</div></div>
-<div class="cell" data-stagger><div class="big">30<em>+</em></div><div class="label" data-i18n="numbers.l.3">Брендов<br>и&nbsp;айдентик</div></div>
-<div class="cell" data-stagger><div class="big">3</div><div class="label" data-i18n="numbers.l.5">Компании<br>на&nbsp;уровне Head</div></div>
-<div class="cell" data-stagger><div class="big">10<em>+</em></div><div class="label" data-i18n="numbers.l.6">Дизайнеров<br>в&nbsp;командах</div></div>
-</div>
-</div>
-</div>
-</section>
-
 <section id="pain">
 <div class="sec-asides-bar">
 <div class="sec-aside sec-aside--left" data-i18n="whisper.pain">«Просто нарисуйте»&nbsp;—<br>начало слабого проекта.</div>
-<div class="sec-aside sec-aside--right"><b>02</b> / 14 → <span data-i18n="pain.kicker">Симптомы</span></div>
+<div class="sec-aside sec-aside--right"><b>01</b> / 11 → <span data-i18n="pain.kicker">Симптомы</span></div>
 </div>
 <div class="container">
 <div style="width:100%">
@@ -2425,7 +3201,7 @@ html[lang="ru"] .hero-title--corner em{
 <section id="partner">
 <div class="sec-asides-bar">
 <div class="sec-aside sec-aside--left" data-i18n="whisper.partner">Самый долгий спор<br>моей карьеры.</div>
-<div class="sec-aside sec-aside--right"><b>03</b> / 14 → <span data-i18n="partner.kicker">Подход</span></div>
+<div class="sec-aside sec-aside--right"><b>02</b> / 11 → <span data-i18n="partner.kicker">Подход</span></div>
 </div>
 <div class="container">
 <div class="partner">
@@ -2467,8 +3243,8 @@ html[lang="ru"] .hero-title--corner em{
 
 <section id="principles">
 <div class="sec-asides-bar">
-<div class="sec-aside sec-aside--left" data-i18n="whisper.pr">Каждый принцип — следствие ошибки.</div>
-<div class="sec-aside sec-aside--right"><b>04</b> / 14 → <span data-i18n="pr.kicker">Принципы</span></div>
+<div class="sec-aside sec-aside--left" data-i18n="whisper.pr">То, что не&nbsp;помещается<br>в&nbsp;портфолио.</div>
+<div class="sec-aside sec-aside--right"><b>03</b> / 11 → <span data-i18n="pr.kicker">Принципы</span></div>
 </div>
 <div class="container">
 <div style="width:100%">
@@ -2492,7 +3268,7 @@ html[lang="ru"] .hero-title--corner em{
 <div class="principle" data-stagger>
 <div class="pnum">03</div>
 <div class="ptitle" data-i18n="pr.3.t">Красиво&nbsp;— недостаточно.<br><em>Должно работать</em></div>
-<p class="pdesc" data-i18n="pr.3.d">Дизайн должен помогать доверию, скорости выбора, конверсии, узнаваемости и&nbsp;росту системы.</p>
+<p class="pdesc" data-i18n="pr.3.d">Дизайн должен помогать доверию, скорости, конверсии и&nbsp;узнаваемости.</p>
 </div>
 <div class="principle" data-stagger>
 <div class="pnum">04</div>
@@ -2507,7 +3283,7 @@ html[lang="ru"] .hero-title--corner em{
 <section id="audience">
 <div class="sec-asides-bar">
 <div class="sec-aside sec-aside--left" data-i18n="whisper.aud">Впечатление создают<br>не&nbsp;картинки. Дизайн.</div>
-<div class="sec-aside sec-aside--right"><b>05</b> / 14 → <span data-i18n="aud.kicker">Аудитория</span></div>
+<div class="sec-aside sec-aside--right"><b>04</b> / 11 → <span data-i18n="aud.kicker">Аудитория</span></div>
 </div>
 <div class="container">
 <div style="width:100%">
@@ -2517,12 +3293,109 @@ html[lang="ru"] .hero-title--corner em{
 <p class="sec-sub" data-i18n="aud.sub">У&nbsp;аналитики нет настроения. У&nbsp;человека — есть.</p>
 </div>
 </header>
-<div class="aud-list stagger" data-reveal>
-<ol>
-<li data-stagger><span class="an">01</span><p class="atitle" data-i18n="aud.1.n">Первое впечатление</p><p class="adesc" data-i18n="aud.1.d">Что человек чувствует до&nbsp;слов и&nbsp;функций. Это решают типографика, цвет, ритм и&nbsp;плотность.</p><span class="anote" data-i18n="aud.1.note">Решает за&nbsp;секунды.</span></li>
-<li data-stagger><span class="an">02</span><p class="atitle" data-i18n="aud.2.n">Удобство в&nbsp;моменте</p><p class="adesc" data-i18n="aud.2.d">Человек не&nbsp;смотрит на&nbsp;хороший дизайн&nbsp;— он&nbsp;его ощущает.</p><span class="anote" data-i18n="aud.2.note">Не&nbsp;заметно&nbsp;—<br>значит работает.</span></li>
-<li data-stagger><span class="an">03</span><p class="atitle" data-i18n="aud.3.n">Что расскажет другому</p><p class="adesc" data-i18n="aud.3.d">Что человек запомнит и&nbsp;сможет пересказать. Здесь рождается сила бренда.</p><span class="anote" data-i18n="aud.3.note">Узнаваемость<br>и&nbsp;доверие.</span></li>
-</ol>
+<div class="aud-stack stagger" data-reveal>
+<div class="aud-row" data-stagger>
+<span class="ar-num" aria-hidden="true">01</span>
+<span class="ar-title" data-i18n="aud.1.n">Первое впечатление</span>
+<p class="ar-tag" data-i18n="aud.1.tag">Реакция&nbsp;— раньше понимания.</p>
+<div class="ar-data" data-i18n="aud.1.data"><span class="num">0.5с</span>&nbsp;впечатление<span class="sep">·</span><span class="num">10с</span>&nbsp;до&nbsp;решения<span class="sep">·</span><span class="num">38%</span>&nbsp;уходят<span class="sep">·</span><span class="num">94%</span>&nbsp;—&nbsp;дизайн</div>
+<div class="ar-stream" aria-hidden="true">
+<div class="stream-track">
+<span data-i18n="aud.1.t1">Похоже на&nbsp;скам</span>
+<span data-i18n="aud.1.t2">Сделано как у&nbsp;банка</span>
+<span data-i18n="aud.1.t3">Не&nbsp;понятно, кому это</span>
+<span data-i18n="aud.1.t4">Чувствую профессионализм</span>
+<span data-i18n="aud.1.t5">Это не&nbsp;для меня</span>
+<span data-i18n="aud.1.t6">Выглядит как мошенники</span>
+<span data-i18n="aud.1.t7">Серьёзная компания</span>
+<span data-i18n="aud.1.t8">Хочу разобраться</span>
+<span data-i18n="aud.1.t9">Боюсь обмана</span>
+<span data-i18n="aud.1.t10">Доверие с&nbsp;первой секунды</span>
+<span data-i18n="aud.1.t11">Видно, что вложились</span>
+<span data-i18n="aud.1.t12">Странная эстетика</span>
+<span data-i18n="aud.1.t1">Похоже на&nbsp;скам</span>
+<span data-i18n="aud.1.t2">Сделано как у&nbsp;банка</span>
+<span data-i18n="aud.1.t3">Не&nbsp;понятно, кому это</span>
+<span data-i18n="aud.1.t4">Чувствую профессионализм</span>
+<span data-i18n="aud.1.t5">Это не&nbsp;для меня</span>
+<span data-i18n="aud.1.t6">Выглядит как мошенники</span>
+<span data-i18n="aud.1.t7">Серьёзная компания</span>
+<span data-i18n="aud.1.t8">Хочу разобраться</span>
+<span data-i18n="aud.1.t9">Боюсь обмана</span>
+<span data-i18n="aud.1.t10">Доверие с&nbsp;первой секунды</span>
+<span data-i18n="aud.1.t11">Видно, что вложились</span>
+<span data-i18n="aud.1.t12">Странная эстетика</span>
+</div>
+</div>
+</div>
+<div class="aud-row" data-stagger>
+<span class="ar-num" aria-hidden="true">02</span>
+<span class="ar-title" data-i18n="aud.2.n">Решение в&nbsp;моменте</span>
+<p class="ar-tag" data-i18n="aud.2.tag">На&nbsp;хороший дизайн не&nbsp;смотрят&nbsp;— его ощущают.</p>
+<div class="ar-data" data-i18n="aud.2.data"><span class="num">01:42</span>&nbsp;сессия<span class="sep">·</span><span class="num">44%</span>&nbsp;бросают форму<span class="sep">·</span><span class="num">27%</span>&nbsp;drop-off<span class="sep">·</span><span class="num">+27%</span>&nbsp;возврат</div>
+<div class="ar-stream" aria-hidden="true">
+<div class="stream-track">
+<span data-i18n="aud.2.t1">Зачем им столько данных от&nbsp;меня</span>
+<span data-i18n="aud.2.t2">Не&nbsp;понимаю, что от&nbsp;меня хотят</span>
+<span data-i18n="aud.2.t3">Сделали бы&nbsp;проще</span>
+<span data-i18n="aud.2.t4">Слишком много шагов</span>
+<span data-i18n="aud.2.t5">Где найти то, что нужно</span>
+<span data-i18n="aud.2.t6">Дайте показать, что получу</span>
+<span data-i18n="aud.2.t7">Этот шаг кажется лишним</span>
+<span data-i18n="aud.2.t8">Сначала бы&nbsp;понять цену</span>
+<span data-i18n="aud.2.t9">Можно без регистрации</span>
+<span data-i18n="aud.2.t10">Удобно, что не&nbsp;требует кода</span>
+<span data-i18n="aud.2.t11">Я&nbsp;бы&nbsp;упростил форму</span>
+<span data-i18n="aud.2.t12">Лень читать всё это</span>
+<span data-i18n="aud.2.t1">Зачем им столько данных от&nbsp;меня</span>
+<span data-i18n="aud.2.t2">Не&nbsp;понимаю, что от&nbsp;меня хотят</span>
+<span data-i18n="aud.2.t3">Сделали бы&nbsp;проще</span>
+<span data-i18n="aud.2.t4">Слишком много шагов</span>
+<span data-i18n="aud.2.t5">Где найти то, что нужно</span>
+<span data-i18n="aud.2.t6">Дайте показать, что получу</span>
+<span data-i18n="aud.2.t7">Этот шаг кажется лишним</span>
+<span data-i18n="aud.2.t8">Сначала бы&nbsp;понять цену</span>
+<span data-i18n="aud.2.t9">Можно без регистрации</span>
+<span data-i18n="aud.2.t10">Удобно, что не&nbsp;требует кода</span>
+<span data-i18n="aud.2.t11">Я&nbsp;бы&nbsp;упростил форму</span>
+<span data-i18n="aud.2.t12">Лень читать всё это</span>
+</div>
+</div>
+</div>
+<div class="aud-row" data-stagger>
+<span class="ar-num" aria-hidden="true">03</span>
+<span class="ar-title" data-i18n="aud.3.n">След в&nbsp;памяти</span>
+<p class="ar-tag" data-i18n="aud.3.tag">Память хранит чувство, не&nbsp;интерфейс.</p>
+<div class="ar-data" data-i18n="aud.3.data"><span class="num">+31%</span>&nbsp;делятся<span class="sep">·</span><span class="num">48%</span>&nbsp;возвращаются<span class="sep">·</span><span class="num">+19%</span>&nbsp;узнаваемость<span class="sep">·</span><span class="num">+11</span>&nbsp;NPS</div>
+<div class="ar-stream" aria-hidden="true">
+<div class="stream-track">
+<span data-i18n="aud.3.t1">Скину коллегам, грамотно сделано</span>
+<span data-i18n="aud.3.t2">У&nbsp;них реально удобно</span>
+<span data-i18n="aud.3.t3">Запомнил их&nbsp;с&nbsp;первой минуты</span>
+<span data-i18n="aud.3.t4">Один из&nbsp;лучших, что видел</span>
+<span data-i18n="aud.3.t5">Расскажу в&nbsp;команде</span>
+<span data-i18n="aud.3.t6">Сам бы&nbsp;так не&nbsp;сделал</span>
+<span data-i18n="aud.3.t7">Вернусь к&nbsp;ним точно</span>
+<span data-i18n="aud.3.t8">Сразу поделился ссылкой</span>
+<span data-i18n="aud.3.t9">Сделано на&nbsp;уровне</span>
+<span data-i18n="aud.3.t10">Помню, как было приятно</span>
+<span data-i18n="aud.3.t11">Это конкурентам пример</span>
+<span data-i18n="aud.3.t12">Запомнил название</span>
+<span data-i18n="aud.3.t1">Скину коллегам, грамотно сделано</span>
+<span data-i18n="aud.3.t2">У&nbsp;них реально удобно</span>
+<span data-i18n="aud.3.t3">Запомнил их&nbsp;с&nbsp;первой минуты</span>
+<span data-i18n="aud.3.t4">Один из&nbsp;лучших, что видел</span>
+<span data-i18n="aud.3.t5">Расскажу в&nbsp;команде</span>
+<span data-i18n="aud.3.t6">Сам бы&nbsp;так не&nbsp;сделал</span>
+<span data-i18n="aud.3.t7">Вернусь к&nbsp;ним точно</span>
+<span data-i18n="aud.3.t8">Сразу поделился ссылкой</span>
+<span data-i18n="aud.3.t9">Сделано на&nbsp;уровне</span>
+<span data-i18n="aud.3.t10">Помню, как было приятно</span>
+<span data-i18n="aud.3.t11">Это конкурентам пример</span>
+<span data-i18n="aud.3.t12">Запомнил название</span>
+</div>
+</div>
+</div>
 </div>
 <p class="aud-quote" data-reveal data-i18n="aud.lead">Человек чувствует раньше, чем&nbsp;читает.<br>Если первое ощущение слабое, функциям приходится заново доказывать <em>доверие</em>.</p>
 </div>
@@ -2532,14 +3405,14 @@ html[lang="ru"] .hero-title--corner em{
 <section id="brand">
 <div class="sec-asides-bar">
 <div class="sec-aside sec-aside--left" data-i18n="whisper.br">Раньше думал:<br>бренд&nbsp;— это логотип.</div>
-<div class="sec-aside sec-aside--right"><b>06</b> / 14 → <span data-i18n="br.kicker">Бренд-стратегия</span></div>
+<div class="sec-aside sec-aside--right"><b>05</b> / 11 → <span data-i18n="br.kicker">Бренд-стратегия</span></div>
 </div>
 <div class="container">
 <div style="width:100%">
 <header class="sec-head sec-head--new" data-reveal>
 <div class="sec-title-wrap">
 <h2 class="sec-title" data-i18n="br.title">Как складывается бренд.</h2>
-<p class="sec-sub" data-i18n="br.sub">Бренд складывается не&nbsp;из&nbsp;логотипа. Он&nbsp;складывается из&nbsp;повторяемых решений: как звучим, как выглядим,<br>как двигаемся и&nbsp;как держим качество в&nbsp;каждом канале.</p>
+<p class="sec-sub" data-i18n="br.sub">Бренд&nbsp;— не&nbsp;логотип. Это повторяемые решения: как звучим, как выглядим, как двигаемся, как держим качество.</p>
 </div>
 </header>
 <div class="brand-steps stagger" data-reveal>
@@ -2547,50 +3420,8 @@ html[lang="ru"] .hero-title--corner em{
 <div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle class="bicon-pos-dot bicon-pos-d1"  cx="57"    cy="32"    r="1.4"/><circle class="bicon-pos-dot bicon-pos-d2"  cx="53.65" cy="44.5"  r="1.4"/><circle class="bicon-pos-dot bicon-pos-d3"  cx="44.5"  cy="53.65" r="1.4"/><circle class="bicon-pos-dot bicon-pos-d4"  cx="32"    cy="57"    r="1.4"/><circle class="bicon-pos-dot bicon-pos-d5"  cx="19.5"  cy="53.65" r="1.4"/><circle class="bicon-pos-dot bicon-pos-d6"  cx="10.35" cy="44.5"  r="1.4"/><circle class="bicon-pos-dot bicon-pos-d7"  cx="7"     cy="32"    r="1.4"/><circle class="bicon-pos-dot bicon-pos-d8"  cx="10.35" cy="19.5"  r="1.4"/><circle class="bicon-pos-dot bicon-pos-d9"  cx="19.5"  cy="10.35" r="1.4"/><circle class="bicon-pos-dot bicon-pos-d10" cx="32"    cy="7"     r="1.4"/><circle class="bicon-pos-dot bicon-pos-d11" cx="44.5"  cy="10.35" r="1.4"/><circle class="bicon-pos-dot bicon-pos-d12" cx="53.65" cy="19.5"  r="1.4"/><path class="bicon-compass" d="M 32 22 L 40 42 L 32 38 L 24 42 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></div><div class="bname" data-i18n="br.2.n">Позиция</div><p class="bdesc" data-i18n="br.2.d">Для кого мы, против кого, и&nbsp;о&nbsp;чём мы&nbsp;принципиально молчим. Без второго первое не&nbsp;работает.</p></div>
 <div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect class="bicon-eq bicon-eq-1" x="7" y="28" width="2.5" height="8" rx="1.25"/><rect class="bicon-eq bicon-eq-2" x="14" y="23" width="2.5" height="18" rx="1.25"/><rect class="bicon-eq bicon-eq-3" x="21" y="18" width="2.5" height="28" rx="1.25"/><rect class="bicon-eq bicon-eq-4" x="28" y="25" width="2.5" height="14" rx="1.25"/><rect class="bicon-eq bicon-eq-5" x="35" y="20" width="2.5" height="24" rx="1.25"/><rect class="bicon-eq bicon-eq-6" x="42" y="27" width="2.5" height="10" rx="1.25"/><rect class="bicon-eq bicon-eq-7" x="49" y="23" width="2.5" height="18" rx="1.25"/><rect class="bicon-eq bicon-eq-8" x="56" y="29" width="2.5" height="6" rx="1.25"/></svg></div><div class="bname" data-i18n="br.3.n">Голос</div><p class="bdesc" data-i18n="br.3.d">Как звучит бренд в&nbsp;письме, в&nbsp;баннере, в&nbsp;техподдержке. Тон, который узнают.</p></div>
 <div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><text class="bicon-aa-letter" x="22" y="46" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="44" fill="currentColor">A</text><text class="bicon-aa-letter" x="44" y="46" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="32" fill="currentColor">a</text></svg></div><div class="bname" data-i18n="br.4.n">Визуальный язык</div><p class="bdesc" data-i18n="br.4.d">Типографика, цвет, образ, motion, фотостиль. Не&nbsp;«логотип и&nbsp;палитра», а&nbsp;целая грамматика.</p></div>
-<div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><line class="bicon-sys-ray bicon-sys-r1" x1="54" y1="32" x2="40" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r2" x1="43" y1="13" x2="36" y2="25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r3" x1="21" y1="13" x2="28" y2="25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r4" x1="10" y1="32" x2="24" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r5" x1="21" y1="51" x2="28" y2="39" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r6" x1="43" y1="51" x2="36" y2="39" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="56" cy="32" r="2"/><circle cx="44" cy="11" r="2"/><circle cx="20" cy="11" r="2"/><circle cx="8" cy="32" r="2"/><circle cx="20" cy="53" r="2"/><circle cx="44" cy="53" r="2"/><circle cx="32" cy="32" r="5"/></svg></div><div class="bname" data-i18n="br.5.n">Система</div><p class="bdesc" data-i18n="br.5.d">Как айдентика разворачивается на&nbsp;сайт, соцсети, продукт, презентации, наружку. Без потерь.</p></div>
+<div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><line class="bicon-sys-ray bicon-sys-r1" x1="54" y1="32" x2="40" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r2" x1="43" y1="13" x2="36" y2="25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r3" x1="21" y1="13" x2="28" y2="25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r4" x1="10" y1="32" x2="24" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r5" x1="21" y1="51" x2="28" y2="39" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line class="bicon-sys-ray bicon-sys-r6" x1="43" y1="51" x2="36" y2="39" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="56" cy="32" r="2"/><circle cx="44" cy="11" r="2"/><circle cx="20" cy="11" r="2"/><circle cx="8" cy="32" r="2"/><circle cx="20" cy="53" r="2"/><circle cx="44" cy="53" r="2"/><circle cx="32" cy="32" r="5"/></svg></div><div class="bname" data-i18n="br.5.n">Система</div><p class="bdesc" data-i18n="br.5.d">Как айдентика разворачивается на&nbsp;сайт, соцсети, продукт, презентации, наружку.</p></div>
 <div class="bstep" data-stagger><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle class="bicon-ripple" cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="1.5"/><circle class="bicon-ripple bicon-ripple-2" cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="32" cy="32" r="4"/></svg></div><div class="bname" data-i18n="br.6.n">Запуск</div><p class="bdesc" data-i18n="br.6.d">Замеры, итерации, доля голоса, brand recall. Бренд живой&nbsp;— он&nbsp;меняется.</p></div>
-</div>
-</div>
-</div>
-</section>
-
-<section id="bmp">
-<div class="sec-asides-bar">
-<div class="sec-aside sec-aside--left" data-i18n="whisper.bmp">Работа происходит<br>до&nbsp;первого пикселя.</div>
-<div class="sec-aside sec-aside--right"><b>07</b> / 14 → <span data-i18n="bmp.kicker">Что стоит за&nbsp;визуалом</span></div>
-</div>
-<div class="container">
-<div style="width:100%">
-<header class="sec-head sec-head--new" data-reveal>
-<div class="sec-title-wrap">
-<h2 class="sec-title" data-i18n="bmp.title">Дизайн&nbsp;— это<br>верхушка системы.</h2>
-<p class="sec-sub" data-i18n="bmp.sub">То, что видят пользователи,&nbsp;— финальная форма. Всё остальное&nbsp;— то, на&nbsp;чём она держится.</p>
-</div>
-</header>
-<div class="bmp-top">
-<div class="bmp-split" data-reveal>
-<div class="side"><div class="pct"><span class="stat-counter" data-target="69">0</span><em>%</em></div><p class="label" data-i18n="bmp.s1.label">Стратегия, процессы, команда&nbsp;— то, что делает визуал возможным</p></div>
-<div class="vs">/</div>
-<div class="side" style="text-align:right"><div class="pct"><span class="stat-counter" data-target="31">0</span><em>%</em></div><p class="label" style="margin-left:auto" data-i18n="bmp.s2.label">Визуал&nbsp;— финальная форма того, что было сделано до</p></div>
-</div>
-<div class="bmp-dotgrid" id="dotgrid" data-reveal></div>
-</div>
-<div class="bmp-cols stagger" data-reveal>
-<div class="bmp-col" data-stagger>
-<span class="clabel" data-i18n="bmp.c1.lbl">Стратегия</span>
-<div class="ctitle" data-i18n="bmp.c1.t">Что и&nbsp;зачем.</div>
-<ul><li data-i18n="bmp.c1.l1">Позиционирование</li><li data-i18n="bmp.c1.l2">Tone of voice</li><li data-i18n="bmp.c1.l3">Цели и&nbsp;горизонты</li><li data-i18n="bmp.c1.l4">Карта аудитории</li></ul>
-</div>
-<div class="bmp-col" data-stagger>
-<span class="clabel" data-i18n="bmp.c2.lbl">Процессы</span>
-<div class="ctitle" data-i18n="bmp.c2.t">Как.</div>
-<ul><li data-i18n="bmp.c2.l1">Ритуалы команды</li><li data-i18n="bmp.c2.l2">Контракт с&nbsp;инженерией</li><li data-i18n="bmp.c2.l3">Контроль качества</li><li data-i18n="bmp.c2.l4">Скорость production</li></ul>
-</div>
-<div class="bmp-col" data-stagger>
-<span class="clabel" data-i18n="bmp.c3.lbl">Система</span>
-<div class="ctitle" data-i18n="bmp.c3.t">На&nbsp;чём держится.</div>
-<ul><li data-i18n="bmp.c3.l1">Токены и&nbsp;компоненты</li><li data-i18n="bmp.c3.l2">Гайды и&nbsp;правила</li><li data-i18n="bmp.c3.l3">Метрика adoption</li><li data-i18n="bmp.c3.l4">Готовность к&nbsp;масштабу</li></ul>
-</div>
 </div>
 </div>
 </div>
@@ -2598,7 +3429,7 @@ html[lang="ru"] .hero-title--corner em{
 <section id="evaluation">
 <div class="sec-asides-bar">
 <div class="sec-aside sec-aside--left" data-i18n="whisper.ev">Работа закончена,<br>когда работает<br>в&nbsp;реальности.</div>
-<div class="sec-aside sec-aside--right"><b>08</b> / 14 → <span data-i18n="ev.kicker">Оценка</span></div>
+<div class="sec-aside sec-aside--right"><b>06</b> / 11 → <span data-i18n="ev.kicker">Оценка</span></div>
 </div>
 <div class="container">
 <div style="width:100%">
@@ -2612,76 +3443,45 @@ html[lang="ru"] .hero-title--corner em{
 <div class="level" data-stagger><div class="ln" data-i18n="ev.1.ln">Уровень 1</div><div class="ltitle" data-i18n="ev.1.t">Логика</div><div class="ldesc" data-i18n="ev.1.d">Пользователь понимает: куда нажать, что произойдёт, зачем это нужно. Если требует объяснения — решение слабое.</div><div class="lq" data-i18n="ev.1.q">Понял?</div></div>
 <div class="level" data-stagger><div class="ln" data-i18n="ev.2.ln">Уровень 2</div><div class="ltitle" data-i18n="ev.2.t">Форма</div><div class="ldesc" data-i18n="ev.2.d">Иерархия, контраст, ритм, типографика, баланс. Здесь живёт ремесло — и&nbsp;здесь работает экспрессия.</div><div class="lq" data-i18n="ev.2.q">Сделано?</div></div>
 <div class="level" data-stagger><div class="ln" data-i18n="ev.3.ln">Уровень 3</div><div class="ltitle" data-i18n="ev.3.t">Система</div><div class="ldesc" data-i18n="ev.3.d">Можно ли&nbsp;развернуть на&nbsp;десять каналов? Выдержит ли&nbsp;новые сценарии? Насколько решение едино с&nbsp;брендом?</div><div class="lq" data-i18n="ev.3.q">Выдержит?</div></div>
-<div class="level" data-stagger><div class="ln" data-i18n="ev.4.ln">Уровень 4</div><div class="ltitle" data-i18n="ev.4.t">Бизнес</div><div class="ldesc" data-i18n="ev.4.d">Помогает ли&nbsp;это бизнесу? Конверсии, CTR, retention, узнаваемость, скорость production, восприятие.</div><div class="lq" data-i18n="ev.4.q">Сработало?</div></div>
+<div class="level" data-stagger><div class="ln" data-i18n="ev.4.ln">Уровень 4</div><div class="ltitle" data-i18n="ev.4.t">Бизнес</div><div class="ldesc" data-i18n="ev.4.d">Помогает ли&nbsp;это бизнесу? Конверсии, retention, узнаваемость, скорость.</div><div class="lq" data-i18n="ev.4.q">Сработало?</div></div>
 </div>
+<div class="ev-bmp-spacer" aria-hidden="true"></div>
+<div class="bmp-top">
+<div class="bmp-split" data-reveal>
+<div class="side"><div class="pct"><span class="stat-counter" data-target="69">0</span><em>%</em></div><p class="label" data-i18n="bmp.s1.label">Стратегия, процессы, команда&nbsp;— то, что делает визуал возможным</p></div>
+<div class="vs">/</div>
+<div class="side" style="text-align:right"><div class="pct"><span class="stat-counter" data-target="31">0</span><em>%</em></div><p class="label" style="margin-left:auto" data-i18n="bmp.s2.label">Визуал&nbsp;— финальная форма того, что было сделано до</p></div>
+</div>
+<div class="bmp-dotgrid" id="dotgrid" data-reveal></div>
+</div>
+<p class="ev-bmp-foot" data-reveal data-i18n="ev.bmp.foot">Можно нарисовать идеальный экран&nbsp;— и&nbsp;проиграть проект. Можно собрать слабый&nbsp;— и&nbsp;выиграть. Разница в&nbsp;этих 69%.</p>
 </div>
 </div>
 </section>
 
-<section id="team-intro" class="dark">
+<section id="team" class="dark">
 <div class="sec-asides-bar">
 <div class="sec-aside sec-aside--left" data-i18n="whisper.tm">Команда ломается<br>от&nbsp;неясности,<br>не&nbsp;от&nbsp;нагрузки.</div>
-<div class="sec-aside sec-aside--right"><b>09</b> / 14 → <span data-i18n="tm.kicker">Команда</span></div>
+<div class="sec-aside sec-aside--right"><b>07</b> / 11 → <span data-i18n="tm.kicker">Команда</span></div>
 </div>
 <div class="container">
 <div class="team-manifesto">
-<header class="sec-head sec-head--new" data-reveal>
-<div class="sec-title-wrap">
+<header class="tm-head" data-reveal>
 <h2 class="sec-title" data-i18n="tm.title">Как работаю<br>с&nbsp;командой.</h2>
-</div>
 </header>
 <div class="tm-stack">
 <div class="tm-row" data-reveal>
 <span class="tm-tag" data-i18n="tm.tag1">Подход</span>
-<p class="lead-line" data-i18n="tm.lead">Веду команду&nbsp;—<br>не&nbsp;ухожу из&nbsp;<em>дизайна</em>.</p>
+<p class="tm-text" data-i18n="tm.lead">Я&nbsp;веду команду&nbsp;— и&nbsp;продолжаю <em>рисовать</em>.</p>
 </div>
 <div class="tm-row" data-reveal>
 <span class="tm-tag" data-i18n="tm.tag2">В&nbsp;работе</span>
-<p class="lead-sub" data-i18n="tm.sub1">Остаюсь внутри работы: смотрю макеты, собираю систему, спорю за&nbsp;решения,<br>помогаю команде расти и&nbsp;держу связь с&nbsp;бизнесом.</p>
+<p class="tm-text" data-i18n="tm.sub1">Остаюсь внутри работы: смотрю макеты, спорю за&nbsp;решения, держу связь с&nbsp;бизнесом.</p>
 </div>
 <div class="tm-row" data-reveal>
 <span class="tm-tag" data-i18n="tm.tag3">Принцип</span>
-<p class="lead-accent" data-i18n="tm.sub2">Команда, которая понимает принципы, не&nbsp;ждёт<br><em>согласований</em> на&nbsp;каждый шаг.</p>
+<p class="tm-text" data-i18n="tm.sub2">Команда, которая понимает принципы, не&nbsp;ждёт <em>согласований</em> на&nbsp;каждый шаг.</p>
 </div>
-</div>
-</div>
-</div>
-</section>
-
-<section id="team-system" class="dark">
-<div class="sec-asides-bar">
-<div class="sec-aside sec-aside--left" data-i18n="whisper.ts">Хорошая команда<br>строится дольше,<br>чем хороший интерфейс.</div>
-<div class="sec-aside sec-aside--right"><b>10</b> / 14 → <span data-i18n="ts.kicker">Ритм</span></div>
-</div>
-<div class="container">
-<div style="width:100%">
-<header class="sec-head sec-head--new" data-reveal>
-<div class="sec-title-wrap">
-<h2 class="sec-title" data-i18n="ts.title">Ритм и&nbsp;менторство.</h2>
-<p class="sec-sub" data-i18n="ts.sub">Регулярность — невидимый каркас, на&nbsp;котором держится качество.</p>
-</div>
-</header>
-<div class="team-blocks-4 stagger" data-reveal>
-<div class="tblock" data-stagger>
-<span class="tlabel" data-i18n="ts.b1.lbl">Ритуалы</span>
-<div class="titem"><div class="tn" data-i18n="ts.b1.1n">Короткая утренняя сверка</div><div class="td" data-i18n="ts.b1.1d">Что в&nbsp;работе, что блокирует, где нужна помощь.</div></div>
-<div class="titem"><div class="tn" data-i18n="ts.b1.2n">Недельный обзор</div><div class="td" data-i18n="ts.b1.2d">Приоритеты, риски и&nbsp;статус по&nbsp;ключевым задачам.</div></div>
-<div class="titem"><div class="tn" data-i18n="ts.b1.3n">Разбор работ</div><div class="td" data-i18n="ts.b1.3d">Командное ревью: учимся видеть сильное и&nbsp;слабое.</div></div>
-<div class="titem"><div class="tn" data-i18n="ts.b1.4n">Ретроспектива</div><div class="td" data-i18n="ts.b1.4d">Меняем процессы, чтобы ошибки не&nbsp;стали привычкой.</div></div>
-</div>
-<div class="tblock" data-stagger>
-<span class="tlabel" data-i18n="ts.b2.lbl">Обучение</span>
-<div class="titem"><div class="tn" data-i18n="ts.b2.1n">Лекции</div><div class="td" data-i18n="ts.b2.1d">Темы выбирает команда.</div></div>
-<div class="titem"><div class="tn" data-i18n="ts.b2.2n">Домашние задания</div><div class="td" data-i18n="ts.b2.2d">Практика на&nbsp;конкретный навык. Не&nbsp;для галочки.</div></div>
-<div class="titem"><div class="tn" data-i18n="ts.b2.3n">Индивидуальное ревью</div><div class="td" data-i18n="ts.b2.3d">Один на&nbsp;один: что сильно, что слабо, что менять.</div></div>
-<div class="titem"><div class="tn" data-i18n="ts.b2.4n">Открытые показы</div><div class="td" data-i18n="ts.b2.4d">Дизайн перестаёт быть «чёрным ящиком».</div></div>
-</div>
-<div class="tblock" data-stagger>
-<span class="tlabel" data-i18n="ts.b3.lbl">Менторство</span>
-<div class="titem"><div class="tn" data-i18n="ts.b3.1n">1:1 каждую неделю</div><div class="td" data-i18n="ts.b3.1d">Не&nbsp;статус-апдейт, а&nbsp;контекст и&nbsp;точки роста.</div></div>
-<div class="titem"><div class="tn" data-i18n="ts.b3.2n">Точечный фидбек</div><div class="td" data-i18n="ts.b3.2d">На&nbsp;работу, не&nbsp;на&nbsp;человека.</div></div>
-<div class="titem"><div class="tn" data-i18n="ts.b3.3n">Сильные стороны → задачи</div><div class="td" data-i18n="ts.b3.3d">Развиваю там, где уже сильное.</div></div>
-<div class="titem"><div class="tn" data-i18n="ts.b3.4n">Прозрачные критерии</div><div class="td" data-i18n="ts.b3.4d">Дизайнер знает, что нужно для следующего грейда.</div></div>
 </div>
 </div>
 </div>
@@ -2689,10 +3489,45 @@ html[lang="ru"] .hero-title--corner em{
 <div class="ts-mark shape-cycle" aria-hidden="true"></div>
 </section>
 
+<section id="mentor" class="dark">
+<div class="sec-asides-bar">
+<div class="sec-aside sec-aside--left kicker-in" data-i18n="whisper.mentor">Скиллы можно нанять.<br>Сильную команду — только вырастить.</div>
+<div class="sec-aside sec-aside--right"><b>08</b> / 11 → <span data-i18n="mentor.kicker">Ритм</span></div>
+</div>
+<div class="container">
+<div class="mentor-cosmos">
+<svg class="mentor-lines" aria-hidden="true"></svg>
+<h2 class="mentor-core" data-i18n="mentor.title">Менторство</h2>
+<div class="mentor-satellites">
+<span class="msat" data-side="left"  data-i18n="mentor.sat.1">1:1 созвоны</span>
+<span class="msat" data-side="left"  data-i18n="mentor.sat.2">Парные сессии</span>
+<span class="msat" data-side="left"  data-i18n="mentor.sat.3">Ревью макетов</span>
+<span class="msat" data-side="left"  data-i18n="mentor.sat.5">Защита решений</span>
+<span class="msat" data-side="left"  data-i18n="mentor.sat.6">Кросс-команды</span>
+<span class="msat" data-side="left"  data-i18n="mentor.sat.7">Обмен референсами</span>
+<span class="msat" data-side="left"  data-i18n="mentor.sat.19">Лекции</span>
+<span class="msat" data-side="left"  data-i18n="mentor.sat.20">Разбор кейсов</span>
+<span class="msat" data-side="left"  data-i18n="mentor.sat.16">Брендинг</span>
+<span class="msat" data-side="left"  data-i18n="mentor.sat.25">Похвала и&nbsp;критика</span>
+<span class="msat" data-side="right" data-i18n="mentor.sat.8">План развития</span>
+<span class="msat" data-side="right" data-i18n="mentor.sat.9">Повышение грейдов</span>
+<span class="msat" data-side="right" data-i18n="mentor.sat.11">Аналитика скиллов</span>
+<span class="msat" data-side="right" data-i18n="mentor.sat.12">Софт-скиллы</span>
+<span class="msat" data-side="right" data-i18n="mentor.sat.14">Карьерные разговоры</span>
+<span class="msat" data-side="right" data-i18n="mentor.sat.15">Типографика</span>
+<span class="msat" data-side="right" data-i18n="mentor.sat.17">Моушн и&nbsp;3D</span>
+<span class="msat" data-side="right" data-i18n="mentor.sat.18">UX-исследования</span>
+<span class="msat" data-side="right" data-i18n="mentor.sat.21">Психотип дизайнера</span>
+<span class="msat" data-side="right" data-i18n="mentor.sat.22">Эмпатия</span>
+</div>
+</div>
+</div>
+</section>
+
 <section id="ds">
 <div class="sec-asides-bar">
 <div class="sec-aside sec-aside--left" data-i18n="whisper.ds">Без системы качество&nbsp;—<br>это настроение.</div>
-<div class="sec-aside sec-aside--right"><b>11</b> / 14 → <span data-i18n="ds.kicker">Дизайн-системы</span></div>
+<div class="sec-aside sec-aside--right"><b>09</b> / 11 → <span data-i18n="ds.kicker">Дизайн-системы</span></div>
 </div>
 <div class="container">
 <div style="width:100%">
@@ -2723,67 +3558,18 @@ html[lang="ru"] .hero-title--corner em{
 </div>
 </section>
 
-<section id="services">
-<div class="sec-asides-bar">
-<div class="sec-aside sec-aside--left" data-i18n="whisper.sv">То, что не&nbsp;помещается<br>в&nbsp;портфолио.</div>
-<div class="sec-aside sec-aside--right"><b>12</b> / 14 → <span data-i18n="sv.kicker">Работа</span></div>
-</div>
-<div class="container">
-<div style="width:100%">
-<header class="sec-head sec-head--new" data-reveal>
-<div class="sec-title-wrap">
-<h2 class="sec-title" data-i18n="sv.title">Где я&nbsp;полезен.</h2>
-<p class="sec-sub" data-i18n="sv.sub">Шесть зон ответственности&nbsp;— от&nbsp;смысла до&nbsp;реализации.</p>
-</div>
-</header>
-<div class="svc-list stagger" data-reveal>
-<div class="svc-row" data-stagger>
-<div class="svc-num" data-i18n="sv.1.num">Визуал</div>
-<div class="svc-name" data-i18n="sv.1.n">Бренд и&nbsp;айдентика</div>
-<div class="svc-text" data-i18n="sv.1.d">Бренд, который не&nbsp;распадается между сайтом, маркетингом и&nbsp;продуктом. Один голос, один язык.</div>
-</div>
-<div class="svc-row" data-stagger>
-<div class="svc-num" data-i18n="sv.2.num">Ясность</div>
-<div class="svc-name" data-i18n="sv.2.n">Веб и&nbsp;коммуникации</div>
-<div class="svc-text" data-i18n="sv.2.d">Сайты, лендинги, кампании. Коммуникации, которые быстро объясняют ценность продукта.</div>
-</div>
-<div class="svc-row" data-stagger>
-<div class="svc-num" data-i18n="sv.3.num">Масштаб</div>
-<div class="svc-name" data-i18n="sv.3.n">Дизайн-системы</div>
-<div class="svc-text" data-i18n="sv.3.d">Система, которая ускоряет команду и&nbsp;держит качество. Один источник правды для дизайна и&nbsp;кода.</div>
-</div>
-<div class="svc-row" data-stagger>
-<div class="svc-num" data-i18n="sv.4.num">Вкус</div>
-<div class="svc-name" data-i18n="sv.4.n">Арт-дирекшн</div>
-<div class="svc-text" data-i18n="sv.4.d">Держу визуальный уровень: бренд не&nbsp;распадается между сайтом, маркетингом, продуктом и&nbsp;презентациями.</div>
-</div>
-<div class="svc-row" data-stagger>
-<div class="svc-num" data-i18n="sv.5.num">Ремесло</div>
-<div class="svc-name" data-i18n="sv.5.n">UI/UX супервизия</div>
-<div class="svc-text" data-i18n="sv.5.d">Ревью интерфейсов и&nbsp;связка с&nbsp;разработкой: чтобы в&nbsp;коде сохранилось то, что задумано в&nbsp;дизайне.</div>
-</div>
-<div class="svc-row" data-stagger>
-<div class="svc-num" data-i18n="sv.6.num">Скорость</div>
-<div class="svc-name" data-i18n="sv.6.n">Команда и&nbsp;процессы</div>
-<div class="svc-text" data-i18n="sv.6.d">Найм, онбординг, грейды, ритм. Команда, которая растёт без потери качества и&nbsp;не&nbsp;выгорает.</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-
 <section id="results">
 <div class="rs-pin-outer">
 <div class="rs-pin-wrap">
 <div class="sec-asides-bar rs-asides">
 <div class="sec-aside sec-aside--left" data-i18n="whisper.rs">Сильный дизайн<br>выдерживает реальность.</div>
-<div class="sec-aside sec-aside--right"><b>13</b> / 14 → <span data-i18n="rs.kicker">Результаты</span></div>
+<div class="sec-aside sec-aside--right"><b>10</b> / 11 → <span data-i18n="rs.kicker">Результаты</span></div>
 </div>
 <div class="container rs-pin-header">
 <header class="sec-head sec-head--new">
 <div class="sec-title-wrap">
 <h2 class="sec-title" data-i18n="rs.title">Что получает бизнес.</h2>
-<p class="sec-sub" data-i18n="rs.sub">Конкретные эффекты, которые видно по&nbsp;работе команды и&nbsp;по&nbsp;тому, как продукт ощущается снаружи.</p>
+<p class="sec-sub" data-i18n="rs.sub">Что меняется внутри команды и&nbsp;в&nbsp;восприятии продукта.</p>
 </div>
 </header>
 </div>
@@ -2853,7 +3639,7 @@ html[lang="ru"] .hero-title--corner em{
 <section id="companies">
 <div class="sec-asides-bar">
 <div class="sec-aside sec-aside--left" data-i18n="whisper.co">Двенадцать лет<br>в&nbsp;трёх главах.</div>
-<div class="sec-aside sec-aside--right"><b>14</b> / 14 → <span data-i18n="co.kicker">Опыт</span></div>
+<div class="sec-aside sec-aside--right"><b>11</b> / 11 → <span data-i18n="co.kicker">Опыт</span></div>
 </div>
 <div class="container">
 <div style="width:100%">
@@ -2865,7 +3651,7 @@ html[lang="ru"] .hero-title--corner em{
 </header>
 <div class="co-list stagger" data-reveal>
 <div class="co" data-stagger>
-<div class="yrs">2023→</div>
+<div class="yrs">2023→Now</div>
 <div><div class="name">Fingular</div><div class="role" data-i18n="co.1.role">Head of Design</div></div>
 <div class="desc" data-i18n="co.1.desc">Глобальный необанк, штаб-квартира в&nbsp;Сингапуре. Пересобрал команду с&nbsp;<span class="num">2</span> до&nbsp;<span class="num">10+</span>, построил две дизайн-системы и&nbsp;<span class="num">15+</span> бренд-айдентик.</div>
 <div class="award" data-i18n="co.1.aw">Best New Fintech APAC 2024 · The Next 100 Global Companies</div>
@@ -2901,7 +3687,7 @@ html[lang="ru"] .hero-title--corner em{
 <span class="cta-eyebrow cta-author" data-i18n="cta.m.1.v">Автор&nbsp;· Сергей Лукин</span>
 </div>
 <h2 class="cta-title" data-reveal-num data-i18n="cta.title">Давайте <em>поговорим</em>.</h2>
-<p class="cta-lead" data-reveal data-i18n="cta.lead">Не&nbsp;обязательно о&nbsp;работе. Для начала можно просто познакомиться. Без сложных формулировок и&nbsp;лишнего пафоса. Остальное потом.</p>
+<p class="cta-lead" data-reveal data-i18n="cta.lead">Не&nbsp;обязательно о&nbsp;работе. Для начала&nbsp;— просто познакомиться. Остальное потом.</p>
 <div class="cta-mega" data-reveal>
 <a class="cta-mega-item" href="https://t.me/Lookin_Sergey" target="_blank" rel="noopener">
 <span class="cta-mega-num">01</span>
@@ -2932,7 +3718,7 @@ html[lang="ru"] .hero-title--corner em{
 <div data-i18n="ft.tag">Дизайн-манифест</div>
 </footer>
 
-<script id="i18n-data" type="application/json">{"ru": {"whisper.intro": "Дизайн&nbsp;— для людей.<br>Не&nbsp;для портфолио.", "whisper.numbers": "Цифры не&nbsp;врут.<br>Но&nbsp;и&nbsp;не&nbsp;всё говорят.", "whisper.pain": "«Просто нарисуйте»&nbsp;—<br>начало слабого проекта.", "whisper.partner": "Самый долгий спор<br>моей карьеры.", "whisper.pr": "Каждый принцип&nbsp;—<br>следствие ошибки.", "whisper.aud": "Впечатление создают<br>не&nbsp;картинки. Дизайн.", "whisper.br": "Раньше думал:<br>бренд&nbsp;— это логотип.", "whisper.bmp": "Работа происходит<br>до&nbsp;первого пикселя.", "whisper.ev": "Работа закончена,<br>когда работает<br>в&nbsp;реальности.", "whisper.tm": "Команда ломается<br>от&nbsp;неясности,<br>не&nbsp;от&nbsp;нагрузки.", "whisper.ts": "Хорошая команда<br>строится дольше,<br>чем хороший интерфейс.", "whisper.ds": "Без системы качество&nbsp;—<br>это настроение.", "whisper.sv": "То, что не&nbsp;помещается<br>в&nbsp;портфолио.", "whisper.rs": "Сильный дизайн<br>выдерживает реальность.", "whisper.co": "Двенадцать лет<br>в&nbsp;трёх главах.", "meta.title": "Манифест · Сергей Лукин", "meta.description": "Манифест Сергея Лукина, Head of Design. О&nbsp;дизайне в&nbsp;бренде, маркетинге и&nbsp;продукте — и&nbsp;о&nbsp;команде вокруг этой работы.", "skip": "Перейти к&nbsp;содержанию", "nav.brand": "Сергей Лукин <b>—</b> Head of Design", "nav.meta": "Манифест · 2026", "nav.tg": "Telegram", "nav.em": "Email", "nav.pf": "Портфолио", "hero.focus.l": "Фокус", "hero.focus.v": "Бренд&nbsp;· Маркетинг<br>Веб&nbsp;· Продукт", "hero.eyebrow": "Дизайн-манифест", "hero.issue": "№ 01 · 2026", "hero.title": "Как я&nbsp;строю<br><em>дизайн.</em>", "hero.title.static": "Как я&nbsp;строю", "hero.center": "Философия, выстроенная через годы работы, наблюдений и&nbsp;переосмысления того, каким должен быть дизайн.", "hero.sub": "Бренд&nbsp;· Маркетинг&nbsp;· Веб&nbsp;· Продукт<br>И&nbsp;команда, которая держит это вместе.", "hero.author.l": "Автор", "hero.author.v": "Сергей Лукин<br>Head of Design / Art Director", "hero.today.l": "Признание", "hero.today.v": "Best New Fintech APAC<br>Tagline Awards", "hero.contact.l": "Контакт", "intro.eyebrow": "00 · Кто я", "intro.kicker": "Начало", "intro.stamp": "12+ лет · 3 страны · 3 компании", "intro.title": "Двенадцать лет дизайна — и&nbsp;всё меньше про&nbsp;макеты.", "intro.p1": "Я&nbsp;прошёл путь от&nbsp;графического дизайнера до&nbsp;<strong>Head of Design</strong>&nbsp;— от&nbsp;федеральной <strong>enterprise</strong>-студии до&nbsp;глобального финтеха в&nbsp;Юго-Восточной Азии.", "intro.p2": "Моя зона&nbsp;— бренд, маркетинг, веб и&nbsp;продуктовая коммуникация. Собираю их&nbsp;в&nbsp;единую систему, чтобы компания звучала цельно во&nbsp;всех каналах.", "numbers.kicker": "В&nbsp;цифрах", "numbers.title": "В&nbsp;цифрах и фактах.", "numbers.right": "Не&nbsp;всё в&nbsp;дизайне измеряется цифрами. Но&nbsp;масштаб помогает понять контекст: 12+ лет, разные команды, продукты и&nbsp;бренды.", "numbers.l.1": "Лет<br>в&nbsp;дизайне", "numbers.l.2": "Запущенных<br>продуктов", "numbers.l.3": "Брендов<br>и&nbsp;айдентик", "numbers.l.4": "Запущенных<br>систем", "numbers.l.5": "Компании<br>на&nbsp;уровне Head", "numbers.l.6": "Дизайнеров<br>в&nbsp;командах", "pain.kicker": "Симптомы", "pain.title": "Знакомая ситуация?", "pain.sub": "Симптомы, по&nbsp;которым видно:<br>дизайн перестал работать на&nbsp;бизнес.", "pain.1": "Маркетинг, продукт и&nbsp;разработка работают в&nbsp;разные стороны.", "pain.2": "Каждый запуск собирают с&nbsp;нуля — и&nbsp;каждый занимает столько&nbsp;же.", "pain.3": "Команда занята, но&nbsp;система не&nbsp;становится сильнее.", "pain.4": "Бренд теряется в&nbsp;каналах. Стиль зависит от&nbsp;исполнителя.", "pain.5": "Руководитель тонет в&nbsp;правках. Стратегии остаётся всё меньше.", "pain.1.note": "Размывает фокус.<br>Замедляет запуск.", "pain.2.note": "Темп не&nbsp;превращается в&nbsp;скорость.", "pain.3.note": "Знание не&nbsp;превращается в&nbsp;систему.", "pain.4.note": "Узнаваемость падает, доверие&nbsp;тает.", "pain.5.note": "Стратегические решения откладываются.", "pain.quote": "Хаос редко выглядит как хаос.<br>Чаще&nbsp;— как временное решение,<br>которое осталось навсегда.", "pain.foot": "Это не&nbsp;лечится одной кнопкой.<br>И&nbsp;не&nbsp;парой макетов.", "partner.kicker": "Подход", "partner.title": "Соавтор, а&nbsp;не&nbsp;подрядчик.", "partner.sub": "Дизайн вступает в&nbsp;задачу до&nbsp;того, как написан бриф.<br>Иначе он&nbsp;уже исправляет, а&nbsp;не&nbsp;решает.", "partner.svc.tag": "Сервис", "partner.svc.title": "Получает задачу<br>и&nbsp;возвращает макет", "partner.svc.1": "Получает бриф «в&nbsp;финальной упаковке»", "partner.svc.2": "Спрашивает «как», не «зачем»", "partner.svc.3": "Решает то, что ему дали", "partner.svc.4": "Стоит на&nbsp;конце пайплайна", "partner.prt.tag": "Партнёр", "partner.prt.title": "Влияет на&nbsp;решение<br>от&nbsp;идеи до&nbsp;запуска", "partner.prt.1": "Влияет на&nbsp;постановку задачи", "partner.prt.2": "Идёт к&nbsp;маркетингу, продукту, владельцу", "partner.prt.3": "Меняет «что делаем», а&nbsp;не&nbsp;только «как»", "partner.prt.4": "Стоит в&nbsp;начале пайплайна", "partner.final": "Дизайн&nbsp;— соавтор бизнеса.<br>Голос за&nbsp;столом,<br>где принимают решения.", "pr.kicker": "Принципы", "pr.title": "Во&nbsp;что я&nbsp;верю.", "pr.sub": "Четыре утверждения, на&nbsp;которых стоит всё остальное.", "pr.1.t": "Форма не&nbsp;спасает<br><em>слабую мысль</em>", "pr.1.d": "Сначала задача, контекст и&nbsp;решение. Потом визуальный язык, который делает это точным и&nbsp;видимым.", "pr.2.t": "Система работает<br><em>без автора</em>", "pr.2.d": "Правила, компоненты и&nbsp;логика должны выдерживать новые задачи, новых людей и&nbsp;новые каналы.", "pr.3.t": "Красиво&nbsp;— это не&nbsp;цель.<br><em>Цель&nbsp;— чтобы работало</em>", "pr.3.d": "Дизайн должен помогать доверию, скорости выбора, конверсии, узнаваемости и&nbsp;росту системы.", "pr.4.t": "Команда понимает не&nbsp;только<br>что, но&nbsp;и&nbsp;<em>почему</em>", "pr.4.d": "Команда должна понимать критерии, язык, ограничения и&nbsp;причину каждого решения.", "aud.kicker": "Аудитория", "aud.title": "Это люди, а&nbsp;не&nbsp;цифры.", "aud.sub": "У&nbsp;аналитики нет настроения. У&nbsp;человека — есть.", "aud.lead": "Человек чувствует раньше, чем&nbsp;читает.<br>Если первое ощущение слабое, функциям<br>приходится заново доказывать <em>доверие</em>.", "aud.1.n": "Первое впечатление", "aud.1.d": "Что человек чувствует до&nbsp;слов и&nbsp;функций. Это решают типографика, цвет, ритм и&nbsp;плотность.", "aud.2.n": "Удобство в&nbsp;моменте", "aud.2.d": "Человек не&nbsp;смотрит на&nbsp;хороший дизайн&nbsp;— он&nbsp;его ощущает.", "aud.3.n": "Что расскажет другому", "aud.3.d": "Что человек запомнит и&nbsp;сможет пересказать. Здесь делается узнаваемость бренда.", "aud.1.note": "Решает за&nbsp;секунды.", "aud.2.note": "Не&nbsp;заметно&nbsp;—<br>значит работает.", "aud.3.note": "Узнаваемость<br>и&nbsp;доверие.", "br.kicker": "Бренд-стратегия", "br.title": "Как складывается бренд.", "br.sub": "Бренд складывается не&nbsp;из&nbsp;логотипа. Он&nbsp;складывается<br>из&nbsp;повторяемых решений: как звучим, как выглядим,<br>как двигаемся и&nbsp;как держим качество в&nbsp;каждом канале.", "br.1.n": "Контекст", "br.1.d": "Рынок, конкуренты, аудитория, цели бизнеса. Что знаем точно, а&nbsp;что только предполагаем.", "br.2.n": "Позиция", "br.2.d": "Для кого мы, против кого, и&nbsp;о&nbsp;чём мы&nbsp;принципиально молчим. Без второго первое не&nbsp;работает.", "br.3.n": "Голос", "br.3.d": "Как звучит бренд в&nbsp;письме, в&nbsp;баннере, в&nbsp;техподдержке. Тон, который узнают.", "br.4.n": "Визуальный язык", "br.4.d": "Типографика, цвет, образ, motion, фотостиль. Не&nbsp;«логотип и&nbsp;палитра», а&nbsp;целая грамматика.", "br.5.n": "Система", "br.5.d": "Как айдентика разворачивается на&nbsp;сайт, соцсети, продукт, презентации, наружку.", "br.6.n": "Запуск", "br.6.d": "Замеры, итерации, доля голоса, brand recall.<br>Бренд живой&nbsp;— он&nbsp;меняется.", "bmp.kicker": "Что стоит за&nbsp;визуалом", "bmp.title": "Дизайн — это<br>верхушка системы.", "bmp.sub": "То, что видят пользователи, — финальная форма.<br>Всё остальное — то, на&nbsp;чём она держится.", "bmp.s1.label": "Стратегия, процессы, команда&nbsp;— то, что делает визуал возможным", "bmp.s2.label": "Визуал&nbsp;— финальная форма того, что было сделано до", "bmp.caption": "31%&nbsp;— это то, что видит человек.<br>69%&nbsp;— то, что делает эту форму точной.", "bmp.c1.lbl": "Стратегия", "bmp.c1.t": "Что и&nbsp;зачем.", "bmp.c1.l1": "Позиционирование", "bmp.c1.l2": "Tone of voice", "bmp.c1.l3": "Цели и&nbsp;горизонты", "bmp.c1.l4": "Карта аудитории", "bmp.c2.lbl": "Процессы", "bmp.c2.t": "Как.", "bmp.c2.l1": "Ритуалы команды", "bmp.c2.l2": "Контракт с&nbsp;инженерией", "bmp.c2.l3": "Контроль качества", "bmp.c2.l4": "Скорость production", "bmp.c3.lbl": "Система", "bmp.c3.t": "На&nbsp;чём держится.", "bmp.c3.l1": "Токены и&nbsp;компоненты", "bmp.c3.l2": "Гайды и&nbsp;правила", "bmp.c3.l3": "Метрика adoption", "bmp.c3.l4": "Готовность к&nbsp;масштабу", "ev.kicker": "Оценка", "ev.title": "Как оцениваю работу.", "ev.sub": "Четыре уровня. Решение проходит проверку<br>только если работает на&nbsp;всех четырёх.", "ev.1.ln": "Уровень 1", "ev.1.t": "Логика", "ev.1.d": "Пользователь понимает: куда нажать, что произойдёт, зачем это нужно. Если требует объяснения — решение слабое.", "ev.1.q": "Понял?", "ev.2.ln": "Уровень 2", "ev.2.t": "Форма", "ev.2.d": "Иерархия, контраст, ритм, типографика, баланс. Здесь живёт ремесло — и&nbsp;здесь работает экспрессия.", "ev.2.q": "Сделано?", "ev.3.ln": "Уровень 3", "ev.3.t": "Система", "ev.3.d": "Можно ли&nbsp;развернуть на&nbsp;десять каналов? Выдержит ли&nbsp;новые сценарии? Насколько решение едино с&nbsp;брендом?", "ev.3.q": "Выдержит?", "ev.4.ln": "Уровень 4", "ev.4.t": "Бизнес", "ev.4.d": "Помогает ли&nbsp;это бизнесу? Конверсии, CTR, retention, узнаваемость, скорость production, восприятие.", "ev.4.q": "Сработало?", "tm.kicker": "Команда", "tm.tag1": "Подход", "tm.tag2": "В&nbsp;работе", "tm.tag3": "Принцип", "tm.title": "Как работаю с&nbsp;командой.", "tm.lead": "Я веду команду&nbsp;—<br>и остаюсь <em>дизайнером</em>.", "tm.sub1": "Остаюсь внутри работы: смотрю макеты, собираю систему,<br>спорю за&nbsp;решения, помогаю команде расти и&nbsp;держу связь с&nbsp;бизнесом.", "tm.sub2": "Команда, которая понимает принципы, не&nbsp;ждёт<br><em>согласований</em> на&nbsp;каждый шаг.", "ts.kicker": "Ритм", "ts.title": "Ритм и менторство.", "ts.sub": "Регулярность — невидимый каркас, на&nbsp;котором держится качество.", "ts.b1.lbl": "Ритуалы", "ts.b1.1n": "Короткая утренняя сверка", "ts.b1.1d": "Что в&nbsp;работе, что блокирует, где нужна помощь.", "ts.b1.2n": "Недельный обзор", "ts.b1.2d": "Приоритеты, риски и&nbsp;статус по&nbsp;ключевым задачам.", "ts.b1.3n": "Разбор работ", "ts.b1.3d": "Командное ревью: учимся видеть сильное и&nbsp;слабое.", "ts.b1.4n": "Ретроспектива", "ts.b1.4d": "Меняем процессы, чтобы ошибки не&nbsp;стали привычкой.", "ts.b2.lbl": "Обучение", "ts.b2.1n": "Лекции", "ts.b2.1d": "Темы выбирает команда.", "ts.b2.2n": "Домашние задания", "ts.b2.2d": "Практика на&nbsp;конкретный навык. Не&nbsp;для галочки.", "ts.b2.3n": "Индивидуальное ревью", "ts.b2.3d": "Один на&nbsp;один: что сильно, что слабо, что менять.", "ts.b2.4n": "Открытые показы", "ts.b2.4d": "Дизайн перестаёт быть «чёрным ящиком».", "ts.b3.lbl": "Менторство", "ts.b3.1n": "1:1 каждую неделю", "ts.b3.1d": "Не&nbsp;статус-апдейт, а&nbsp;контекст и&nbsp;точки роста.", "ts.b3.2n": "Точечный фидбек", "ts.b3.2d": "На&nbsp;работу, не&nbsp;на&nbsp;человека.", "ts.b3.3n": "Сильные стороны → задачи", "ts.b3.3d": "Развиваю там, где уже сильное.", "ts.b3.4n": "Прозрачные критерии", "ts.b3.4d": "Дизайнер знает, что нужно для следующего грейда.", "ts.b4.lbl": "Путь от&nbsp;Junior до&nbsp;Lead", "ts.b4.1n": "Junior — старт", "ts.b4.1d": "Гайды, наставник и&nbsp;короткие задачи с&nbsp;понятным критерием качества.", "ts.b4.2n": "Middle — автономия", "ts.b4.2d": "Самостоятельные задачи, защита решений и&nbsp;первые зоны ответственности.", "ts.b4.3n": "Senior — влияние", "ts.b4.3d": "Стандарты, ревью, влияние на&nbsp;продукт и&nbsp;дизайн от&nbsp;цели бизнеса.", "ts.b4.4n": "Lead — стратегия", "ts.b4.4d": "Кросс-функция, метрики, процессы и&nbsp;культура принятия решений.", "ds.kicker": "Дизайн-системы", "ds.title": "Не&nbsp;библиотека. Язык.", "ds.sub": "Дизайн-система&nbsp;— это не&nbsp;библиотека компонентов. Это способ<br>не&nbsp;пересобирать одно и&nbsp;то&nbsp;же&nbsp;каждый раз и&nbsp;держать качество<br>без ручного контроля.", "ds.1.num": "Слой 01", "ds.1.n": "Основа", "ds.1.l1": "Цвет", "ds.1.l2": "Типографика", "ds.1.l3": "Отступы и&nbsp;сетка", "ds.1.l4": "Motion", "ds.1.l5": "Токены", "ds.1.note": "Источник правды. Меняется здесь&nbsp;— меняется везде.", "ds.2.num": "Слой 02", "ds.2.n": "Компоненты", "ds.2.l1": "Переиспользуемые", "ds.2.l2": "Предсказуемые", "ds.2.l3": "Состояния и&nbsp;анимация", "ds.2.l4": "Документированные", "ds.2.l5": "С&nbsp;учётом масштаба", "ds.2.note": "Разработка продолжает решение, а&nbsp;не&nbsp;пересобирает.", "ds.3.num": "Слой 03", "ds.3.n": "Управление", "ds.3.l1": "Кто принимает решения", "ds.3.l2": "Как обновляется", "ds.3.l3": "Roadmap системы", "ds.3.l4": "Как держится единый язык", "ds.3.l5": "Метрика — adoption", "ds.3.note": "Главная метрика — не «сколько компонентов», а&nbsp;какая доля экранов их использует.", "sv.kicker": "Работа", "sv.title": "Где я&nbsp;полезен.", "sv.sub": "Шесть зон ответственности&nbsp;— от&nbsp;смысла до&nbsp;реализации.", "sv.1.n": "Бренд и&nbsp;айдентика", "sv.1.num": "Визуал", "sv.1.d": "Бренд, который не&nbsp;распадается между сайтом, маркетингом и&nbsp;продуктом. Один голос, один язык.", "sv.2.n": "Веб и&nbsp;коммуникации", "sv.2.num": "Ясность", "sv.2.d": "Сайты, лендинги, кампании. Коммуникации, которые быстро объясняют ценность продукта.", "sv.3.n": "Дизайн-системы", "sv.3.num": "Масштаб", "sv.3.d": "Система, которая ускоряет команду и&nbsp;держит качество. Один источник правды для дизайна и&nbsp;кода.", "sv.4.n": "Арт-дирекшн", "sv.4.num": "Вкус", "sv.4.d": "Держу визуальный уровень: бренд не&nbsp;распадается между сайтом, маркетингом, продуктом и&nbsp;презентациями.", "sv.5.n": "UI/UX супервизия", "sv.5.num": "Ремесло", "sv.5.d": "Ревью интерфейсов и&nbsp;связка с&nbsp;разработкой: чтобы в&nbsp;коде сохранилось то, что задумано в&nbsp;дизайне.", "sv.6.n": "Команда и&nbsp;процессы", "sv.6.num": "Скорость", "sv.6.d": "Найм, онбординг, грейды, ритм. Команда, которая растёт без потери качества и&nbsp;не&nbsp;выгорает.", "sv.mark.q": "А&nbsp;что нужно вам?", "sv.mark.d": "Эти зоны редко работают по&nbsp;одной. Сильнее всего&nbsp;— когда складываются в&nbsp;систему.", "rs.kicker": "Результаты", "rs.title": "Что получает бизнес.", "rs.sub": "Конкретные эффекты, которые видно по&nbsp;работе команды<br>и&nbsp;по&nbsp;тому, как продукт ощущается снаружи.", "rs.1.t": "Один бренд во&nbsp;всех касаниях", "rs.1.d": "Лендинг, продукт, реклама, презентация&nbsp;— части одной системы. Клиент видит зрелость, а&nbsp;не&nbsp;пять разных компаний.", "rs.2.t": "Релизы быстрее в&nbsp;разы", "rs.2.d": "Когда команда опирается на&nbsp;систему, дизайн перестаёт быть бутылочным горлом. То, что раньше шло месяц, выходит за&nbsp;неделю.", "rs.3.t": "Команды&nbsp;— в&nbsp;одну сторону", "rs.3.d": "Маркетинг, продукт, разработка опираются на&nbsp;одни принципы. Меньше политики&nbsp;— больше работы для рынка.", "rs.5.t": "Решения по&nbsp;критериям, а&nbsp;не по&nbsp;вкусу", "rs.5.d": "Дизайн перестаёт быть личным мнением. Спор переходит из&nbsp;«мне не&nbsp;нравится» в&nbsp;«это работает».", "rs.1.note": "BRAND", "rs.2.note": "SPEED", "rs.3.note": "FOCUS", "rs.5.note": "CRITERIA", "rs.quote": "Дизайн становится частью бизнес-системы.<br>Не&nbsp;отдельной функцией, не&nbsp;этапом, не&nbsp;<em>надстройкой</em>.", "co.kicker": "Опыт", "co.title": "Где работал и&nbsp;над чем.", "co.sub": "Три места работы за&nbsp;12+ лет. От&nbsp;федеральных<br>корпораций до&nbsp;глобального финтеха в&nbsp;ЮВА.", "co.1.role": "Head of Design", "co.1.desc": "Глобальный необанк, штаб-квартира в&nbsp;Сингапуре. Пересобрал команду с&nbsp;<span class=\"num\">2</span> до&nbsp;<span class=\"num\">10+</span>, построил две дизайн-системы и&nbsp;<span class=\"num\">15+</span> бренд-айдентик.", "co.1.aw": "Best New Fintech APAC 2024 · The Next 100 Global Companies", "co.2.role": "Lead Designer", "co.2.desc": "Web3-экосистема: MetaFi-криптобанк, <span class=\"num\">750K+</span> пользователей в&nbsp;<span class=\"num\">170+</span> странах, и&nbsp;Chobies NTO. Ребрендинг Crypterium&nbsp;→ Choise.com без потери аудитории.", "co.2.aw": "CHO-токен: ATH $1,38<br>TOP-500 CoinMarketCap", "co.3.role": "Арт-директор", "co.3.desc": "Московская enterprise-студия. <span class=\"num\">200+</span> проектов для федеральных брендов, аудитория <span class=\"num\">10M+</span> в&nbsp;день. Команда выросла с&nbsp;5 до&nbsp;50+ человек.", "co.3.aw": "Tagline Awards<br>Удержание клиентов&nbsp;— 70%", "co.marquee.lbl": "Бренды, с&nbsp;которыми работал", "cta.eyebrow": "Если зацепил подход", "cta.title": "Давайте <em>поговорим</em>.", "cta.lead": "Не&nbsp;обязательно о&nbsp;работе. Для начала можно просто познакомиться. Без сложных формулировок и&nbsp;лишнего пафоса. Остальное потом.", "cta.btn.tg": "Telegram", "cta.btn.em": "Email", "cta.btn.pf": "Портфолио", "cta.m.1.l": "Автор", "cta.m.1.v": "Автор&nbsp;· Сергей Лукин", "cta.m.2.l": "Telegram", "cta.m.3.l": "Email", "cta.m.4.l": "Портфолио", "ft.copy": "© 2026 Сергей Лукин", "ft.tag": "Дизайн-манифест", "ft.top": "Наверх <span class=\"arr\">↑</span>", "rs.4.note": "TRUST", "rs.4.t": "Бренд воспринимается дороже", "rs.4.d": "Когда касания согласованны, цена ощущается оправданной. Премиум&nbsp;— это не&nbsp;позолота, а&nbsp;порядок."}, "en": {"whisper.intro": "Design is for people.<br>Not for portfolios.", "whisper.numbers": "Numbers don't lie.<br>But they don't tell the whole story.", "whisper.pain": "\"Just design it\"&nbsp;—<br>the start of a weak project.", "whisper.partner": "The longest argument<br>of my career.", "whisper.pr": "Every principle came<br>from a mistake.", "whisper.aud": "It's not pictures<br>that create the impression.<br>It's design.", "whisper.br": "I used to think<br>a brand was a logo.", "whisper.bmp": "The work happens<br>before the first pixel.", "whisper.ev": "Work is done<br>when it works<br>in reality.", "whisper.tm": "Teams break<br>from unclarity,<br>not from load.", "whisper.ts": "A good team<br>takes longer to build<br>than a good interface.", "whisper.ds": "Without a system,<br>quality is a mood.", "whisper.sv": "What doesn't fit<br>in a portfolio.", "whisper.rs": "Strong design<br>holds up in reality.", "whisper.co": "Twelve years<br>in three chapters.", "meta.title": "Manifesto · Sergey Lukin", "meta.description": "A design manifesto by Sergey Lukin, Head of Design. On design across brand, marketing and product — and the team that holds it together.", "skip": "Skip to content", "nav.brand": "Sergey Lukin <b>—</b> Head of Design", "nav.meta": "Manifesto · 2026", "nav.tg": "Telegram", "nav.em": "Email", "nav.pf": "Portfolio", "hero.focus.l": "Focus", "hero.focus.v": "Brand&nbsp;· Marketing<br>Web&nbsp;· Product", "hero.eyebrow": "Design manifesto", "hero.issue": "Issue 01 · 2026", "hero.title": "How I build<br><em>design.</em>", "hero.title.static": "How I&nbsp;build", "hero.center": "A philosophy built over years of work, observation and rethinking what design should&nbsp;be.", "hero.sub": "Brand&nbsp;· Marketing&nbsp;· Web&nbsp;· Product<br>And the team that ties it together.", "hero.author.l": "Author", "hero.author.v": "Sergey Lukin<br>Head of Design / Art Director", "hero.today.l": "Recognition", "hero.today.v": "Best New Fintech APAC<br>Tagline Awards", "hero.contact.l": "Contact", "intro.eyebrow": "00 · About", "intro.kicker": "Beginning", "intro.stamp": "12+ years · 3 countries · 3 companies", "intro.title": "Twelve years in design — and less and less about layouts.", "intro.p1": "I've moved from a graphic designer to <strong>Head of Design</strong> — from a federal-scale <strong>enterprise</strong> studio to a global fintech in Southeast Asia.", "intro.p2": "My territory is brand, marketing, web and product communication. I pull them into one system so the brand feels coherent across every channel.", "numbers.kicker": "By the numbers", "numbers.title": "By the numbers.", "numbers.right": "Not everything in design is measurable. But scale gives the context: 12+ years, different teams, products and brands.", "numbers.l.1": "Years<br>in design", "numbers.l.2": "Products<br>shipped", "numbers.l.3": "Brands<br>&amp; identities", "numbers.l.4": "Design systems<br>shipped", "numbers.l.5": "Roles at<br>Head-of-Design level", "numbers.l.6": "Designers<br>led", "pain.kicker": "Symptoms", "pain.title": "Sound familiar?", "pain.sub": "The signs that design has<br>stopped working for the business.", "pain.1": "Marketing, product and engineering pull in different directions.", "pain.2": "Every launch is built from scratch — and every one takes just as long.", "pain.3": "The team is busy, but the system gets no stronger.", "pain.4": "The brand drifts across channels. The look depends on whoever picked it up.", "pain.5": "Leadership is buried in review rounds. There's less and less room for strategy.", "pain.1.note": "Blurs focus.<br>Slows launches.", "pain.2.note": "Effort doesn't become speed.", "pain.3.note": "Knowledge doesn't become a system.", "pain.4.note": "Recognition drops, trust fades.", "pain.5.note": "Strategy keeps slipping.", "pain.quote": "Chaos rarely looks like chaos.<br>More often, it looks like<br>a temporary fix that quietly<br>stayed forever.", "pain.foot": "There's no single button<br>for this. No quick mockup, either.", "partner.kicker": "Approach", "partner.title": "A co-author, not a contractor.", "partner.sub": "Design enters the task before the brief is written.<br>Otherwise it fixes symptoms, not the problem.", "partner.svc.tag": "Service", "partner.svc.title": "Receives a brief,<br>returns a mockup", "partner.svc.1": "Gets the brief already framed", "partner.svc.2": "Asks how, not why", "partner.svc.3": "Solves whatever lands on the desk", "partner.svc.4": "Sits at the end of the pipeline", "partner.prt.tag": "Partner", "partner.prt.title": "Shapes the decision<br>from idea to launch", "partner.prt.1": "Helps frame the brief itself", "partner.prt.2": "Talks directly to marketing, product, leadership", "partner.prt.3": "Changes the what, not just the how", "partner.prt.4": "Sits at the start of the pipeline", "partner.final": "Design is a co-author<br>of the business. A voice<br>at the table where<br>decisions are made.", "pr.kicker": "Principles", "pr.title": "What I stand on.", "pr.sub": "Four statements that hold up the rest.", "pr.1.t": "Form doesn't save<br><em>a weak idea</em>", "pr.1.d": "The problem, context and answer come first. The visual language comes after — to make it precise and visible.", "pr.2.t": "A system works<br><em>without its author</em>", "pr.2.d": "Rules, components and logic should hold up under new briefs, new people and new channels.", "pr.3.t": "Beautiful isn't the goal.<br><em>The goal is that it works</em>", "pr.3.d": "Design has to earn trust, speed up decisions, lift conversion, build recognition and grow the system itself.", "pr.4.t": "The team understands<br>not just what, but <em>why</em>", "pr.4.d": "The team has to understand the criteria, the language, the constraints — and why each decision was made.", "aud.kicker": "Audience", "aud.title": "People, not numbers.", "aud.sub": "Analytics has no mood. A person does.", "aud.lead": "Feeling comes before reading.<br>If the first impression is weak,<br>every feature has to earn <em>trust</em><br>back on its own.", "aud.1.n": "First impression", "aud.1.d": "What someone feels before any words or features. Carried by type, colour, rhythm and density.", "aud.2.n": "Ease in the moment", "aud.2.d": "A person doesn't look at good design — they feel it.", "aud.3.n": "What they'll tell someone else", "aud.3.d": "What stays with a person and gets retold. This is where brand recognition is built.", "aud.1.note": "Decides in seconds.", "aud.2.note": "Unseen — that means it works.", "aud.3.note": "Recognition and trust.", "br.kicker": "Brand strategy", "br.title": "How a brand takes shape.", "br.sub": "A brand isn't made from a logo. It's made from repeated decisions: how we sound, how we look, how we move and how we hold the bar across every channel.", "br.1.n": "Context", "br.1.d": "Market, competitors, audience, business goals. What we know — and what we're only guessing.", "br.2.n": "Position", "br.2.d": "Who we're for, who we're against, and what we deliberately stay silent on. Without the second, the first doesn't work.", "br.3.n": "Voice", "br.3.d": "How the brand reads in an email, on a banner, in support. The tone people recognise.", "br.4.n": "Visual language", "br.4.d": "Typography, colour, imagery, motion, photography. Not just a logo and palette — a whole grammar.", "br.5.n": "System", "br.5.d": "How the identity scales into web, social, product, decks, OOH.", "br.6.n": "Launch", "br.6.d": "Measurement, iteration, share of voice, brand recall. A brand is alive — it shifts.", "bmp.kicker": "Structure", "bmp.title": "Design is the system's<br>top layer.", "bmp.sub": "What users see is the final form. Everything else is what holds it up.", "bmp.s1.label": "Strategy, process, team — what makes the visual possible", "bmp.s2.label": "Visual — the final form of everything done before it", "bmp.caption": "31% is what people see.<br>69% is what makes that form precise.", "bmp.c1.lbl": "Strategy", "bmp.c1.t": "What and why.", "bmp.c1.l1": "Positioning", "bmp.c1.l2": "Tone of voice", "bmp.c1.l3": "Goals and horizons", "bmp.c1.l4": "Audience map", "bmp.c2.lbl": "Process", "bmp.c2.t": "How.", "bmp.c2.l1": "Team rituals", "bmp.c2.l2": "Contract with engineering", "bmp.c2.l3": "Quality control", "bmp.c2.l4": "Production speed", "bmp.c3.lbl": "System", "bmp.c3.t": "What it stands on.", "bmp.c3.l1": "Tokens and components", "bmp.c3.l2": "Guides and rules", "bmp.c3.l3": "Adoption metric", "bmp.c3.l4": "Readiness to scale", "ev.kicker": "Evaluation", "ev.title": "How I evaluate the work.", "ev.sub": "Four levels. A solution only passes<br>if it works on all four.", "ev.1.ln": "Level 1", "ev.1.t": "Logic", "ev.1.d": "The user gets it: where to tap, what happens, why it matters. If it needs explaining, the solution is weak.", "ev.1.q": "Got it?", "ev.2.ln": "Level 2", "ev.2.t": "Form", "ev.2.d": "Hierarchy, contrast, rhythm, typography, balance. This is where craft lives — and where expression earns its place.", "ev.2.q": "Made?", "ev.3.ln": "Level 3", "ev.3.t": "System", "ev.3.d": "Will it scale to ten channels? Hold up under new scenarios? Stay aligned with the brand?", "ev.3.q": "Holds?", "ev.4.ln": "Level 4", "ev.4.t": "Business", "ev.4.d": "Does it help the business? Conversion, CTR, retention, recognition, production speed, perception.", "ev.4.q": "Worked?", "tm.kicker": "Team", "tm.tag1": "Approach", "tm.tag2": "In practice", "tm.tag3": "Principle", "tm.title": "Working with the team.", "tm.lead": "I lead the team —<br>and I'm still a <em>designer</em>.", "tm.sub1": "I stay inside the work: reviewing files, building the system, fighting for decisions,<br>helping the team grow, staying close to the business.", "tm.sub2": "A team that understands the principles doesn't wait<br>for <em>sign-off</em> on every step.", "ts.kicker": "Rhythm", "ts.title": "Rhythm and mentorship.", "ts.sub": "Rhythm is the invisible scaffolding of quality.", "ts.b1.lbl": "Rituals", "ts.b1.1n": "Short morning sync", "ts.b1.1d": "What's moving, what's blocked, where help is needed.", "ts.b1.2n": "Weekly review", "ts.b1.2d": "Priorities, risks and status on the key tasks.", "ts.b1.3n": "Work review", "ts.b1.3d": "Team review: learning to see what's strong and what's weak.", "ts.b1.4n": "Retrospective", "ts.b1.4d": "We change the process so mistakes don't become habits.", "ts.b2.lbl": "Learning", "ts.b2.1n": "Talks", "ts.b2.1d": "The team picks the topics.", "ts.b2.2n": "Assignments", "ts.b2.2d": "Practice aimed at one specific skill. Not box-ticking.", "ts.b2.3n": "One-to-one review", "ts.b2.3d": "One on one: what's strong, what's weak, what to change.", "ts.b2.4n": "Open critiques", "ts.b2.4d": "Design stops being a black box.", "ts.b3.lbl": "Mentorship", "ts.b3.1n": "1:1 every week", "ts.b3.1d": "Not a status update — context and growth points.", "ts.b3.2n": "Targeted feedback", "ts.b3.2d": "On the work, not on the person.", "ts.b3.3n": "Strengths → tasks", "ts.b3.3d": "I grow people where they're already strong.", "ts.b3.4n": "Transparent criteria", "ts.b3.4d": "A designer knows exactly what the next grade asks for.", "ts.b4.lbl": "From Junior to Lead", "ts.b4.1n": "Junior — start", "ts.b4.1d": "Guides, a mentor and short tasks with a clear quality bar.", "ts.b4.2n": "Middle — autonomy", "ts.b4.2d": "Independent work, defending decisions, first areas of ownership.", "ts.b4.3n": "Senior — influence", "ts.b4.3d": "Standards, reviews, influence over the product and design driven by business goals.", "ts.b4.4n": "Lead — strategy", "ts.b4.4d": "Cross-functional work, metrics, process and a decision-making culture.", "ds.kicker": "Design systems", "ds.title": "Not a library. A language.", "ds.sub": "A design system isn't a library of components. It's a way to stop rebuilding the same thing every time — and to hold quality without manual control.", "ds.1.num": "Layer 01", "ds.1.n": "Foundation", "ds.1.l1": "Colour", "ds.1.l2": "Typography", "ds.1.l3": "Spacing and grid", "ds.1.l4": "Motion", "ds.1.l5": "Tokens", "ds.1.note": "The source of truth. Change here — changes everywhere.", "ds.2.num": "Layer 02", "ds.2.n": "Components", "ds.2.l1": "Reusable", "ds.2.l2": "Predictable", "ds.2.l3": "States and animation", "ds.2.l4": "Documented", "ds.2.l5": "Built for scale", "ds.2.note": "Engineering continues the solution instead of rebuilding it.", "ds.3.num": "Layer 03", "ds.3.n": "Governance", "ds.3.l1": "Who decides", "ds.3.l2": "How updates ship", "ds.3.l3": "System roadmap", "ds.3.l4": "How one language is held", "ds.3.l5": "Adoption as the metric", "ds.3.note": "The metric is share of screens using components.", "sv.kicker": "Work", "sv.title": "Where I help.", "sv.sub": "Six areas of responsibility — from meaning to execution.", "sv.1.n": "Brand and identity", "sv.1.num": "Visual", "sv.1.d": "A brand that doesn't fall apart between web, marketing and product. One voice, one language.", "sv.2.n": "Web and communication", "sv.2.num": "Clarity", "sv.2.d": "Sites, landing pages, campaigns. Communication that explains a product's value fast.", "sv.3.n": "Design systems", "sv.3.num": "Scale", "sv.3.d": "A system that speeds the team up and holds quality. One source of truth for design and code.", "sv.4.n": "Art direction", "sv.4.num": "Taste", "sv.4.d": "Maintaining the visual bar: the brand stays whole across web, marketing, product and decks.", "sv.5.n": "UI/UX supervision", "sv.5.num": "Craft", "sv.5.d": "Interface review and a tight loop with engineering — so what was designed makes it into the code.", "sv.6.n": "Team and process", "sv.6.num": "Speed", "sv.6.d": "Hiring, onboarding, leveling and rhythm. A team that grows without losing quality — and without burning out.", "sv.mark.q": "What do you need?", "sv.mark.d": "These areas rarely work alone. They're strongest when they fit into one system.", "rs.kicker": "Results", "rs.title": "What the business gets.", "rs.sub": "Concrete shifts — visible in how the team works and in how the product feels from the outside.", "rs.1.t": "One brand across every touchpoint", "rs.1.d": "Landing, product, ads, deck — pieces of one system. The customer sees maturity, not five different companies.", "rs.2.t": "Releases ship multiples faster", "rs.2.d": "When the team works from a system, design stops being the bottleneck. What took a month ships in a week.", "rs.3.t": "Teams moving the same way", "rs.3.d": "Marketing, product, engineering lean on the same principles. Less politics — more work for the market.", "rs.5.t": "Decisions by criteria, not by taste", "rs.5.d": "Design stops being personal opinion. The argument shifts from \"I don't like it\" to \"this works.\"", "rs.1.note": "BRAND", "rs.2.note": "SPEED", "rs.3.note": "FOCUS", "rs.5.note": "CRITERIA", "rs.quote": "Design becomes part of the business system.<br>Not a separate function, not a stage, not an <em>add-on</em>.", "co.kicker": "Experience", "co.title": "Where I've worked, what I've built.", "co.sub": "Three companies over 12+ years. From large federal-scale<br>corporates in Russia to a global fintech in Southeast Asia.", "co.1.role": "Head of Design", "co.1.desc": "Global neobank, headquartered in Singapore. Rebuilt the team from <span class=\"num\">2</span> to <span class=\"num\">10+</span>, shipped two design systems and <span class=\"num\">15+</span> brand identities.", "co.1.aw": "Best New Fintech APAC 2024 · The Next 100 Global Companies", "co.2.role": "Lead Designer", "co.2.desc": "Web3 ecosystem: a MetaFi crypto-bank with <span class=\"num\">750K+</span> users across <span class=\"num\">170+</span> countries, plus Chobies NTO. Rebranded Crypterium → Choise.com without losing the audience.", "co.2.aw": "CHO token: ATH $1.38<br>TOP-500 CoinMarketCap", "co.3.role": "Art Director", "co.3.desc": "Moscow enterprise studio. <span class=\"num\">200+</span> projects for federal-scale brands, reaching <span class=\"num\">10M+</span> people daily. Grew the studio from 5–7 to 50+ specialists.", "co.3.aw": "Tagline Awards<br>70% client retention", "co.marquee.lbl": "Brands I've worked with", "cta.eyebrow": "If the approach lands", "cta.title": "Let's <em>talk</em>.", "cta.lead": "Not necessarily about work. We can just say hello first. No heavy framing, no fanfare. The rest comes later.", "cta.btn.tg": "Telegram", "cta.btn.em": "Email", "cta.btn.pf": "Portfolio", "cta.m.1.l": "Author", "cta.m.1.v": "Author&nbsp;· Sergey Lukin", "cta.m.2.l": "Telegram", "cta.m.3.l": "Email", "cta.m.4.l": "Portfolio", "ft.copy": "© 2026 Sergey Lukin", "ft.tag": "Design manifesto", "ft.top": "Top <span class=\"arr\">↑</span>", "rs.4.note": "TRUST", "rs.4.t": "The brand reads more expensive", "rs.4.d": "When touchpoints are coherent, price feels earned. Premium isn't gold trim. It's order."}}</script>
+<script id="i18n-data" type="application/json">{"ru": {"whisper.intro": "Дизайн&nbsp;— для людей.<br>Не&nbsp;для портфолио.", "whisper.pain": "«Просто нарисуйте»&nbsp;—<br>начало слабого проекта.", "whisper.partner": "Самый долгий спор<br>моей карьеры.", "whisper.pr": "То, что не&nbsp;помещается<br>в&nbsp;портфолио.", "whisper.aud": "Впечатление создают<br>не&nbsp;картинки. Дизайн.", "whisper.br": "Раньше думал:<br>бренд&nbsp;— это логотип.", "whisper.ev": "Работа закончена,<br>когда работает<br>в&nbsp;реальности.", "whisper.tm": "Команда ломается<br>от&nbsp;неясности,<br>не&nbsp;от&nbsp;нагрузки.", "whisper.ds": "Без системы качество&nbsp;—<br>это настроение.", "whisper.rs": "Сильный дизайн<br>выдерживает реальность.", "whisper.co": "Двенадцать лет<br>в&nbsp;трёх главах.", "meta.title": "Манифест · Сергей Лукин", "meta.description": "Манифест Сергея Лукина, Head of Design. О&nbsp;дизайне в&nbsp;бренде, маркетинге и&nbsp;продукте — и&nbsp;о&nbsp;команде вокруг этой работы.", "skip": "Перейти к&nbsp;содержанию", "nav.brand": "Сергей Лукин <b>—</b> Head of Design", "nav.meta": "Манифест · 2026", "nav.tg": "Telegram", "nav.em": "Email", "nav.pf": "Портфолио", "hero.focus.l": "Фокус", "hero.focus.v": "Бренд&nbsp;· Маркетинг<br>Веб&nbsp;· Продукт", "hero.eyebrow": "Дизайн-манифест", "hero.issue": "№ 01 · 2026", "hero.title": "Как я&nbsp;строю<br><em>дизайн.</em>", "hero.title.static": "Как я&nbsp;строю", "hero.center": "Философия, выстроенная через годы работы, наблюдений и&nbsp;переосмысления того, каким должен быть дизайн.", "hero.sub": "Бренд&nbsp;· Маркетинг&nbsp;· Веб&nbsp;· Продукт<br>И&nbsp;команда, которая держит это вместе.", "hero.author.l": "Автор", "hero.author.v": "Сергей Лукин<br>Head of Design / Art Director", "hero.today.l": "Признание", "hero.today.v": "Best New Fintech APAC<br>Tagline Awards", "hero.contact.l": "Контакт", "intro.eyebrow": "00 · Кто я", "intro.kicker": "Начало", "intro.stamp": "12+ лет · 3 страны · 3 компании", "intro.title": "Двенадцать лет дизайна — и&nbsp;всё меньше про&nbsp;макеты.", "intro.p1": "От&nbsp;графического дизайнера&nbsp;— до&nbsp;<strong>Head of Design</strong>. От&nbsp;федеральной <strong>enterprise</strong>-студии&nbsp;— до&nbsp;финтеха в&nbsp;Юго-Восточной Азии.", "intro.p2": "Работаю на&nbsp;стыке бренда, маркетинга, веба и&nbsp;продукта. Собираю их&nbsp;в&nbsp;одну систему, чтобы компания звучала цельно.", "pain.kicker": "Симптомы", "pain.title": "Знакомая ситуация?", "pain.sub": "Симптомы, по&nbsp;которым видно:<br>дизайн перестал работать на&nbsp;бизнес.", "pain.1": "Маркетинг, продукт и&nbsp;разработка работают в&nbsp;разные стороны.", "pain.2": "Каждый запуск собирают заново&nbsp;— прошлые проекты не&nbsp;ускоряют новые.", "pain.3": "Команда занята, но&nbsp;система не&nbsp;становится сильнее.", "pain.4": "Бренд теряется в&nbsp;каналах. Стиль зависит от&nbsp;исполнителя.", "pain.5": "Руководитель тонет в&nbsp;правках. Стратегии остаётся всё меньше.", "pain.1.note": "Размывает фокус.<br>Замедляет запуск.", "pain.2.note": "Темп не&nbsp;превращается в&nbsp;скорость.", "pain.3.note": "Знание не&nbsp;превращается в&nbsp;систему.", "pain.4.note": "Узнаваемость падает, доверие&nbsp;тает.", "pain.5.note": "Стратегические решения откладываются.", "pain.quote": "Хаос редко выглядит как хаос.<br>Чаще&nbsp;— как временное решение,<br>которое осталось навсегда.", "pain.foot": "Это не&nbsp;лечится одной кнопкой.<br>И&nbsp;не&nbsp;парой макетов.", "partner.kicker": "Подход", "partner.title": "Соавтор, а&nbsp;не&nbsp;подрядчик.", "partner.sub": "Дизайн вступает в&nbsp;задачу до&nbsp;того, как написан бриф.<br>Иначе он&nbsp;уже исправляет, а&nbsp;не&nbsp;решает.", "partner.svc.tag": "Сервис", "partner.svc.title": "Получает задачу<br>и&nbsp;возвращает макет", "partner.svc.1": "Получает бриф «в&nbsp;финальной упаковке»", "partner.svc.2": "Спрашивает «как», не «зачем»", "partner.svc.3": "Решает то, что ему дали", "partner.svc.4": "Стоит на&nbsp;конце пайплайна", "partner.prt.tag": "Партнёр", "partner.prt.title": "Влияет на&nbsp;решение<br>от&nbsp;идеи до&nbsp;запуска", "partner.prt.1": "Влияет на&nbsp;постановку задачи", "partner.prt.2": "Идёт к&nbsp;маркетингу, продукту, владельцу", "partner.prt.3": "Меняет «что делаем», а&nbsp;не&nbsp;только «как»", "partner.prt.4": "Стоит в&nbsp;начале пайплайна", "partner.final": "Дизайн&nbsp;— соавтор бизнеса.<br>Голос за&nbsp;столом,<br>где принимают решения.", "pr.kicker": "Принципы", "pr.title": "Во&nbsp;что я&nbsp;верю.", "pr.sub": "Четыре утверждения, на&nbsp;которых стоит всё остальное.", "pr.1.t": "Форма не&nbsp;спасает<br><em>слабую мысль</em>", "pr.1.d": "Сначала задача, контекст и&nbsp;решение. Потом визуальный язык, который делает это точным и&nbsp;видимым.", "pr.2.t": "Система работает<br><em>без автора</em>", "pr.2.d": "Правила, компоненты и&nbsp;логика должны выдерживать новые задачи, новых людей и&nbsp;новые каналы.", "pr.3.t": "Красиво&nbsp;— это не&nbsp;цель.<br><em>Цель&nbsp;— чтобы работало</em>", "pr.3.d": "Дизайн должен помогать доверию, скорости, конверсии и&nbsp;узнаваемости.", "pr.4.t": "Команда понимает не&nbsp;только<br>что, но&nbsp;и&nbsp;<em>почему</em>", "pr.4.d": "Команда должна понимать критерии, язык, ограничения и&nbsp;причину каждого решения.", "aud.kicker": "Аудитория", "aud.title": "Это люди, а&nbsp;не&nbsp;цифры.", "aud.sub": "У&nbsp;аналитики нет настроения. У&nbsp;человека — есть.", "aud.lead": "Человек чувствует раньше, чем&nbsp;читает.<br>Если первое ощущение слабое, функциям<br>приходится заново доказывать <em>доверие</em>.", "aud.1.n": "Первое впечатление", "aud.2.n": "Решение в&nbsp;моменте", "aud.3.n": "След в&nbsp;памяти", "br.kicker": "Бренд-стратегия", "br.title": "Как складывается бренд.", "br.sub": "Бренд&nbsp;— не&nbsp;логотип. Это повторяемые решения: как звучим, как выглядим, как двигаемся, как держим качество.", "br.1.n": "Контекст", "br.1.d": "Рынок, конкуренты, аудитория, цели бизнеса. Что знаем точно, а&nbsp;что только предполагаем.", "br.2.n": "Позиция", "br.2.d": "Для кого мы, против кого, и&nbsp;о&nbsp;чём мы&nbsp;принципиально молчим. Без второго первое не&nbsp;работает.", "br.3.n": "Голос", "br.3.d": "Как звучит бренд в&nbsp;письме, в&nbsp;баннере, в&nbsp;техподдержке. Тон, который узнают.", "br.4.n": "Визуальный язык", "br.4.d": "Типографика, цвет, образ, motion, фотостиль. Не&nbsp;«логотип и&nbsp;палитра», а&nbsp;целая грамматика.", "br.5.n": "Система", "br.5.d": "Как айдентика разворачивается на&nbsp;сайт, соцсети, продукт, презентации, наружку.", "br.6.n": "Запуск", "br.6.d": "Замеры, итерации, доля голоса, brand recall.<br>Бренд живой&nbsp;— он&nbsp;меняется.", "bmp.c1.lbl": "Стратегия", "bmp.c1.t": "Что и&nbsp;зачем.", "bmp.c1.l1": "Позиционирование", "bmp.c1.l2": "Tone of voice", "bmp.c1.l3": "Цели и&nbsp;горизонты", "bmp.c1.l4": "Карта аудитории", "bmp.c2.lbl": "Процессы", "bmp.c2.t": "Как.", "bmp.c2.l1": "Ритуалы команды", "bmp.c2.l2": "Контракт с&nbsp;инженерией", "bmp.c2.l3": "Контроль качества", "bmp.c2.l4": "Скорость production", "bmp.c3.lbl": "Система", "bmp.c3.t": "На&nbsp;чём держится.", "bmp.c3.l1": "Токены и&nbsp;компоненты", "bmp.c3.l2": "Гайды и&nbsp;правила", "bmp.c3.l3": "Метрика adoption", "bmp.c3.l4": "Готовность к&nbsp;масштабу", "ev.kicker": "Оценка", "ev.title": "Как оцениваю работу.", "ev.sub": "Четыре уровня. Решение проходит проверку<br>только если работает на&nbsp;всех четырёх.", "ev.1.ln": "Уровень 1", "ev.1.t": "Логика", "ev.1.d": "Пользователь понимает: куда нажать, что произойдёт, зачем это нужно. Если требует объяснения — решение слабое.", "ev.1.q": "Понял?", "ev.2.ln": "Уровень 2", "ev.2.t": "Форма", "ev.2.d": "Иерархия, контраст, ритм, типографика, баланс. Здесь живёт ремесло — и&nbsp;здесь работает экспрессия.", "ev.2.q": "Сделано?", "ev.3.ln": "Уровень 3", "ev.3.t": "Система", "ev.3.d": "Можно ли&nbsp;развернуть на&nbsp;десять каналов? Выдержит ли&nbsp;новые сценарии? Насколько решение едино с&nbsp;брендом?", "ev.3.q": "Выдержит?", "ev.4.ln": "Уровень 4", "ev.4.t": "Бизнес", "ev.4.d": "Помогает ли&nbsp;это бизнесу? Конверсии, retention, узнаваемость, скорость.", "ev.4.q": "Сработало?", "tm.kicker": "Команда", "tm.tag1": "Подход", "tm.tag2": "В&nbsp;работе", "tm.tag3": "Принцип", "tm.title": "Как работаю<br>с&nbsp;командой.", "tm.lead": "Я&nbsp;веду команду&nbsp;— и&nbsp;продолжаю <em>рисовать</em>.", "tm.sub1": "Остаюсь внутри работы: смотрю макеты, спорю за&nbsp;решения, держу связь с&nbsp;бизнесом.", "tm.sub2": "Команда, которая понимает принципы, не&nbsp;ждёт <em>согласований</em> на&nbsp;каждый шаг.", "ts.title": "Ритм и менторство.", "ts.sub": "Регулярность — невидимый каркас, на&nbsp;котором держится качество.", "ts.b1.lbl": "Ритуалы", "ts.b1.1n": "Короткая утренняя сверка", "ts.b1.1d": "Что в&nbsp;работе, что блокирует, где нужна помощь.", "ts.b1.2n": "Недельный обзор", "ts.b1.2d": "Приоритеты, риски и&nbsp;статус по&nbsp;ключевым задачам.", "ts.b1.3n": "Разбор работ", "ts.b1.3d": "Командное ревью: учимся видеть сильное и&nbsp;слабое.", "ts.b1.4n": "Ретроспектива", "ts.b1.4d": "Меняем процессы, чтобы ошибки не&nbsp;стали привычкой.", "ts.b2.lbl": "Обучение", "ts.b2.1n": "Лекции", "ts.b2.1d": "Темы выбирает команда.", "ts.b2.2n": "Домашние задания", "ts.b2.2d": "Практика на&nbsp;конкретный навык. Не&nbsp;для галочки.", "ts.b2.3n": "Индивидуальное ревью", "ts.b2.3d": "Один на&nbsp;один: что сильно, что слабо, что менять.", "ts.b2.4n": "Открытые показы", "ts.b2.4d": "Дизайн перестаёт быть «чёрным ящиком».", "ts.b3.lbl": "Менторство", "ts.b3.1n": "1:1 каждую неделю", "ts.b3.1d": "Не&nbsp;статус-апдейт, а&nbsp;контекст и&nbsp;точки роста.", "ts.b3.2n": "Точечный фидбек", "ts.b3.2d": "На&nbsp;работу, не&nbsp;на&nbsp;человека.", "ts.b3.3n": "Сильные стороны → задачи", "ts.b3.3d": "Развиваю там, где уже сильное.", "ts.b3.4n": "Прозрачные критерии", "ts.b3.4d": "Дизайнер знает, что нужно для следующего грейда.", "ds.kicker": "Дизайн-системы", "ds.title": "Не&nbsp;библиотека. Язык.", "ds.sub": "Дизайн-система&nbsp;— это не&nbsp;библиотека компонентов. Это способ<br>не&nbsp;пересобирать одно и&nbsp;то&nbsp;же&nbsp;каждый раз и&nbsp;держать качество<br>без ручного контроля.", "ds.1.num": "Слой 01", "ds.1.n": "Основа", "ds.1.l1": "Цвет", "ds.1.l2": "Типографика", "ds.1.l3": "Отступы и&nbsp;сетка", "ds.1.l4": "Motion", "ds.1.l5": "Токены", "ds.1.note": "Источник правды. Меняется здесь&nbsp;— меняется везде.", "ds.2.num": "Слой 02", "ds.2.n": "Компоненты", "ds.2.l1": "Переиспользуемые", "ds.2.l2": "Предсказуемые", "ds.2.l3": "Состояния и&nbsp;анимация", "ds.2.l4": "Документированные", "ds.2.l5": "С&nbsp;учётом масштаба", "ds.2.note": "Разработка продолжает решение, а&nbsp;не&nbsp;пересобирает.", "ds.3.num": "Слой 03", "ds.3.n": "Управление", "ds.3.l1": "Кто принимает решения", "ds.3.l2": "Как обновляется", "ds.3.l3": "Roadmap системы", "ds.3.l4": "Как держится единый язык", "ds.3.l5": "Метрика — adoption", "ds.3.note": "Главная метрика — не «сколько компонентов», а&nbsp;какая доля экранов их использует.", "rs.kicker": "Результаты", "rs.title": "Что получает бизнес.", "rs.sub": "Что меняется внутри команды и&nbsp;в&nbsp;восприятии продукта.", "rs.1.t": "Один бренд во&nbsp;всех касаниях", "rs.1.d": "Лендинг, продукт, реклама, презентация&nbsp;— части одной системы. Клиент видит зрелость, а&nbsp;не&nbsp;пять разных компаний.", "rs.2.t": "Релизы быстрее в&nbsp;разы", "rs.2.d": "Когда команда опирается на&nbsp;систему, дизайн перестаёт быть бутылочным горлом. То, что раньше шло месяц, выходит за&nbsp;неделю.", "rs.3.t": "Команды&nbsp;— в&nbsp;одну сторону", "rs.3.d": "Маркетинг, продукт, разработка опираются на&nbsp;одни принципы. Меньше политики&nbsp;— больше работы для рынка.", "rs.5.t": "Решения по&nbsp;критериям, а&nbsp;не по&nbsp;вкусу", "rs.5.d": "Дизайн перестаёт быть личным мнением. Спор переходит из&nbsp;«мне не&nbsp;нравится» в&nbsp;«это работает».", "rs.1.note": "BRAND", "rs.2.note": "SPEED", "rs.3.note": "FOCUS", "rs.5.note": "CRITERIA", "rs.quote": "Дизайн становится частью бизнес-системы.<br>Не&nbsp;отдельной функцией, не&nbsp;этапом, не&nbsp;<em>надстройкой</em>.", "co.kicker": "Опыт", "co.title": "Где работал и&nbsp;над чем.", "co.sub": "Три места работы за&nbsp;12+ лет. От&nbsp;федеральных<br>корпораций до&nbsp;глобального финтеха в&nbsp;ЮВА.", "co.1.role": "Head of Design", "co.1.desc": "Глобальный необанк, штаб-квартира в&nbsp;Сингапуре. Пересобрал команду с&nbsp;<span class=\"num\">2</span> до&nbsp;<span class=\"num\">10+</span>, построил две дизайн-системы и&nbsp;<span class=\"num\">15+</span> бренд-айдентик.", "co.1.aw": "Best New Fintech APAC 2024 · The Next 100 Global Companies", "co.2.role": "Lead Designer", "co.2.desc": "Web3-экосистема: MetaFi-криптобанк, <span class=\"num\">750K+</span> пользователей в&nbsp;<span class=\"num\">170+</span> странах, и&nbsp;Chobies NTO. Ребрендинг Crypterium&nbsp;→ Choise.com без потери аудитории.", "co.2.aw": "CHO-токен: ATH $1,38<br>TOP-500 CoinMarketCap", "co.3.role": "Арт-директор", "co.3.desc": "Московская enterprise-студия. <span class=\"num\">200+</span> проектов для федеральных брендов, аудитория <span class=\"num\">10M+</span> в&nbsp;день. Команда выросла с&nbsp;5 до&nbsp;50+ человек.", "co.3.aw": "Tagline Awards<br>Удержание клиентов&nbsp;— 70%", "co.marquee.lbl": "Бренды, с&nbsp;которыми работал", "cta.eyebrow": "Если зацепил подход", "cta.title": "Давайте <em>поговорим</em>.", "cta.lead": "Не&nbsp;обязательно о&nbsp;работе. Для начала&nbsp;— просто познакомиться. Остальное потом.", "cta.btn.tg": "Telegram", "cta.btn.em": "Email", "cta.btn.pf": "Портфолио", "cta.m.1.l": "Автор", "cta.m.1.v": "Автор&nbsp;· Сергей Лукин", "cta.m.2.l": "Telegram", "cta.m.3.l": "Email", "cta.m.4.l": "Портфолио", "ft.copy": "© 2026 Сергей Лукин", "ft.tag": "Дизайн-манифест", "ft.top": "Наверх <span class=\"arr\">↑</span>", "rs.4.note": "TRUST", "rs.4.t": "Бренд воспринимается дороже", "rs.4.d": "Когда касания согласованны, цена ощущается оправданной. Премиум&nbsp;— это не&nbsp;позолота, а&nbsp;порядок.", "partner.bridge": "То, что видят пользователи,&nbsp;— финальная форма.<br>Всё остальное&nbsp;— то, на&nbsp;чём она держится.", "aud.1.tag": "Реакция&nbsp;— раньше понимания.", "aud.2.tag": "На&nbsp;хороший дизайн не&nbsp;смотрят&nbsp;— его ощущают.", "aud.3.tag": "Память хранит чувство, не&nbsp;интерфейс.", "aud.1.data": "<span class=\"num\">0.5с</span>&nbsp;впечатление<span class=\"sep\">·</span><span class=\"num\">10с</span>&nbsp;до&nbsp;решения<span class=\"sep\">·</span><span class=\"num\">38%</span>&nbsp;уходят<span class=\"sep\">·</span><span class=\"num\">94%</span>&nbsp;—&nbsp;дизайн", "aud.2.data": "<span class=\"num\">01:42</span>&nbsp;сессия<span class=\"sep\">·</span><span class=\"num\">44%</span>&nbsp;бросают форму<span class=\"sep\">·</span><span class=\"num\">27%</span>&nbsp;drop-off<span class=\"sep\">·</span><span class=\"num\">+27%</span>&nbsp;возврат", "aud.3.data": "<span class=\"num\">+31%</span>&nbsp;делятся<span class=\"sep\">·</span><span class=\"num\">48%</span>&nbsp;возвращаются<span class=\"sep\">·</span><span class=\"num\">+19%</span>&nbsp;узнаваемость<span class=\"sep\">·</span><span class=\"num\">+11</span>&nbsp;NPS", "aud.1.t1": "Похоже на&nbsp;скам", "aud.1.t2": "Сделано как у&nbsp;банка", "aud.1.t3": "Не&nbsp;понятно, кому это", "aud.1.t4": "Чувствую профессионализм", "aud.1.t5": "Это не&nbsp;для меня", "aud.1.t6": "Выглядит как мошенники", "aud.1.t7": "Серьёзная компания", "aud.1.t8": "Хочу разобраться", "aud.1.t9": "Боюсь обмана", "aud.1.t10": "Доверие с&nbsp;первой секунды", "aud.2.t1": "Зачем им столько данных", "aud.2.t2": "Не понимаю, что от&nbsp;меня хотят", "aud.2.t3": "Сделали бы&nbsp;проще", "aud.2.t4": "Слишком много шагов", "aud.2.t5": "Где найти то, что нужно", "aud.2.t6": "Сначала покажите, ради чего", "aud.2.t7": "Зачем мне это", "aud.2.t8": "Сначала бы&nbsp;понять цену", "aud.2.t9": "Можно без регистрации?", "aud.2.t10": "Не&nbsp;успел понять&nbsp;— уже форма", "aud.3.t1": "Скину коллегам, грамотно сделано", "aud.3.t2": "У&nbsp;них реально удобно", "aud.3.t3": "Запомнил их&nbsp;с&nbsp;первой минуты", "aud.3.t4": "Один из&nbsp;лучших, что видел", "aud.3.t5": "Расскажу в&nbsp;команде", "aud.3.t6": "Сам бы&nbsp;так не&nbsp;сделал", "aud.3.t7": "Вернусь к&nbsp;ним точно", "aud.3.t8": "Сразу поделился ссылкой", "aud.3.t9": "Сделано на&nbsp;уровне", "aud.3.t10": "Помню, как было приятно", "aud.1.t11": "Видно, что вложились", "aud.1.t12": "Странная эстетика", "aud.2.t11": "Не&nbsp;разобрался", "aud.2.t12": "Лень читать всё это", "aud.3.t11": "Это конкурентам пример", "aud.3.t12": "Запомнил название", "intro.sub": "Теперь&nbsp;— про мышление, про людей, про решения, которые они принимают.", "partner.svc.def": "Получает бриф в&nbsp;финальной упаковке. Спрашивает «как», не «зачем». Стоит на&nbsp;конце пайплайна.", "partner.prt.def": "Влияет на&nbsp;постановку задачи. Меняет «что делаем», не&nbsp;только «как». Стоит в&nbsp;начале пайплайна.", "bmp.s1.label": "Стратегия, процессы, команда&nbsp;— то, что делает визуал возможным", "bmp.s2.label": "Визуал&nbsp;— финальная форма того, что было сделано до", "ev.bmp.foot": "Можно нарисовать идеальный экран&nbsp;— и&nbsp;проиграть проект. Можно собрать слабый&nbsp;— и&nbsp;выиграть. Разница в&nbsp;этих 69%.", "whisper.mentor": "Скиллы можно нанять.<br>Сильную команду — только вырастить.", "mentor.kicker": "Ритм", "mentor.title": "Менторство", "mentor.sat.1": "1:1 созвоны", "mentor.sat.2": "Парные сессии", "mentor.sat.3": "Ревью макетов", "mentor.sat.4": "Совместные правки", "mentor.sat.5": "Защита решений", "mentor.sat.6": "Кросс-команды", "mentor.sat.7": "Референсы", "mentor.sat.8": "План развития", "mentor.sat.9": "Грейды", "mentor.sat.10": "Карта компетенций", "mentor.sat.11": "Аналитика", "mentor.sat.12": "Софт-скиллы", "mentor.sat.13": "Хард-скиллы", "mentor.sat.14": "Карьера", "mentor.sat.15": "Типографика", "mentor.sat.16": "Брендинг", "mentor.sat.17": "Моушн и&nbsp;3D", "mentor.sat.18": "UX-исследования", "mentor.sat.19": "Лекции", "mentor.sat.20": "Разбор кейсов", "mentor.sat.21": "Психотип", "mentor.sat.22": "Эмпатия", "mentor.sat.23": "Эмоциональный интеллект", "mentor.sat.24": "Тон обратной связи", "mentor.sat.25": "Похвала и&nbsp;критика", "mentor.sat.26": "Психологическая безопасность"}, "en": {"whisper.intro": "Design is for people.<br>Not for portfolios.", "whisper.pain": "\"Just design it\"&nbsp;—<br>the start of a weak project.", "whisper.partner": "The longest argument<br>of my career.", "whisper.pr": "What doesn't fit<br>in a portfolio.", "whisper.aud": "It's not pictures<br>that create the impression.<br>It's design.", "whisper.br": "I used to think<br>a brand was a logo.", "whisper.ev": "Work is done<br>when it works<br>in reality.", "whisper.tm": "Teams break<br>from unclarity,<br>not from load.", "whisper.ds": "Without a system,<br>quality is a mood.", "whisper.rs": "Strong design<br>holds up in reality.", "whisper.co": "Twelve years<br>in three chapters.", "meta.title": "Manifesto · Sergey Lukin", "meta.description": "A design manifesto by Sergey Lukin, Head of Design. On design across brand, marketing and product — and the team that holds it together.", "skip": "Skip to content", "nav.brand": "Sergey Lukin <b>—</b> Head of Design", "nav.meta": "Manifesto · 2026", "nav.tg": "Telegram", "nav.em": "Email", "nav.pf": "Portfolio", "hero.focus.l": "Focus", "hero.focus.v": "Brand&nbsp;· Marketing<br>Web&nbsp;· Product", "hero.eyebrow": "Design manifesto", "hero.issue": "Issue 01 · 2026", "hero.title": "How I build<br><em>design.</em>", "hero.title.static": "How I&nbsp;build", "hero.center": "A philosophy built over years of work, observation and rethinking what design should&nbsp;be.", "hero.sub": "Brand&nbsp;· Marketing&nbsp;· Web&nbsp;· Product<br>And the team that ties it together.", "hero.author.l": "Author", "hero.author.v": "Sergey Lukin<br>Head of Design / Art Director", "hero.today.l": "Recognition", "hero.today.v": "Best New Fintech APAC<br>Tagline Awards", "hero.contact.l": "Contact", "intro.eyebrow": "00 · About", "intro.kicker": "Beginning", "intro.stamp": "12+ years · 3 countries · 3 companies", "intro.title": "Twelve years in design — and less and less about layouts.", "intro.p1": "From graphic designer&nbsp;— to <strong>Head of Design</strong>. From a federal-scale <strong>enterprise</strong> studio&nbsp;— to a fintech in Southeast Asia.", "intro.p2": "I work at the intersection of brand, marketing, web and product. I pull them into one system so the company sounds coherent.", "pain.kicker": "Symptoms", "pain.title": "Sound familiar?", "pain.sub": "The signs that design has<br>stopped working for the business.", "pain.1": "Marketing, product and engineering pull in different directions.", "pain.2": "Every launch is built from scratch&nbsp;— past projects don't speed up the next.", "pain.3": "The team is busy, but the system gets no stronger.", "pain.4": "The brand drifts across channels. The look depends on whoever picked it up.", "pain.5": "Leadership is buried in review rounds. There's less and less room for strategy.", "pain.1.note": "Blurs focus.<br>Slows launches.", "pain.2.note": "Effort doesn't become speed.", "pain.3.note": "Knowledge doesn't become a system.", "pain.4.note": "Recognition drops, trust fades.", "pain.5.note": "Strategy keeps slipping.", "pain.quote": "Chaos rarely looks like chaos.<br>More often, it looks like<br>a temporary fix that quietly<br>stayed forever.", "pain.foot": "There's no single button<br>for this. No quick mockup, either.", "partner.kicker": "Approach", "partner.title": "A co-author, not a contractor.", "partner.sub": "Design enters the task before the brief is written.<br>Otherwise it fixes symptoms, not the problem.", "partner.svc.tag": "Service", "partner.svc.title": "Receives a brief,<br>returns a mockup", "partner.svc.1": "Gets the brief already framed", "partner.svc.2": "Asks how, not why", "partner.svc.3": "Solves whatever lands on the desk", "partner.svc.4": "Sits at the end of the pipeline", "partner.prt.tag": "Partner", "partner.prt.title": "Shapes the decision<br>from idea to launch", "partner.prt.1": "Helps frame the brief itself", "partner.prt.2": "Talks directly to marketing, product, leadership", "partner.prt.3": "Changes the what, not just the how", "partner.prt.4": "Sits at the start of the pipeline", "partner.final": "Design is a co-author<br>of the business. A voice<br>at the table where<br>decisions are made.", "pr.kicker": "Principles", "pr.title": "What I stand on.", "pr.sub": "Four statements that hold up the rest.", "pr.1.t": "Form doesn't save<br><em>a weak idea</em>", "pr.1.d": "The problem, context and answer come first. The visual language comes after — to make it precise and visible.", "pr.2.t": "A system works<br><em>without its author</em>", "pr.2.d": "Rules, components and logic should hold up under new briefs, new people and new channels.", "pr.3.t": "Beautiful isn't the goal.<br><em>The goal is that it works</em>", "pr.3.d": "Design has to earn trust, speed up decisions, lift conversion and build recognition.", "pr.4.t": "The team understands<br>not just what, but <em>why</em>", "pr.4.d": "The team has to understand the criteria, the language, the constraints — and why each decision was made.", "aud.kicker": "Audience", "aud.title": "People, not numbers.", "aud.sub": "Analytics has no mood. A person does.", "aud.lead": "Feeling comes before reading.<br>If the first impression is weak,<br>every feature has to earn <em>trust</em><br>back on its own.", "aud.1.n": "First impression", "aud.2.n": "Decision in the moment", "aud.3.n": "What lingers", "br.kicker": "Brand strategy", "br.title": "How a brand takes shape.", "br.sub": "A brand isn't a logo. It's repeated decisions: how we sound, how we look, how we move, how we hold the bar.", "br.1.n": "Context", "br.1.d": "Market, competitors, audience, business goals. What we know — and what we're only guessing.", "br.2.n": "Position", "br.2.d": "Who we're for, who we're against, and what we deliberately stay silent on. Without the second, the first doesn't work.", "br.3.n": "Voice", "br.3.d": "How the brand reads in an email, on a banner, in support. The tone people recognise.", "br.4.n": "Visual language", "br.4.d": "Typography, colour, imagery, motion, photography. Not just a logo and palette — a whole grammar.", "br.5.n": "System", "br.5.d": "How the identity scales into web, social, product, decks, OOH.", "br.6.n": "Launch", "br.6.d": "Measurement, iteration, share of voice, brand recall. A brand is alive — it shifts.", "bmp.c1.lbl": "Strategy", "bmp.c1.t": "What and why.", "bmp.c1.l1": "Positioning", "bmp.c1.l2": "Tone of voice", "bmp.c1.l3": "Goals and horizons", "bmp.c1.l4": "Audience map", "bmp.c2.lbl": "Process", "bmp.c2.t": "How.", "bmp.c2.l1": "Team rituals", "bmp.c2.l2": "Contract with engineering", "bmp.c2.l3": "Quality control", "bmp.c2.l4": "Production speed", "bmp.c3.lbl": "System", "bmp.c3.t": "What it stands on.", "bmp.c3.l1": "Tokens and components", "bmp.c3.l2": "Guides and rules", "bmp.c3.l3": "Adoption metric", "bmp.c3.l4": "Readiness to scale", "ev.kicker": "Evaluation", "ev.title": "How I evaluate the work.", "ev.sub": "Four levels. A solution only passes<br>if it works on all four.", "ev.1.ln": "Level 1", "ev.1.t": "Logic", "ev.1.d": "The user gets it: where to tap, what happens, why it matters. If it needs explaining, the solution is weak.", "ev.1.q": "Got it?", "ev.2.ln": "Level 2", "ev.2.t": "Form", "ev.2.d": "Hierarchy, contrast, rhythm, typography, balance. This is where craft lives — and where expression earns its place.", "ev.2.q": "Made?", "ev.3.ln": "Level 3", "ev.3.t": "System", "ev.3.d": "Will it scale to ten channels? Hold up under new scenarios? Stay aligned with the brand?", "ev.3.q": "Holds?", "ev.4.ln": "Level 4", "ev.4.t": "Business", "ev.4.d": "Does it help the business? Conversion, retention, recognition, speed.", "ev.4.q": "Worked?", "tm.kicker": "Team", "tm.tag1": "Approach", "tm.tag2": "In practice", "tm.tag3": "Principle", "tm.title": "Working with<br>the team.", "tm.lead": "I lead the team&nbsp;— and I keep <em>drawing</em>.", "tm.sub1": "I stay inside the work: reviewing files, fighting for decisions, staying close to the business.", "tm.sub2": "A team that understands the principles doesn't wait for <em>sign-off</em> on every step.", "ts.title": "Rhythm and mentorship.", "ts.sub": "Rhythm is the invisible scaffolding of quality.", "ts.b1.lbl": "Rituals", "ts.b1.1n": "Short morning sync", "ts.b1.1d": "What's moving, what's blocked, where help is needed.", "ts.b1.2n": "Weekly review", "ts.b1.2d": "Priorities, risks and status on the key tasks.", "ts.b1.3n": "Work review", "ts.b1.3d": "Team review: learning to see what's strong and what's weak.", "ts.b1.4n": "Retrospective", "ts.b1.4d": "We change the process so mistakes don't become habits.", "ts.b2.lbl": "Learning", "ts.b2.1n": "Talks", "ts.b2.1d": "The team picks the topics.", "ts.b2.2n": "Assignments", "ts.b2.2d": "Practice aimed at one specific skill. Not box-ticking.", "ts.b2.3n": "One-to-one review", "ts.b2.3d": "One on one: what's strong, what's weak, what to change.", "ts.b2.4n": "Open critiques", "ts.b2.4d": "Design stops being a black box.", "ts.b3.lbl": "Mentorship", "ts.b3.1n": "1:1 every week", "ts.b3.1d": "Not a status update — context and growth points.", "ts.b3.2n": "Targeted feedback", "ts.b3.2d": "On the work, not on the person.", "ts.b3.3n": "Strengths → tasks", "ts.b3.3d": "I grow people where they're already strong.", "ts.b3.4n": "Transparent criteria", "ts.b3.4d": "A designer knows exactly what the next grade asks for.", "ds.kicker": "Design systems", "ds.title": "Not a library. A language.", "ds.sub": "A design system isn't a library of components. It's a way to stop rebuilding the same thing every time — and to hold quality without manual control.", "ds.1.num": "Layer 01", "ds.1.n": "Foundation", "ds.1.l1": "Colour", "ds.1.l2": "Typography", "ds.1.l3": "Spacing and grid", "ds.1.l4": "Motion", "ds.1.l5": "Tokens", "ds.1.note": "The source of truth. Change here — changes everywhere.", "ds.2.num": "Layer 02", "ds.2.n": "Components", "ds.2.l1": "Reusable", "ds.2.l2": "Predictable", "ds.2.l3": "States and animation", "ds.2.l4": "Documented", "ds.2.l5": "Built for scale", "ds.2.note": "Engineering continues the solution instead of rebuilding it.", "ds.3.num": "Layer 03", "ds.3.n": "Governance", "ds.3.l1": "Who decides", "ds.3.l2": "How updates ship", "ds.3.l3": "System roadmap", "ds.3.l4": "How one language is held", "ds.3.l5": "Adoption as the metric", "ds.3.note": "The metric is share of screens using components.", "rs.kicker": "Results", "rs.title": "What the business gets.", "rs.sub": "What shifts inside the team — and in how the product feels.", "rs.1.t": "One brand across every touchpoint", "rs.1.d": "Landing, product, ads, deck — pieces of one system. The customer sees maturity, not five different companies.", "rs.2.t": "Releases ship multiples faster", "rs.2.d": "When the team works from a system, design stops being the bottleneck. What took a month ships in a week.", "rs.3.t": "Teams moving the same way", "rs.3.d": "Marketing, product, engineering lean on the same principles. Less politics — more work for the market.", "rs.5.t": "Decisions by criteria, not by taste", "rs.5.d": "Design stops being personal opinion. The argument shifts from \"I don't like it\" to \"this works.\"", "rs.1.note": "BRAND", "rs.2.note": "SPEED", "rs.3.note": "FOCUS", "rs.5.note": "CRITERIA", "rs.quote": "Design becomes part of the business system.<br>Not a separate function, not a stage, not an <em>add-on</em>.", "co.kicker": "Experience", "co.title": "Where I've worked, what I've built.", "co.sub": "Three companies over 12+ years. From large federal-scale<br>corporates in Russia to a global fintech in Southeast Asia.", "co.1.role": "Head of Design", "co.1.desc": "Global neobank, headquartered in Singapore. Rebuilt the team from <span class=\"num\">2</span> to <span class=\"num\">10+</span>, shipped two design systems and <span class=\"num\">15+</span> brand identities.", "co.1.aw": "Best New Fintech APAC 2024 · The Next 100 Global Companies", "co.2.role": "Lead Designer", "co.2.desc": "Web3 ecosystem: a MetaFi crypto-bank with <span class=\"num\">750K+</span> users across <span class=\"num\">170+</span> countries, plus Chobies NTO. Rebranded Crypterium → Choise.com without losing the audience.", "co.2.aw": "CHO token: ATH $1.38<br>TOP-500 CoinMarketCap", "co.3.role": "Art Director", "co.3.desc": "Moscow enterprise studio. <span class=\"num\">200+</span> projects for federal-scale brands, reaching <span class=\"num\">10M+</span> people daily. Grew the studio from 5–7 to 50+ specialists.", "co.3.aw": "Tagline Awards<br>70% client retention", "co.marquee.lbl": "Brands I've worked with", "cta.eyebrow": "If the approach lands", "cta.title": "Let's <em>talk</em>.", "cta.lead": "Not necessarily about work. To start — just say hello. The rest comes later.", "cta.btn.tg": "Telegram", "cta.btn.em": "Email", "cta.btn.pf": "Portfolio", "cta.m.1.l": "Author", "cta.m.1.v": "Author&nbsp;· Sergey Lukin", "cta.m.2.l": "Telegram", "cta.m.3.l": "Email", "cta.m.4.l": "Portfolio", "ft.copy": "© 2026 Sergey Lukin", "ft.tag": "Design manifesto", "ft.top": "Top <span class=\"arr\">↑</span>", "rs.4.note": "TRUST", "rs.4.t": "The brand reads more expensive", "rs.4.d": "When touchpoints are coherent, price feels earned. Premium isn't gold trim. It's order.", "partner.bridge": "What users see is the final form.<br>Everything else is what holds it up.", "aud.1.tag": "Reaction comes before understanding.", "aud.2.tag": "Good design isn’t looked at — it’s felt.", "aud.3.tag": "Memory keeps the feeling, not the interface.", "aud.1.data": "<span class=\"num\">0.5s</span>&nbsp;impression<span class=\"sep\">·</span><span class=\"num\">10s</span>&nbsp;to decide<span class=\"sep\">·</span><span class=\"num\">38%</span>&nbsp;leave<span class=\"sep\">·</span><span class=\"num\">94%</span>&nbsp;—&nbsp;design", "aud.2.data": "<span class=\"num\">01:42</span>&nbsp;session<span class=\"sep\">·</span><span class=\"num\">44%</span>&nbsp;abandon forms<span class=\"sep\">·</span><span class=\"num\">27%</span>&nbsp;drop-off<span class=\"sep\">·</span><span class=\"num\">+27%</span>&nbsp;return", "aud.3.data": "<span class=\"num\">+31%</span>&nbsp;share<span class=\"sep\">·</span><span class=\"num\">48%</span>&nbsp;return<span class=\"sep\">·</span><span class=\"num\">+19%</span>&nbsp;recall<span class=\"sep\">·</span><span class=\"num\">+11</span>&nbsp;NPS", "aud.1.t1": "Looks like a scam", "aud.1.t2": "Done like a bank", "aud.1.t3": "Not clear who this is for", "aud.1.t4": "Feels professional", "aud.1.t5": "Not for me", "aud.1.t6": "Looks like fraud", "aud.1.t7": "Serious company", "aud.1.t8": "Want to understand", "aud.1.t9": "Afraid of being tricked", "aud.1.t10": "Trust from the first second", "aud.2.t1": "Why so much data from me", "aud.2.t2": "Don't get what they want", "aud.2.t3": "Make it simpler", "aud.2.t4": "Too many steps", "aud.2.t5": "Where do I find this", "aud.2.t6": "Show me what's in it first", "aud.2.t7": "Why do I need this", "aud.2.t8": "Just show the price", "aud.2.t9": "Can I skip signup?", "aud.2.t10": "Already a form, I haven't even started", "aud.3.t1": "I’ll share with coworkers, well done", "aud.3.t2": "They’re really easy to use", "aud.3.t3": "Remembered them from minute one", "aud.3.t4": "One of the best I’ve seen", "aud.3.t5": "I’ll tell the team", "aud.3.t6": "I couldn’t make it that good", "aud.3.t7": "I’ll definitely come back", "aud.3.t8": "Shared the link right away", "aud.3.t9": "Done at a real level", "aud.3.t10": "I remember how pleasant it was", "aud.1.t11": "You can tell they invested", "aud.1.t12": "Strange aesthetic", "aud.2.t11": "Lost", "aud.2.t12": "Too lazy to read all this", "aud.3.t11": "An example for competitors", "aud.3.t12": "Remembered the name", "intro.sub": "Now — about thinking, about people, about the decisions they make.", "partner.svc.def": "Gets the brief already framed. Asks how, not why. Sits at the end of the pipeline.", "partner.prt.def": "Shapes the brief itself. Changes the what, not just the how. Sits at the start of the pipeline.", "bmp.s1.label": "Strategy, process, team&nbsp;— what makes the visual possible", "bmp.s2.label": "The visual&nbsp;— the final form of everything that came before", "ev.bmp.foot": "You can ship the perfect screen and still lose the project. You can ship a weak one and still win. The difference is in that 69%.", "whisper.mentor": "Skills can be hired.<br>A strong team can only be grown.", "mentor.kicker": "Rhythm", "mentor.title": "Mentorship", "mentor.sat.1": "1:1 calls", "mentor.sat.2": "Pair design", "mentor.sat.3": "Mockup reviews", "mentor.sat.4": "Joint revisions", "mentor.sat.5": "Defending decisions", "mentor.sat.6": "Cross-team", "mentor.sat.7": "Sharing references", "mentor.sat.8": "Growth plan", "mentor.sat.9": "Promotions", "mentor.sat.10": "Competency map", "mentor.sat.11": "Skill analytics", "mentor.sat.12": "Soft skills", "mentor.sat.13": "Hard skills", "mentor.sat.14": "Career chats", "mentor.sat.15": "Typography", "mentor.sat.16": "Branding", "mentor.sat.17": "Motion & 3D", "mentor.sat.18": "UX research", "mentor.sat.19": "Talks", "mentor.sat.20": "Case reviews", "mentor.sat.21": "Designer psychotype", "mentor.sat.22": "Empathy", "mentor.sat.23": "Emotional intelligence", "mentor.sat.24": "Feedback tone", "mentor.sat.25": "Praise and critique", "mentor.sat.26": "Psychological safety"}}</script>
 <script>
 /* ─────────────── i18n ─────────────── */
 const I18N = JSON.parse(document.getElementById('i18n-data').textContent);
@@ -3110,6 +3896,9 @@ function applyLang(lang){
       requestAnimationFrame(()=>requestAnimationFrame(()=>ct.classList.add('in-view')));
     }
   }
+
+  /* intro monument — re-split words after language switch (innerHTML was just restored) */
+  try { if(typeof setupIntroMonument === 'function') setupIntroMonument(); }catch(e){}
 
   /* sec-head h2 — reset and re-split (only if was already split, or is on screen) */
   document.querySelectorAll('.sec-head h2').forEach(h2 => {
@@ -3345,6 +4134,330 @@ if(dgWave){
   }
 }
 
+/* ─────────────── mentor cosmos ─────────────── */
+(function setupMentorCosmos(){
+  const cosmos = document.querySelector('.mentor-cosmos');
+  if(!cosmos) return;
+  const core = cosmos.querySelector('.mentor-core');
+  const sats = Array.from(cosmos.querySelectorAll('.msat'));
+  const svg = cosmos.querySelector('.mentor-lines');
+  if(!core || !sats.length || !svg) return;
+
+  // 20 positions — LEFT (7) / RIGHT (7) / TOP (3) / BOTTOM (3)
+  // Carefully positioned to stay within bounds and avoid central horizontal band
+  const positions = [
+    /* LEFT side (10) — mix of outer (nx 0.04-0.07) and inner (nx 0.20-0.22) */
+    {nx: 0.06, ny: 0.04},  // 1 1:1 созвоны (outer)
+    {nx: 0.22, ny: 0.14},  // 2 Парные сессии (inner)
+    {nx: 0.04, ny: 0.24},  // 3 Ревью макетов (outer)
+    {nx: 0.20, ny: 0.34},  // 4 Защита решений (inner)
+    {nx: 0.07, ny: 0.45},  // 5 Кросс-команды (outer)
+    {nx: 0.22, ny: 0.55},  // 6 Обмен референсами (inner)
+    {nx: 0.05, ny: 0.66},  // 7 Лекции (outer)
+    {nx: 0.06, ny: 0.76},  // 8 Разбор кейсов (OUTER per Sergey — was inner)
+    {nx: 0.20, ny: 0.86},  // 9 Брендинг (inner)
+    {nx: 0.05, ny: 0.95},  // 10 Похвала и критика (outer)
+    /* RIGHT side (10) — DIFFERENT ny values from left for asymmetry, NOT mirror.
+       Each row's ny is offset ~0.02-0.04 from the left side. */
+    {nx: 0.94, ny: 0.07},  // 11 План развития (outer)         — ny 0.07 vs left 0.04
+    {nx: 0.78, ny: 0.17},  // 12 Повышение грейдов (inner)     — ny 0.17 vs left 0.14
+    {nx: 0.96, ny: 0.27},  // 13 Аналитика скиллов (outer)     — ny 0.27 vs left 0.24
+    {nx: 0.80, ny: 0.38},  // 14 Софт-скиллы (inner)           — ny 0.38 vs left 0.34
+    {nx: 0.95, ny: 0.50},  // 15 Карьерные разговоры (outer)   — at central horizontal level
+    {nx: 0.94, ny: 0.62},  // 16 Типографика (OUTER per Sergey — was inner) — ny 0.62 (offset from left 0.55)
+    {nx: 0.78, ny: 0.72},  // 17 Моушн и 3D (inner)
+    {nx: 0.94, ny: 0.83},  // 18 UX-исследования (outer)
+    {nx: 0.80, ny: 0.93},  // 19 Психотип дизайнера (inner)
+    {nx: 0.96, ny: 0.99},  // 20 Эмпатия (outer)
+  ];
+
+  // State per satellite: base position + current shift + per-satellite phase + DEPTH multiplier
+  const satState = sats.map((sat, i) => ({
+    sat,
+    pos: positions[i] || positions[0],
+    baseX: 0, baseY: 0,
+    shiftX: 0, shiftY: 0,
+    line: null,
+    // Unique per-satellite drift parameters
+    fx: 0.30 + (i * 0.037) % 0.25,   // 0.30 - 0.55 Hz
+    fy: 0.22 + (i * 0.053) % 0.22,   // 0.22 - 0.44 Hz
+    phaseX: i * 0.713,
+    phaseY: i * 1.327,
+    ampX: 3.5 + (i % 3) * 0.7,        // 3.5 - 4.9 px
+    ampY: 2.8 + (i % 4) * 0.5,        // 2.8 - 4.3 px
+    // Per-satellite sensitivity — varies 0.55 to 1.0 — breaks symmetric response between siblings
+    depth: 0.55 + ((i * 0.27) % 0.45),
+  }));
+
+  /* Entry stagger rhythm — 20 delays in mix of pairs/trios/solos (NOT linear cascade) */
+  const entryDelays = [
+    0.05, 0.05,           /* pair 1 (sync) */
+    0.25,                 /* solo */
+    0.40, 0.40, 0.40,     /* trio 1 (sync) */
+    0.62,                 /* solo */
+    0.78, 0.78,           /* pair 2 */
+    0.95,                 /* solo */
+    1.10, 1.10,           /* pair 3 */
+    1.25,                 /* solo */
+    1.40, 1.40, 1.40,     /* trio 2 */
+    1.58,                 /* solo */
+    1.72, 1.72,           /* pair 4 */
+    1.90                  /* solo last */
+  ];
+
+  function layout(){
+    const r = cosmos.getBoundingClientRect();
+    const w = r.width, h = r.height;
+    const cx = w / 2;
+    const cy = h / 2;
+
+    // Compute base positions + entry vectors for explosion effect
+    satState.forEach((s, i) => {
+      s.baseX = s.pos.nx * w;
+      s.baseY = s.pos.ny * h;
+      const rect = s.sat.getBoundingClientRect();
+      const halfW = rect.width / 2;
+      const halfH = rect.height / 2;
+      const margin = 10;
+      s.baseX = Math.max(halfW + margin, Math.min(w - halfW - margin, s.baseX));
+      s.baseY = Math.max(halfH + margin, Math.min(h - halfH - margin, s.baseY));
+
+      s.sat.style.setProperty('--x', s.baseX + 'px');
+      s.sat.style.setProperty('--y', s.baseY + 'px');
+      s.sat.style.setProperty('--i', i);
+
+      /* EXPLOSION EFFECT: Entry vector points FROM CENTER TOWARD each item's position
+         This creates a true radial burst where all items emanate outward from "Менторство" */
+      const angle = Math.atan2(s.baseY - cy, s.baseX - cx);  /* Actual angle TO this item */
+      const distance = Math.sqrt((s.baseX - cx) ** 2 + (s.baseY - cy) ** 2);
+      const entryDx = Math.cos(angle) * distance;   /* Full distance from center */
+      const entryDy = Math.sin(angle) * distance;   /* Full distance from center */
+      s.sat.style.setProperty('--entry-dx', entryDx + 'px');
+      s.sat.style.setProperty('--entry-dy', entryDy + 'px');
+
+      /* Staggered delays create wave effect: items explode in sequence, not all at once */
+      const delay = entryDelays[i] || 0;  /* Use original pattern for controlled rhythm */
+      s.sat.style.setProperty('--entry-delay', delay + 's');
+      
+      /* Idle drift parameters — subtle floating movement, different per-satellite */
+      const driftX = (Math.random() - 0.5) * 8;  /* ±4px max drift */
+      const driftY = (Math.random() - 0.5) * 8;  /* ±4px max drift */
+      s.sat.style.setProperty('--drift-x', driftX + 'px');
+      s.sat.style.setProperty('--drift-y', driftY + 'px');
+      
+      /* Each item gets its own idle delay offset so they don't all float in sync */
+      const idleDelay = 2.5 + (Math.random() * 0.5);
+      s.sat.style.setProperty('--idle-delay', idleDelay + 's');
+    });
+
+    // Build SVG lines from cosmos center to each satellite
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.innerHTML = '';
+
+    satState.forEach((s, i) => {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', cx);
+      line.setAttribute('y1', cy);
+      line.setAttribute('x2', s.baseX);
+      line.setAttribute('y2', s.baseY);
+      /* Line delay = satellite entry delay → line "draws" in sync with its satellite flying out */
+      line.style.setProperty('--line-delay', (entryDelays[i] || 0) + 's');
+      svg.appendChild(line);
+      s.line = line;
+    });
+  }
+
+  // Motion constants — asymmetric distance-based response (no mirror symmetry)
+  const MAG_RADIUS   = 160;   // px — close-range strong magnetic repulsion
+  const MAG_PUSH     = 65;    // px — max push at close range
+  const INFL_RADIUS  = 440;   // px — broader gentle influence zone
+  const INFL_PUSH    = 30;    // px — max gentle push at the influence boundary
+  const SPRING       = 0.13;  // lerp factor — slightly softer for more elegant glide
+
+  let raf = null;
+  let mxPx = -9999, myPx = -9999;
+  let inView = false;
+
+  // Core state for mouse-driven parallax (translate + tilt 3D)
+  const coreState = { shiftX: 0, shiftY: 0, tiltX: 0, tiltY: 0 };
+  const CORE_SPRING = 0.09;
+
+  /* Whisper element reference + tilt state for same 3D parallax effect */
+  const whisperEl = document.querySelector('#mentor .sec-aside--left');
+  const whisperState = { tiltX: 0, tiltY: 0 };
+  const WHISPER_SPRING = 0.08;
+
+  function tick(){
+    raf = null;
+    const r = cosmos.getBoundingClientRect();
+    const w = r.width, h = r.height;
+    const time = performance.now() * 0.001;
+    const cursorActive = mxPx > -1000;
+
+    // Lines converge at exact geometric center of cosmos (matches core's absolute centering)
+    const ccx = w / 2;
+    const ccy = h / 2;
+
+    satState.forEach(s => {
+      /* Autonomous slow drift — each satellite has unique frequency + amplitude */
+      const autoX = Math.sin(time * s.fx + s.phaseX) * s.ampX;
+      const autoY = Math.cos(time * s.fy + s.phaseY) * s.ampY;
+
+      let pushX = 0, pushY = 0;
+
+      if (cursorActive) {
+        /* Distance-based asymmetric response — no left/right mirror, each satellite reacts to its own distance to cursor */
+        const dx = mxPx - s.baseX;
+        const dy = myPx - s.baseY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+
+        if (dist > 0.5) {
+          const nx = dx / dist;
+          const ny = dy / dist;
+
+          /* Close-range magnetic repulsion — quadratic falloff, strong */
+          if (dist < MAG_RADIUS) {
+            const k = 1 - dist / MAG_RADIUS;
+            const strength = k * k * MAG_PUSH * s.depth;
+            pushX -= nx * strength;
+            pushY -= ny * strength;
+          }
+
+          /* Broader gentle influence — linear falloff, asymmetric per-satellite depth */
+          if (dist < INFL_RADIUS) {
+            const k = 1 - dist / INFL_RADIUS;
+            const ripple = k * INFL_PUSH * s.depth;
+            pushX -= nx * ripple;
+            pushY -= ny * ripple;
+          }
+        }
+      }
+
+      const targetX = pushX + autoX;
+      const targetY = pushY + autoY;
+
+      /* Spring lerp toward target — creates organic chase feel */
+      s.shiftX += (targetX - s.shiftX) * SPRING;
+      s.shiftY += (targetY - s.shiftY) * SPRING;
+
+      s.sat.style.setProperty('--shift-x', s.shiftX + 'px');
+      s.sat.style.setProperty('--shift-y', s.shiftY + 'px');
+
+      if (s.line) {
+        s.line.setAttribute('x1', ccx);
+        s.line.setAttribute('y1', ccy);
+        s.line.setAttribute('x2', s.baseX + s.shiftX);
+        s.line.setAttribute('y2', s.baseY + s.shiftY);
+      }
+    });
+
+    /* Core mouse parallax — subtle 3D tilt + translate, like hero screen */
+    let coreTargetX = 0, coreTargetY = 0, coreTiltX = 0, coreTiltY = 0;
+    if (cursorActive) {
+      const mxNorm = (mxPx - ccx) / ccx;  // -1 to 1
+      const myNorm = (myPx - ccy) / ccy;
+      coreTargetX = mxNorm * 14;          // ±14px horizontal
+      coreTargetY = myNorm * 8;           // ±8px vertical
+      coreTiltY = mxNorm * 5;             // ±5deg rotateY
+      coreTiltX = -myNorm * 3;            // ±3deg rotateX (inverted for natural feel)
+    }
+    coreState.shiftX += (coreTargetX - coreState.shiftX) * CORE_SPRING;
+    coreState.shiftY += (coreTargetY - coreState.shiftY) * CORE_SPRING;
+    coreState.tiltX += (coreTiltX - coreState.tiltX) * CORE_SPRING;
+    coreState.tiltY += (coreTiltY - coreState.tiltY) * CORE_SPRING;
+    core.style.setProperty('--core-shift-x', coreState.shiftX + 'px');
+    core.style.setProperty('--core-shift-y', coreState.shiftY + 'px');
+    core.style.setProperty('--core-tilt-x', coreState.tiltX + 'deg');
+    core.style.setProperty('--core-tilt-y', coreState.tiltY + 'deg');
+
+    /* Whisper 3D tilt — same parallax as core, slightly subtler */
+    let whisperTiltX = 0, whisperTiltY = 0;
+    if (cursorActive) {
+      const mxNorm = (mxPx - ccx) / ccx;
+      const myNorm = (myPx - ccy) / ccy;
+      whisperTiltY = mxNorm * 4;     // ±4deg rotateY (left-right turn)
+      whisperTiltX = -myNorm * 2.5;  // ±2.5deg rotateX
+    }
+    whisperState.tiltX += (whisperTiltX - whisperState.tiltX) * WHISPER_SPRING;
+    whisperState.tiltY += (whisperTiltY - whisperState.tiltY) * WHISPER_SPRING;
+    if (whisperEl) {
+      whisperEl.style.setProperty('--whisper-tilt-x', whisperState.tiltX + 'deg');
+      whisperEl.style.setProperty('--whisper-tilt-y', whisperState.tiltY + 'deg');
+    }
+
+    if (inView) raf = requestAnimationFrame(tick);
+  }
+
+  function startLoop(){
+    if (!inView || !isDesktop()) return;
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  function stopLoop(){ if (raf) { cancelAnimationFrame(raf); raf = null; } }
+  function isDesktop(){ return window.matchMedia('(min-width: 901px)').matches; }
+
+  function onMove(e){
+    if (!isDesktop()) return;
+    const r = cosmos.getBoundingClientRect();
+    mxPx = e.clientX - r.left;
+    myPx = e.clientY - r.top;
+  }
+  function onLeave(){
+    mxPx = -9999; myPx = -9999;
+  }
+  /* Mouse listener on #mentor section (not just cosmos) — so events fire when cursor is over whisper, which is in DOM-sibling .sec-asides-bar */
+  const sectionEl = document.getElementById('mentor');
+  sectionEl.addEventListener('mousemove', onMove, {passive: true});
+  sectionEl.addEventListener('mouseleave', onLeave);
+
+  // Only animate while section is in viewport AND on desktop
+  const vio = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      inView = e.isIntersecting;
+      if (inView) startLoop(); else stopLoop();
+    });
+  }, {threshold: 0.05});
+  vio.observe(cosmos);
+
+  /* Entry trigger — fires when visible, resets animation on re-entry */
+  const entryIO = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        cosmos.classList.remove('has-entered');  // Reset animation state
+        setTimeout(() => {
+          cosmos.classList.add('has-entered');  // Trigger animation again
+        }, 50);  // Brief delay allows CSS to pick up the state change
+      }
+    });
+  }, {threshold: 0.15});
+  entryIO.observe(cosmos);
+
+  // Initial layout + resize handler — only on desktop
+  requestAnimationFrame(() => {
+    if (isDesktop()) { layout(); startLoop(); }
+  });
+  let resizeRaf = null;
+  window.addEventListener('resize', () => {
+    if (resizeRaf) return;
+    resizeRaf = requestAnimationFrame(() => {
+      if (isDesktop()) {
+        layout();
+        startLoop();
+      } else {
+        stopLoop();
+        // Reset shifts so satellites are clean if/when desktop layout returns
+        satState.forEach(s => { s.shiftX = 0; s.shiftY = 0; });
+      }
+      resizeRaf = null;
+    });
+  }, {passive: true});
+
+  // Respect reduced-motion preference
+  if (window.matchMedia('(prefers-reduced-motion:reduce)').matches) {
+    stopLoop();
+  }
+})();
+
 /* ─────────────── reveal IO ─────────────── */
 /* Bidirectional: adds .in-view on enter, removes on exit so animation
    re-triggers every time the element comes back into viewport. */
@@ -3506,9 +4619,7 @@ const BR_TO_SPACE_SEL = [
   '.pain-list .pnote','.aud-list .anote',
   '#brand .sec-sub',
   /* Team manifesto — flatten <br>s so the words don't merge / orphan */
-  '.team-manifesto .lead-line',
-  '.team-manifesto .lead-sub',
-  '.team-manifesto .lead-accent'
+  '.team-manifesto .tm-text'
 ].join(',');
 
 function convertBrToSpace(root){
@@ -3541,9 +4652,7 @@ function fixTypographyOrphans(root){
     '.bmp-split .label','.ctitle','.bmp-col li',
     '.hero-sub','.hero-static','.hero-title',
     '.hero-bottom .item .value',
-    '.team-manifesto .lead-line',
-    '.team-manifesto .lead-sub',
-    '.team-manifesto .lead-accent',
+    '.team-manifesto .tm-text',
     '.tblock .tn','.tblock .td',
     '.cta-eyebrow','.cta-title','.cta-lead'
   ];
@@ -3610,8 +4719,8 @@ function initScrollHover(){
 
 /* ─────────────── hero title typewriter cycle ─────────────── */
 const HERO_WORDS={
-  ru:['дизайн.','команду.','бренды.','системы.','продукт.'],
-  en:['design.','teams.','brands.','systems.','product.']
+  ru:['дизайн.','команду.','бренд.','системы.','продукт.'],
+  en:['design.','teams.','brand.','systems.','product.']
 };
 let heroTyperToken=0;
 function startHeroTyper(){
@@ -3685,18 +4794,15 @@ const SIDE_LABELS={
   ru:{
     'hero':'Начало',
     'intro':'Введение',
-    'numbers':'Цифры',
-    'pain':'Контекст',
-    'partner':'Установка',
+    'pain':'Боль',
+    'partner':'Подход',
     'principles':'Принципы',
-    'audience':'Аудитория',
+    'audience':'Люди',
     'brand':'Бренд',
-    'bmp':'Визуал',
     'evaluation':'Оценка',
-    'team-intro':'Команда',
-    'team-system':'Ритм',
+    'team':'Команда',
+    'mentor':'Менторство',
     'ds':'Системы',
-    'services':'Услуги',
     'results':'Результаты',
     'companies':'Опыт',
     'cta':'Контакт'
@@ -3704,18 +4810,15 @@ const SIDE_LABELS={
   en:{
     'hero':'Start',
     'intro':'Intro',
-    'numbers':'Numbers',
-    'pain':'Context',
-    'partner':'Stance',
+    'pain':'Pain',
+    'partner':'Approach',
     'principles':'Principles',
-    'audience':'Audience',
+    'audience':'People',
     'brand':'Brand',
-    'bmp':'Visual',
     'evaluation':'Evaluation',
-    'team-intro':'Team',
-    'team-system':'Rhythm',
+    'team':'Team',
+    'mentor':'Mentorship',
     'ds':'Systems',
-    'services':'Services',
     'results':'Results',
     'companies':'Experience',
     'cta':'Contact'
@@ -3896,7 +4999,7 @@ requestAnimationFrame(()=>sideProgress.classList.add('is-ready'));
 (function bmpScrollScale(){
   if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
   if(window.innerWidth<=720)return;
-  const bmp=document.getElementById('bmp');
+  const bmp=document.getElementById('evaluation');
   if(!bmp)return;
   let raf=null;
   let lastP=-1;
@@ -3930,7 +5033,7 @@ requestAnimationFrame(()=>sideProgress.classList.add('is-ready'));
   if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
   if(window.innerWidth<=720)return;
   const sections=Array.from(document.querySelectorAll('section')).filter(s=>{
-    if(s.id==='bmp')return false; /* bmp use its own --bp */
+    if(s.id==='evaluation')return false; /* evaluation use its own --bp (carries 69/31 split) */
     if(s.classList.contains('hero'))return false; /* hero use --hp */
     return s.querySelector('.sec-title em');
   });
@@ -4364,6 +5467,93 @@ document.querySelectorAll('.sec-asides-bar .sec-aside').forEach(k=>kickerIO.obse
     if(!scrollRaf)scrollRaf=requestAnimationFrame(recomputeTarget);
   },{passive:true});
   recomputeTarget();
+})();
+
+// ═══ INTRO MONUMENT — split words into double-spans (iw + iw__in), measure natural positions, animate edge→center on scroll ═══
+function splitWordsForMonument(node){
+  const kids = Array.from(node.childNodes);
+  kids.forEach(child => {
+    if(child.nodeType === Node.TEXT_NODE){
+      const parts = child.textContent.split(/(\s+)/);
+      const fragment = document.createDocumentFragment();
+      parts.forEach(part => {
+        if(part.trim()){
+          const outer = document.createElement('span');
+          outer.className = 'iw';
+          const inner = document.createElement('span');
+          inner.className = 'iw__in';
+          inner.textContent = part;
+          outer.appendChild(inner);
+          fragment.appendChild(outer);
+        } else if(part){
+          fragment.appendChild(document.createTextNode(part));
+        }
+      });
+      node.replaceChild(fragment, child);
+    } else if(child.nodeType === Node.ELEMENT_NODE && !child.classList.contains('iw')){
+      // Recurse into <strong>, <em>, etc. — skip already-wrapped iw
+      splitWordsForMonument(child);
+    }
+  });
+}
+function measureMonumentOffsets(container, factor){
+  if(!container) return;
+  const rect = container.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  container.querySelectorAll('.iw').forEach(word => {
+    const r = word.getBoundingClientRect();
+    const wx = r.left + r.width / 2;
+    const distance = wx - cx;
+    // Words on left of center get negative offset (pulled further left)
+    // Words on right of center get positive offset (pulled further right)
+    // Proportional → no overlap, words slide along their natural axis
+    const offset = distance * factor;
+    word.style.setProperty('--offset', `${offset.toFixed(0)}px`);
+  });
+}
+function setupIntroMonument(){
+  // Word-level animation applies ONLY to bio paragraphs (intro-p), NOT to hero/title
+  const paragraphs = document.querySelectorAll('.intro-spread .intro-p');
+  paragraphs.forEach(p => splitWordsForMonument(p));
+  requestAnimationFrame(() => {
+    paragraphs.forEach(p => measureMonumentOffsets(p, 1.2));
+  });
+}
+setupIntroMonument();
+
+(function(){
+  const spread = document.querySelector('.intro-spread');
+  if(!spread) return;
+  let raf = null;
+  function update(){
+    // Anchor mapping on CONTENT element (not section) so animation is tied to where the bio actually sits in viewport
+    const rect = spread.getBoundingClientRect();
+    const vh = window.innerHeight;
+    // EXIT-ONLY: dispersion starts slightly BEFORE content top reaches viewport top
+    // (about half a scroll-wheel earlier) — feels more natural
+    const startExit = vh * 0.08;
+    const endExit = -vh * 0.5;
+    let p;
+    if(rect.top >= startExit){
+      p = 0;
+    } else {
+      p = (startExit - rect.top) / (startExit - endExit);
+    }
+    p = Math.max(0, Math.min(1, p));
+    spread.style.setProperty('--scroll-p', p.toFixed(3));
+    raf = null;
+  }
+  function onScroll(){
+    if(raf) return;
+    raf = requestAnimationFrame(update);
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', () => {
+    const paragraphs = document.querySelectorAll('.intro-spread .intro-p');
+    paragraphs.forEach(p => measureMonumentOffsets(p, 1.2));
+    onScroll();
+  }, {passive:true});
+  update();
 })();
 
 </script>
