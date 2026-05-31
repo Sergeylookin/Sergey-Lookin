@@ -6,11 +6,23 @@
 <meta name="color-scheme" content="dark" />
 <title>Обо мне · Сергей Лукин</title>
 <meta name="description" content="Сергей Лукин — Head of Design / Art Director. О подходе, услугах и клиентах." />
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta property="og:type" content="profile" />
+<meta property="og:locale" content="ru_RU" />
+<meta property="og:site_name" content="Сергей Лукин — Head of Design" />
+<meta property="og:title" content="Обо мне · Сергей Лукин" />
+<meta property="og:description" content="Сергей Лукин — Head of Design / Art Director. О подходе, услугах и клиентах." />
+<meta property="og:image" content="assets/og/og-cover.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Обо мне · Сергей Лукин" />
+<meta name="twitter:description" content="Сергей Лукин — Head of Design / Art Director. О подходе, услугах и клиентах." />
+<meta name="twitter:image" content="assets/og/og-cover.png" />
+<link rel="icon" href="assets/favicon-dark.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-light.svg" type="image/svg+xml" media="(prefers-color-scheme: light)">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300..700;1,300..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/site.css?v=20">
 </head>
 <body class="theme-dark">
 <a class="skip" href="#main">Перейти к содержанию</a>
@@ -35,14 +47,24 @@
 
 <main id="main" class="about wrap">
   <div class="about__col">
-    <h1 class="about__title" data-i18n="ab.hi">Привет, я Сергей Лукин</h1>
+    <h1 class="about__title" data-reveal>
+      <span class="hi-morph" data-greetings="Привет,Hello,Hola,Bonjour,Ciao,Hallo,Olá,Ahoj,Cześć,Hej,Salam" aria-label="Привет">Привет</span><span class="about__name" data-i18n="ab.hi.rest">я&nbsp;Сергей Лукин</span>
+    </h1>
     <div class="about__text">
-      <p data-i18n="ab.p1">Я занимаюсь дизайном больше 12 лет и всё ещё люблю эту профессию за возможность соединять смысл, визуальный язык и человеческое восприятие.</p>
-      <p data-i18n="ab.p2">Мне интересно работать с идеями, которые можно превратить в сильный образ: точный, живой, эмоциональный и понятный. В дизайне для меня важны не только форма и эстетика, но и ощущение — то, как человек воспринимает бренд, продукт или историю в первые секунды.</p>
-      <p data-i18n="ab.p3">Сейчас я работаю как Head of Design / Art Director: создаю визуальные направления, работаю с командами и помогаю делать дизайн более выразительным, цельным и эмоционально точным.</p>
+      <p data-reveal style="transition-delay:.12s" data-i18n="ab.p1">Я занимаюсь дизайном больше 12 лет и всё ещё люблю эту профессию за возможность соединять смысл, визуальный язык и человеческое восприятие.</p>
+      <p data-reveal style="transition-delay:.22s" data-i18n="ab.p2">Мне интересно работать с идеями, которые можно превратить в сильный образ: точный, живой, эмоциональный и понятный. В дизайне для меня важны не только форма и эстетика, но и ощущение — то, как человек воспринимает бренд, продукт или историю в первые секунды.</p>
+      <p data-reveal style="transition-delay:.32s" data-i18n="ab.p3">Сейчас я работаю как Head of Design / Art Director: создаю визуальные направления, работаю с командами и помогаю делать дизайн более выразительным, цельным и эмоционально точным.</p>
+    </div>
+    <div class="about__contacts" data-reveal style="transition-delay:.42s">
+      <span class="about__contacts-label" data-i18n="ab.contacts">Связаться</span>
+      <div class="about__contacts-list">
+        <a class="about__contact" href="https://t.me/Lookin_Sergey" target="_blank" rel="noopener"><span class="l">Telegram</span><span class="v">@Lookin_Sergey</span></a>
+        <a class="about__contact" href="mailto:lookindn@gmail.com"><span class="l">Email</span><span class="v">lookindn@gmail.com</span></a>
+        <a class="about__contact" href="https://www.behance.net/lookin_sergey" target="_blank" rel="noopener"><span class="l">Behance</span><span class="v">behance.net/lookin_sergey</span></a>
+      </div>
     </div>
   </div>
-  <div class="about__photo">
+  <div class="about__photo" data-reveal>
     <!-- ░ Замени на свой подписанный портрет: сохрани файл как assets/img/about.webp ░ -->
     <img src="assets/img/about.webp" alt="Сергей Лукин" loading="lazy">
   </div>
@@ -54,7 +76,7 @@
   <div data-i18n="ft.tag">Обо мне</div>
 </footer>
 
-<script id="i18n-data" type="application/json">{"ru":{"nav.brand":"Сергей Лукин <b>—</b> Head of Design","nav.manifesto":"Манифест","nav.about":"Обо мне","nav.pf":"Портфолио","ft.copy":"© 2026 Сергей Лукин","ft.top":"Наверх <span class=\"arr\">↑</span>","ft.tag":"Обо мне","ab.hi":"Привет, я Сергей Лукин","ab.p1":"Я занимаюсь дизайном больше 12 лет и всё ещё люблю эту профессию за возможность соединять смысл, визуальный язык и человеческое восприятие.","ab.p2":"Мне интересно работать с идеями, которые можно превратить в сильный образ: точный, живой, эмоциональный и понятный. В дизайне для меня важны не только форма и эстетика, но и ощущение — то, как человек воспринимает бренд, продукт или историю в первые секунды.","ab.p3":"Сейчас я работаю как Head of Design / Art Director: создаю визуальные направления, работаю с командами и помогаю делать дизайн более выразительным, цельным и эмоционально точным."},"en":{"nav.brand":"Sergey Lukin <b>—</b> Head of Design","nav.manifesto":"Manifesto","nav.about":"About","nav.pf":"Portfolio","ft.copy":"© 2026 Sergey Lukin","ft.top":"Top <span class=\"arr\">↑</span>","ft.tag":"About","ab.hi":"Hi, I’m Sergey Lukin","ab.p1":"I have been working in design for over 12 years, and I still love the craft for one reason — it lets me connect meaning, visual language and human perception.","ab.p2":"I am drawn to ideas that can become a strong image: precise, alive, emotional and clear. In design I care not only about form and aesthetics, but about feeling — how a person reads a brand, a product or a story in the first few seconds.","ab.p3":"Today I work as a Head of Design / Art Director: I set visual direction, lead teams, and help make design more expressive, coherent and emotionally precise."}}</script>
-<script src="assets/site.js"></script>
+<script id="i18n-data" type="application/json">{"ru":{"nav.brand":"Сергей Лукин <b>—</b> Head of Design","nav.manifesto":"Манифест","nav.about":"Обо мне","nav.pf":"Портфолио","ft.copy":"© 2026 Сергей Лукин","ft.top":"Наверх <span class=\"arr\">↑</span>","ft.tag":"Обо мне","ab.hi":"Привет, я Сергей Лукин","ab.hi.rest":"я&nbsp;Сергей Лукин","ab.contacts":"Связаться","ab.p1":"Я занимаюсь дизайном больше 12 лет и всё ещё люблю эту профессию за возможность соединять смысл, визуальный язык и человеческое восприятие.","ab.p2":"Мне интересно работать с идеями, которые можно превратить в сильный образ: точный, живой, эмоциональный и понятный. В дизайне для меня важны не только форма и эстетика, но и ощущение — то, как человек воспринимает бренд, продукт или историю в первые секунды.","ab.p3":"Сейчас я работаю как Head of Design / Art Director: создаю визуальные направления, работаю с командами и помогаю делать дизайн более выразительным, цельным и эмоционально точным."},"en":{"nav.brand":"Sergey Lukin <b>—</b> Head of Design","nav.manifesto":"Manifesto","nav.about":"About","nav.pf":"Portfolio","ft.copy":"© 2026 Sergey Lukin","ft.top":"Top <span class=\"arr\">↑</span>","ft.tag":"About","ab.hi":"Hi, I’m Sergey Lukin","ab.hi.rest":"I’m Sergey Lukin","ab.contacts":"Get in touch","ab.p1":"I have been working in design for over 12 years, and I still love the craft for one reason — it lets me connect meaning, visual language and human perception.","ab.p2":"I am drawn to ideas that can become a strong image: precise, alive, emotional and clear. In design I care not only about form and aesthetics, but about feeling — how a person reads a brand, a product or a story in the first few seconds.","ab.p3":"Today I work as a Head of Design / Art Director: I set visual direction, lead teams, and help make design more expressive, coherent and emotionally precise."}}</script>
+<script defer src="assets/lenis.min.js?v=20"></script><script defer src="assets/smooth-scroll.js?v=20"></script><script defer src="assets/site.js?v=20"></script>
 </body>
 </html>

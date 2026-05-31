@@ -1,7 +1,7 @@
 /* ============================================================
    site.css — shared shell for portfolio / project / 404 pages
    Mirrors the manifest (index.html) design system: Inter Tight +
-   IBM Plex Mono, accent red, hairline editorial, light page / dark
+   IBM Plex Mono, amber accent, hairline editorial, light page / dark
    hero & footer. Fonts are loaded per-page via Google Fonts <link>.
    ============================================================ */
 
@@ -14,7 +14,9 @@
   --mute-2:#A8AEB8;
   --hair:#D9D9D9;
   --hair-dk:#252830;
-  --accent:#DC2F2E;
+  --accent:#FB460D;
+  --accent-hi:#FF6A38;
+  --accent-ink:#0C0D11;
   --serif:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   --sans:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   --mono:'IBM Plex Mono',ui-monospace,'SF Mono',monospace;
@@ -35,6 +37,12 @@
 
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+/* Lenis smooth-scroll (overrides native smooth while active) */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+.lenis.lenis-stopped{overflow:hidden}
+.lenis.lenis-smooth iframe{pointer-events:none}
 body{
   margin:0;background:var(--bg);color:var(--ink);
   font-family:var(--sans);font-size:var(--t-body);line-height:1.55;
@@ -44,7 +52,7 @@ body{
 }
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
-::selection{background:var(--accent);color:#fff}
+::selection{background:var(--accent);color:var(--accent-ink)}
 
 .skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:#fff;padding:.75rem 1rem;z-index:var(--z-top)}
 .skip:focus{left:.5rem;top:.5rem}
@@ -52,11 +60,16 @@ a{color:inherit;text-decoration:none}
 /* ─── Cursor cross ─── */
 .cursor-dot{position:fixed;top:0;left:0;width:14px;height:14px;pointer-events:none;z-index:var(--z-top);transform:translate(-50%,-50%);opacity:0;transition:width .32s var(--ease-out),height .32s var(--ease-out),opacity .4s var(--ease-out);will-change:left,top}
 .cursor-dot::before,.cursor-dot::after{content:"";position:absolute;background:var(--accent);transition:transform .32s var(--ease-out),opacity .32s var(--ease-out)}
-.cursor-dot::before{width:100%;height:1px;top:50%;left:0;transform:translateY(-50%)}
-.cursor-dot::after{width:1px;height:100%;left:50%;top:0;transform:translateX(-50%)}
+.cursor-dot::before{display:none}
+.cursor-dot::after{width:7px;height:7px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%)}
 .cursor-dot.is-active{opacity:.85}
 .cursor-dot.is-hovering-link{width:30px;height:30px;border:1px solid var(--accent);border-radius:50%;opacity:.7}
 .cursor-dot.is-hovering-link::before,.cursor-dot.is-hovering-link::after{opacity:0}
+/* Cursor turns into a "Смотреть / View" pill over a case image */
+.cursor-label{display:none}
+.cursor-dot.cursor-view{width:auto;height:auto;border:none;padding:.55rem .95rem;border-radius:0;background:var(--accent);opacity:1;mix-blend-mode:normal}
+.cursor-dot.cursor-view::before,.cursor-dot.cursor-view::after{display:none}
+.cursor-dot.cursor-view .cursor-label{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);white-space:nowrap;font-weight:500}
 @media (max-width:900px),(hover:none){.cursor-dot{display:none}}
 @media (prefers-reduced-motion:reduce){.cursor-dot{display:none}}
 
@@ -101,7 +114,7 @@ nav.top.on-dark .lang-switch button.active{color:var(--accent)}
 .btn{display:inline-flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.1em;text-transform:uppercase;font-weight:500;padding:.95rem 1.6rem;border:1px solid var(--hair);border-radius:2px;transition:color .3s var(--ease-out),border-color .3s var(--ease-out),background .3s var(--ease-out);cursor:pointer;background:transparent;color:var(--ink)}
 .btn:hover{border-color:var(--accent);color:var(--accent)}
 .btn--solid{background:var(--ink);color:#fff;border-color:var(--ink)}
-.btn--solid:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn--solid:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .on-dark-block .btn{border-color:var(--hair-dk);color:#fff}
 .on-dark-block .btn:hover{border-color:var(--accent);color:var(--accent)}
 
@@ -119,22 +132,38 @@ nav.top.on-dark .lang-switch button.active{color:var(--accent)}
    ============================================================ */
 .cases{padding-top:clamp(2.5rem,6vw,5rem);padding-bottom:clamp(4rem,8vw,7rem)}
 .case{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(1rem,2vw,1.75rem);align-items:center;padding:clamp(2.5rem,6vw,5rem) 0;border-top:1px solid var(--hair)}
+/* Soft reveal as a case scrolls in. It's an ENTRANCE animation, not a hide: the card is
+   visible by default, so if the observer never fires the card still shows (no empty blocks). */
+.case[data-reveal]{opacity:1;transform:none;filter:none}
+.case[data-reveal].in-view{animation:caseRise .85s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes caseRise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.case[data-reveal].in-view{animation:none}}
 .case:first-child{border-top:none}
 .case__media{grid-column:1 / 8;position:relative;overflow:hidden;border-radius:4px;aspect-ratio:16/10;background:var(--hair)}
-.case__media img{width:100%;height:100%;object-fit:cover;transition:transform 1.1s var(--ease-out),filter .6s var(--ease-out);filter:saturate(.92)}
-.case:hover .case__media img{transform:scale(1.04);filter:saturate(1.05)}
-.case__media .case__num{position:absolute;top:1rem;left:1.1rem;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.1em;color:#fff;mix-blend-mode:difference;z-index:2}
+.case__media img,.case__media video{width:100%;height:100%;object-fit:cover;transition:transform 1.1s var(--ease-out),filter .6s var(--ease-out);filter:saturate(.92)}
+.case__media:hover img,.case__media:hover video{transform:scale(1.07)}
+.case__media .case__num{display:none}  /* number moved out of the preview into .case__foot (by site.js) */
 .case__body{grid-column:8 / 13}
 .case--flip .case__media{grid-column:6 / 13}
 .case--flip .case__body{grid-column:1 / 6;order:-1}
 .case__tags{display:flex;flex-wrap:wrap;gap:.5rem .9rem;font-family:var(--mono);font-size:.8125rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin-bottom:1rem}
 .case__title{font-family:var(--serif);font-weight:500;font-size:clamp(1.875rem,3.4vw,3rem);line-height:1;letter-spacing:-.025em;margin:0 0 .9rem;transition:color .3s var(--ease-out)}
-.case:hover .case__title{color:var(--accent)}
-.case__desc{color:var(--mute);max-width:46ch;margin:0 0 1.5rem;line-height:1.5;text-wrap:pretty}
+.case:has(.case__media-link:hover) .case__title,.case:has(.case__cta-link:hover) .case__title{color:var(--accent)}
+.case__desc{color:var(--mute);max-width:40ch;margin:0;line-height:1.5;font-size:.95rem;text-wrap:pretty}
 .case__meta{display:flex;gap:1.5rem;align-items:baseline;font-family:var(--mono);font-size:.8125rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute-2)}
 .case__cta{margin-left:auto;color:var(--ink);transition:color .3s var(--ease-out)}
-.case:hover .case__cta{color:var(--accent)}
-.case__link{position:absolute;inset:0;z-index:3}
+.case__cta{position:relative;transition:color .3s var(--ease-out),transform .4s var(--ease-out)}
+.case__cta::after{content:'';position:absolute;left:0;bottom:-3px;width:100%;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left center;transition:transform .5s var(--ease-out)}
+.case__cta-link:hover .case__cta{transform:translateX(3px)}
+.case__cta-link:hover .case__cta::after{transform:scaleX(1)}
+/* Bottom row of a case: number (left) opposite the "Смотреть" CTA (right) */
+.case__foot{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin-top:auto;padding-top:clamp(1.25rem,2.5vw,2rem)}
+.case__foot .case__num{display:inline-block;position:static;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.12em;color:var(--mute);mix-blend-mode:normal;font-weight:500}
+.case__foot .case__cta{margin:0;padding-top:0}
+/* Hover/click scoped to two precise links (image + CTA), injected by site.js.
+   display:contents = zero layout impact (media stays the grid item, CTA the flex item). */
+.case__media-link,.case__cta-link{display:contents;text-decoration:none;color:inherit}
+.case__media,.case__cta{cursor:pointer}
 .case{position:relative}
 @media (max-width:860px){
   .case,.case--flip{grid-template-columns:1fr}
@@ -179,11 +208,11 @@ body.theme-dark .page-lead{color:var(--mute-2)}
 body.theme-dark .btn{border-color:var(--hair-dk);color:#fff}
 body.theme-dark .btn:hover{border-color:var(--accent);color:var(--accent)}
 body.theme-dark .btn--solid{background:#fff;color:var(--bg-dark);border-color:#fff}
-body.theme-dark .btn--solid:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+body.theme-dark .btn--solid:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 /* Portfolio cases on dark */
 body.theme-dark .case{border-top-color:var(--hair-dk)}
 body.theme-dark .case__title{color:#fff}
-body.theme-dark .case:hover .case__title{color:var(--accent)}
+body.theme-dark .case:has(.case__media-link:hover) .case__title,body.theme-dark .case:has(.case__cta-link:hover) .case__title{color:var(--accent)}
 body.theme-dark .case__desc{color:var(--mute-2)}
 body.theme-dark .case__meta{color:var(--mute)}
 body.theme-dark .case__cta{color:#fff}
@@ -202,11 +231,16 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 .pcase__back:hover .a{transform:translateX(-4px)}
 /* Title left + technical facts pinned top-right at the edge */
 .pcase__topgrid{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);align-items:start;row-gap:clamp(1.5rem,3vw,2.25rem)}
-.pcase__title{grid-column:1 / 9;font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(3rem,9vw,8.5rem);line-height:.9;letter-spacing:-.04em;margin:0;color:#fff;text-wrap:balance}
-.pcase__facts{grid-column:9 / 13;display:flex;flex-direction:column;gap:1.3rem;align-self:start;padding-top:.5rem}
-.pcase__f .l{font-family:var(--mono);font-size:.8125rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:.4rem}
-.pcase__f .v{font-size:1.0625rem;line-height:1.45;color:#fff}
-@media (max-width:860px){.pcase__title{grid-column:1 / 13}.pcase__facts{grid-column:1 / 13;flex-direction:row;flex-wrap:wrap;gap:1.5rem 2.5rem;padding-top:0}}
+.pcase__title{grid-column:1 / 7;font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(2.75rem,7vw,6.5rem);line-height:.92;letter-spacing:-.04em;margin:0;color:#fff;text-wrap:balance}
+/* Facts + metrics — 2 columns × 3 rows, to the right of the title (facts left col, metrics right col) */
+.pcase__facts{grid-column:8 / 13;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,auto);grid-auto-flow:column;gap:clamp(1.2rem,2vw,1.6rem) clamp(1.25rem,2.5vw,2rem);align-self:start;padding-top:.4rem}
+.pcase__f .l{font-family:var(--mono);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:.45rem;line-height:1.3}
+.pcase__f .v{font-size:1.0625rem;line-height:1.4;color:#fff}
+/* Metrics read exactly like the facts — same type, no colour. We just state them. */
+@media (max-width:860px){
+  .pcase__title{grid-column:1 / 13;font-size:clamp(2.5rem,11vw,4.5rem)}
+  .pcase__facts{grid-column:1 / 13;border-top:1px solid var(--hair-dk);padding-top:clamp(1.5rem,4vw,2rem);margin-top:.5rem}
+}
 /* General description — strong upright statement + 2–3 column body */
 .pcase__about{padding-top:clamp(2.5rem,5vw,4rem);padding-bottom:clamp(2.5rem,6vw,4.5rem);border-top:1px solid var(--hair-dk);margin-top:clamp(2.5rem,5vw,4rem)}
 .pcase__lead{font-weight:400;font-size:clamp(1.5rem,3.2vw,2.75rem);line-height:1.12;letter-spacing:-.025em;color:#fff;max-width:24ch;margin:0 0 clamp(2rem,4vw,3.25rem);text-wrap:balance}
@@ -216,7 +250,12 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 @media (max-width:560px){.pcase__cols{columns:1}}
 /* full-width media — description first, images after */
 .pcase__media{display:flex;flex-direction:column;gap:clamp(.6rem,1.2vw,1rem);padding-bottom:clamp(3.5rem,7vw,6rem)}
-.pcase__media img{width:100%;display:block;border-radius:2px;background:#1a1c22}
+.pcase__media img,.pcase__media video{width:100%;display:block;border-radius:2px;background:#1a1c22}
+/* Case results — proof in numbers */
+.pcase__stats{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(1.5rem,4vw,3rem);border-top:1px solid var(--hair-dk);padding:clamp(2.5rem,5vw,4rem) 0 clamp(3.5rem,7vw,6rem)}
+.pstat__num{font-family:var(--serif);font-weight:350;font-size:clamp(2.4rem,5vw,3.75rem);line-height:1;letter-spacing:-.04em;color:var(--accent)}
+.pstat__l{font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.07em;text-transform:uppercase;color:var(--mute-2);margin-top:.7rem;line-height:1.5;max-width:22ch}
+@media(max-width:680px){.pcase__stats{grid-template-columns:1fr;gap:1.6rem}}
 .pcase__media .row{display:grid;grid-template-columns:1fr 1fr;gap:clamp(.6rem,1.2vw,1rem)}
 @media (max-width:680px){.pcase__media .row{grid-template-columns:1fr}}
 
@@ -237,7 +276,7 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 /* Image-trail (ImagePathEffect-style) — previews follow the cursor in the header */
 .page-head{position:relative;overflow:hidden}
 .page-head>.eyebrow,.page-head>.page-title,.page-head>.page-lead{position:relative;z-index:2}
-.trail-img{position:absolute;width:clamp(120px,13vw,210px);aspect-ratio:16/11;object-fit:cover;border-radius:3px;z-index:3;pointer-events:none;opacity:0;will-change:transform,opacity;transform:translate(-50%,-50%) scale(.5) rotate(var(--r,0deg));transition:opacity .6s var(--ease-out),transform .7s var(--ease-out)}
+.trail-img{position:absolute;width:clamp(140px,15vw,245px);aspect-ratio:16/11;object-fit:cover;border-radius:3px;z-index:3;pointer-events:none;opacity:0;will-change:transform,opacity;transform:translate(-50%,-50%) scale(.5) rotate(var(--r,0deg));transition:opacity .6s var(--ease-out),transform .7s var(--ease-out)}
 .trail-img.show{opacity:.96;transform:translate(-50%,-50%) scale(1) rotate(var(--r,0deg))}
 @media (hover:none),(prefers-reduced-motion:reduce){.trail-img{display:none}}
 
@@ -250,8 +289,7 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 
 /* Magnifier lens — appears when hovering the photo itself */
 .case__media{position:relative}
-.mag-lens{position:absolute;width:clamp(150px,16vw,210px);aspect-ratio:1;border-radius:50%;pointer-events:none;background-repeat:no-repeat;opacity:0;transform:translate(-50%,-50%) scale(.8);transition:opacity .3s var(--ease-out),transform .3s var(--ease-out);z-index:4;border:1px solid rgba(255,255,255,.45);box-shadow:0 18px 60px rgba(0,0,0,.45)}
-.lens-on .mag-lens{opacity:1;transform:translate(-50%,-50%) scale(1)}
+/* (Case image scroll-reveal removed — images are always visible; hover = zoom only.) */
 .about__photo{position:relative}
 
 /* ============================================================
@@ -259,7 +297,7 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
    ============================================================ */
 .nav-burger{display:none}
 .nav-drop{display:none}
-.hero-cycle{display:none}
+.hero-slider{display:none}
 @media (max-width:720px){
   .nav-burger{display:flex;flex-direction:column;justify-content:center;gap:5px;width:36px;height:36px;background:none;border:0;cursor:pointer;padding:0;margin-left:auto;color:inherit}
   .nav-burger span{display:block;width:22px;height:1.5px;background:currentColor;margin:0 auto;transition:transform .3s var(--ease-out),opacity .3s var(--ease-out)}
@@ -276,7 +314,13 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
   .nav-drop__lang button.active{color:var(--accent)}
   footer.foot > *:last-child{display:none}
   /* portfolio hero — sequential image slideshow fixed above the title */
-  .hero-cycle{display:block;width:clamp(180px,56vw,280px);aspect-ratio:16/11;object-fit:cover;border-radius:4px;margin:0 auto clamp(1.5rem,5vw,2.25rem);opacity:1;transition:opacity .5s var(--ease-out)}
+  .hero-slider{display:block;width:clamp(230px,74vw,360px);margin:0 auto clamp(1.5rem,5vw,2.25rem);overflow:hidden;border-radius:6px}
+  .hero-slider__track{display:flex;transition:transform .6s cubic-bezier(0.16,1,0.3,1);will-change:transform}
+  .hero-slide{flex:0 0 100%;aspect-ratio:16/11}
+  .hero-slide img{width:100%;height:100%;object-fit:cover;display:block}
+  .hero-slider__dots{display:flex;justify-content:center;gap:.45rem;margin-top:.85rem}
+  .hero-dot{width:6px;height:6px;border-radius:50%;border:none;padding:0;background:var(--hair-dk);transition:background .3s var(--ease-out),transform .3s var(--ease-out);cursor:pointer}
+  .hero-dot.is-active{background:var(--accent);transform:scale(1.3)}
 }
 
 /* ── About page ── */
@@ -284,7 +328,27 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 .about__col{grid-column:1 / 7;display:flex;flex-direction:column}
 .about__photo{grid-column:8 / 13;position:sticky;top:clamp(5rem,9vh,7rem);border-radius:4px;overflow:hidden;background:#1a1c22;aspect-ratio:3/4}
 .about__photo img{width:100%;height:100%;object-fit:cover;display:block}
-.about__title{font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(2.5rem,5.5vw,4.5rem);line-height:.98;letter-spacing:-.035em;color:#fff;margin:0 0 clamp(1.75rem,3.5vw,2.75rem);text-wrap:balance}
+/* About headline — same scale as the portfolio title ("Доказательство словам.") */
+.about__title{font-family:var(--serif);font-style:italic;font-weight:400;font-size:var(--t-hero);line-height:.86;letter-spacing:-.055em;color:#fff;margin:0 0 clamp(2rem,4vw,3rem);text-wrap:balance;max-width:15ch}
+/* Greeting word that morphs through languages (gooey cross-fade, ported from the manifest hero) */
+.hi-unit{white-space:nowrap}
+.hi-morph{display:inline-grid;position:relative;vertical-align:baseline}
+/* Name sits on its own line so the morphing greeting never reflows the typography */
+.about__name{display:block}
+.hi-morph>.hm{grid-area:1/1;display:block;white-space:nowrap;will-change:filter,opacity}
+/* Photo settles out of a slight zoom as it reveals */
+.about__photo img{transform:scale(1.08);transition:transform 1.5s var(--ease-out)}
+.about__photo.in-view img{transform:scale(1)}
+/* Contacts */
+.about__contacts{margin-top:clamp(2.5rem,5vw,3.75rem);display:flex;flex-direction:column;gap:1rem}
+.about__contacts-label{font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:500}
+.about__contacts-list{display:flex;flex-direction:column;border-top:1px solid var(--hair-dk)}
+.about__contact{display:flex;justify-content:space-between;align-items:baseline;gap:1.5rem;padding:.95rem 0;border-bottom:1px solid var(--hair-dk);transition:padding-left .5s var(--ease-out)}
+.about__contact .l{font-family:var(--serif);font-size:clamp(1.25rem,2vw,1.625rem);color:#fff;transition:color .3s var(--ease-out)}
+.about__contact .v{font-family:var(--mono);font-size:var(--t-mono-sm);color:var(--mute-2);letter-spacing:.02em;transition:color .3s var(--ease-out)}
+.about__contact:hover{padding-left:.65rem}
+.about__contact:hover .l{color:var(--accent)}
+.about__contact:hover .v{color:#fff}
 .about__text{display:flex;flex-direction:column;gap:1.1rem;color:var(--mute-2);font-size:clamp(1rem,1.15vw,1.1875rem);line-height:1.55;max-width:54ch}
 .about__text p{margin:0;text-wrap:pretty}
 @media (max-width:900px){.about{grid-template-columns:1fr}.about__col{grid-column:1;order:2}.about__photo{grid-column:1;order:1;position:relative;top:0;max-width:520px;margin-bottom:2.5rem}}
@@ -297,7 +361,7 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 /* Parallax media inside project cases (ParallaxMedia-style). Images are
    optimised (≈7MB total) so scroll stays smooth. */
 /* Project media — full frames, no crop (parallax removed per request) */
-.pcase__media img{height:auto;object-fit:contain}
+.pcase__media img,.pcase__media video{height:auto;object-fit:contain}
 
 /* ── 404 — giant thin headline with text-pressure + minimal links ── */
 .nf__big{font-family:var(--serif);font-style:italic;font-weight:200;font-size:clamp(7rem,26vw,21rem);line-height:.82;letter-spacing:-.03em;margin:.4rem 0 1.4rem;color:#fff}
