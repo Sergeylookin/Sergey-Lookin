@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<meta name="robots" content="noindex" />
+<title>404 · Страница не найдена · Сергей Лукин</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body class="theme-dark">
+
+<nav class="top on-dark" id="nav">
+  <button class="brand" type="button" id="navHome" data-i18n="nav.brand" aria-label="На главную">Сергей Лукин <b>—</b> Head of Design</button>
+  <div class="nav-center">
+    <a href="index.html" class="nav-contact" data-i18n="nav.manifesto">Манифест</a>
+    <span class="nav-sep" aria-hidden="true">·</span>
+    <a href="about.html" class="nav-contact" data-i18n="nav.about">Обо мне</a>
+    <span class="nav-sep" aria-hidden="true">·</span>
+    <a href="portfolio.html" class="nav-contact" data-i18n="nav.pf">Портфолио</a>
+  </div>
+  <div class="nav-right">
+    <div class="lang-switch" id="langSwitch" role="group" aria-label="Язык">
+      <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
+      <span class="sep" aria-hidden="true">·</span>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+</nav>
+
+<main class="nf" data-dark>
+  <span class="eyebrow" data-i18n="nf.kicker">Ошибка · 404</span>
+  <h1 class="nf__big" data-pressure aria-label="404">404</h1>
+  <p class="nf__text" data-i18n="nf.text">Похоже, такого проекта нет: он переехал, ещё не опубликован или ссылка устарела.</p>
+  <div class="nf__actions">
+    <a class="nf__link" href="portfolio.html" data-i18n="nf.cta1">Все проекты →</a>
+    <a class="nf__link" href="index.html" data-i18n="nf.cta2">На главную →</a>
+  </div>
+</main>
+
+<footer class="foot">
+  <div data-i18n="ft.copy">© 2026 Сергей Лукин</div>
+  <div data-i18n="nf.tag">Ошибка 404</div>
+</footer>
+
+<script id="i18n-data" type="application/json">{
+"ru":{"nav.brand":"Сергей Лукин <b>—</b> Head of Design","nav.manifesto":"Манифест","nav.pf":"Портфолио","nav.about":"Обо мне","nf.kicker":"Ошибка · 404","nf.text":"Похоже, такого проекта нет: он переехал, ещё не опубликован или ссылка устарела.","nf.cta1":"Все проекты →","nf.cta2":"На главную →","ft.copy":"© 2026 Сергей Лукин","nf.tag":"Ошибка 404"},
+"en":{"nav.brand":"Sergey Lukin <b>—</b> Head of Design","nav.manifesto":"Manifesto","nav.pf":"Portfolio","nav.about":"About","nf.kicker":"Error · 404","nf.text":"This page isn’t here — it moved, hasn’t been published yet, or the link is out of date.","nf.cta1":"All projects →","nf.cta2":"Home →","ft.copy":"© 2026 Sergey Lukin","nf.tag":"Error 404"}
+}</script>
+<script src="assets/site.js"></script>
+</body>
+</html>
