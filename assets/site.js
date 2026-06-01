@@ -354,7 +354,7 @@
       var d = document.createElement('button'); d.type = 'button'; d.className = 'hero-dot';
       d.setAttribute('aria-label', 'Слайд ' + (i + 1)); dots.appendChild(d);
     });
-    slider.appendChild(dots);
+    /* dots intentionally not shown — slider auto-advances on its own */
     head.insertBefore(slider, head.firstChild);
 
     var n = srcs.length, cur = 0, auto = null;
@@ -363,7 +363,7 @@
       Array.prototype.forEach.call(dots.children, function(d, k){ d.classList.toggle('is-active', k === cur); });
     }
     function go(i){ cur = (i + n) % n; render(); }
-    function start(){ if(!auto && !prefersReduced) auto = setInterval(function(){ go(cur + 1); }, 2600); }
+    function start(){ if(!auto && !prefersReduced) auto = setInterval(function(){ go(cur + 1); }, 1600); }
     function stop(){ if(auto){ clearInterval(auto); auto = null; } }
     Array.prototype.forEach.call(dots.children, function(d, k){ d.addEventListener('click', function(){ go(k); stop(); start(); }); });
     render(); start();

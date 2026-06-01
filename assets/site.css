@@ -153,9 +153,9 @@ nav.top.on-dark .lang-switch button.active{color:var(--accent)}
 .case__meta{display:flex;gap:1.5rem;align-items:baseline;font-family:var(--mono);font-size:.8125rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute-2)}
 .case__cta{margin-left:auto;color:var(--ink);transition:color .3s var(--ease-out)}
 .case__cta{position:relative;transition:color .3s var(--ease-out),transform .4s var(--ease-out)}
-.case__cta::after{content:'';position:absolute;left:0;bottom:-3px;width:100%;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left center;transition:transform .5s var(--ease-out)}
-.case__cta-link:hover .case__cta{transform:translateX(3px)}
-.case__cta-link:hover .case__cta::after{transform:scaleX(1)}
+.case__cta::after{display:none}
+/* CTA «Смотреть»: orange ONLY on direct button hover — no shift, no fill from media/case hover */
+.case__cta-link:hover .case__cta,body.theme-dark .case__cta-link:hover .case__cta{color:var(--accent)}
 /* Bottom row of a case: number (left) opposite the "Смотреть" CTA (right) */
 .case__foot{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin-top:auto;padding-top:clamp(1.25rem,2.5vw,2rem)}
 .case__foot .case__num{display:inline-block;position:static;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.12em;color:var(--mute);mix-blend-mode:normal;font-weight:500}
@@ -242,12 +242,24 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
   .pcase__facts{grid-column:1 / 13;border-top:1px solid var(--hair-dk);padding-top:clamp(1.5rem,4vw,2rem);margin-top:.5rem}
 }
 /* General description — strong upright statement + 2–3 column body */
-.pcase__about{padding-top:clamp(2.5rem,5vw,4rem);padding-bottom:clamp(2.5rem,6vw,4.5rem);border-top:1px solid var(--hair-dk);margin-top:clamp(2.5rem,5vw,4rem)}
+.pcase__about{padding-top:clamp(2.5rem,5vw,4rem);padding-bottom:clamp(4rem,8vw,7rem);border-top:1px solid var(--hair-dk);margin-top:clamp(2.5rem,5vw,4rem);display:grid;grid-template-columns:1fr 1fr 1fr;column-gap:clamp(1.75rem,3vw,3.25rem);align-items:start}
 .pcase__lead{font-weight:400;font-size:clamp(1.5rem,3.2vw,2.75rem);line-height:1.12;letter-spacing:-.025em;color:#fff;max-width:24ch;margin:0 0 clamp(2rem,4vw,3.25rem);text-wrap:balance}
 .pcase__cols{columns:3;column-gap:clamp(1.75rem,3vw,3.25rem);color:var(--mute-2);font-size:clamp(0.9375rem,1vw,1.0625rem);line-height:1.62}
 .pcase__cols p{margin:0 0 1.1rem;break-inside:avoid;text-wrap:pretty}
 @media (max-width:980px){.pcase__cols{columns:2}}
 @media (max-width:560px){.pcase__cols{columns:1}}
+/* case description — lead on top, body aligned across 3 columns (prose 1–2, facts 3) */
+.pcase__about > .pcase__lead{grid-column:1 / 3;grid-row:1;max-width:none;margin:0 0 clamp(1.6rem,3vw,2.4rem)}
+.pcase__prose{grid-column:1 / 3;grid-row:2;min-width:0;columns:2;column-gap:clamp(1.75rem,3vw,3.25rem);color:var(--mute-2);font-size:clamp(0.9375rem,1vw,1.0625rem);line-height:1.62}
+.pcase__prose p{margin:0 0 1.1rem;break-inside:avoid;text-wrap:pretty}
+.pcase__prose p:last-child{margin-bottom:0}
+.pcase__facts3{grid-column:3 / 4;grid-row:2;min-width:0}
+.proof__facts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(.5rem,1vw,.8rem)}
+.proof__facts li{position:relative;padding-left:1.5rem;color:var(--mute-2);font-size:clamp(0.9375rem,1vw,1.0625rem);line-height:1.5;text-wrap:pretty}
+.proof__facts li::before{content:"";position:absolute;left:.05rem;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.proof__facts li b{color:#fff;font-weight:500}
+@media (max-width:980px){.pcase__about{grid-template-columns:1fr}.pcase__about>.pcase__lead,.pcase__prose,.pcase__facts3{grid-column:1 / -1;grid-row:auto}.pcase__facts3{margin-top:clamp(1.8rem,4vw,2.5rem);padding-top:clamp(1.4rem,3vw,1.8rem);border-top:1px solid var(--hair-dk)}}
+@media (max-width:560px){.pcase__prose{columns:1}}
 /* full-width media — description first, images after */
 .pcase__media{display:flex;flex-direction:column;gap:clamp(.6rem,1.2vw,1rem);padding-bottom:clamp(3.5rem,7vw,6rem)}
 .pcase__media img,.pcase__media video{width:100%;display:block;border-radius:2px;background:#1a1c22}
