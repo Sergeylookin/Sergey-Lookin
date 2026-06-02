@@ -308,11 +308,12 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 
 /* ── About page ── */
 .about{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);align-items:start;padding-top:clamp(7rem,14vh,10rem);padding-bottom:clamp(3rem,7vw,6rem)}
-.about__col{grid-column:1 / 7;display:flex;flex-direction:column}
-.about__photo{grid-column:8 / 13;position:sticky;top:clamp(5rem,9vh,7rem);border-radius:4px;overflow:hidden;background:#1a1c22;aspect-ratio:3/4}
+/* col dissolves into the page grid so title / text / contacts can sit on different columns */
+.about__col{display:contents}
+.about__photo{grid-column:8 / 13;grid-row:1 / span 3;position:sticky;top:clamp(5rem,9vh,7rem);border-radius:4px;overflow:hidden;background:#1a1c22;aspect-ratio:3/4}
 .about__photo img{width:100%;height:100%;object-fit:cover;display:block}
 /* About headline — same scale as the portfolio title ("Доказательство словам.") */
-.about__title{font-family:var(--serif);font-style:italic;font-weight:400;font-size:var(--t-hero);line-height:.86;letter-spacing:-.055em;color:#fff;margin:0 0 clamp(2rem,4vw,3rem);text-wrap:balance;max-width:15ch}
+.about__title{grid-column:1 / 8;font-family:var(--serif);font-style:italic;font-weight:400;font-size:var(--t-hero);line-height:.86;letter-spacing:-.055em;color:#fff;margin:0 0 clamp(2rem,4vw,3rem);text-wrap:balance;max-width:15ch}
 /* Greeting word that morphs through languages (gooey cross-fade, ported from the manifest hero) */
 .hi-unit{white-space:nowrap}
 .hi-morph{display:inline-grid;position:relative;vertical-align:baseline}
@@ -323,7 +324,7 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 .about__photo img{transform:scale(1.08);transition:transform 1.5s var(--ease-out)}
 .about__photo.in-view img{transform:scale(1)}
 /* Contacts */
-.about__contacts{margin-top:clamp(2.5rem,5vw,3.75rem);display:flex;flex-direction:column;gap:1rem}
+.about__contacts{grid-column:1 / 8;margin-top:clamp(2.5rem,5vw,3.75rem);display:flex;flex-direction:column;gap:1rem}
 .about__contacts-label{font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:500}
 .about__contacts-list{display:flex;flex-direction:column;border-top:1px solid var(--hair-dk)}
 .about__contact{display:flex;justify-content:space-between;align-items:baseline;gap:1.5rem;padding:.95rem 0;border-bottom:1px solid var(--hair-dk);transition:padding-left .5s var(--ease-out)}
@@ -332,9 +333,9 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 .about__contact:hover{padding-left:.65rem}
 .about__contact:hover .l{color:var(--accent)}
 .about__contact:hover .v{color:#fff}
-.about__text{display:flex;flex-direction:column;gap:1.1rem;color:var(--mute-2);font-size:clamp(1rem,1.15vw,1.1875rem);line-height:1.55;max-width:54ch}
+.about__text{grid-column:2 / 8;display:flex;flex-direction:column;gap:1.1rem;color:var(--mute-2);font-size:clamp(1.0625rem,1.2vw,1.25rem);line-height:1.6;max-width:60ch}
 .about__text p{margin:0;text-wrap:pretty}
-@media (max-width:900px){.about{grid-template-columns:1fr}.about__col{grid-column:1;order:2}.about__photo{grid-column:1;order:1;position:relative;top:0;max-width:520px;margin-bottom:2.5rem}}
+@media (max-width:900px){.about{grid-template-columns:1fr}.about__title,.about__text,.about__contacts{grid-column:1}.about__title{order:2}.about__text{order:3}.about__contacts{order:4}.about__photo{grid-column:1;grid-row:auto;order:1;position:relative;top:0;max-width:520px;margin-bottom:2.5rem}}
 
 /* Portfolio headline broken onto two lines (one word per line), all white */
 .page-title .word{display:block}
