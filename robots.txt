@@ -1,0 +1,37 @@
+# robots.txt — advisory only (well-behaved bots obey; bad bots ignore).
+# Search engines: allowed (keeps the portfolio indexable / good for SEO).
+# AI training & dataset crawlers: blocked to protect original design work.
+
+User-agent: *
+Allow: /
+
+# ─── AI / dataset scrapers — disallowed ───
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /

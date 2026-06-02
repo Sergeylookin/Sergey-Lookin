@@ -7,6 +7,35 @@
   'use strict';
   var prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* Image deterrents — block right-click "Save image" and drag-to-save on media,
+     scoped to images/video + their containers so links and text stay normal.
+     Friction only: the file is still reachable via the network tab. */
+  ['contextmenu','dragstart'].forEach(function(type){
+    document.addEventListener(type, function(e){
+      var t = e.target;
+      if (t && t.closest && t.closest('img,video,picture,.case__media,.pcase__media,.about__photo,.trail-img,.hero-slide')) {
+        e.preventDefault();
+      }
+    });
+  });
+
+  /* Lazy case-preview videos — they're preload="none" + no autoplay in the HTML, so nothing
+     downloads until a case is near the viewport. Play/pause by visibility (quality unchanged,
+     just deferred). Reduced-motion: leave the poster, never load the video. */
+  (function lazyCaseVideos(){
+    var vids = document.querySelectorAll('.case__media video');
+    if (!vids.length || prefersReduced) return;
+    function start(v){ if (v.preload === 'none') v.preload = 'auto'; var p = v.play(); if (p && p.catch) p.catch(function(){}); }
+    if (!('IntersectionObserver' in window)) { vids.forEach(start); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting) start(en.target);
+        else en.target.pause();
+      });
+    }, { rootMargin: '200px 0px', threshold: 0.01 });
+    vids.forEach(function(v){ io.observe(v); });
+  })();
+
   /* Preview thumbnail for any case media element — <img> uses its src, <video> uses its
      poster (or data-thumb). Lets previews / trails / slideshows accept video, not just images. */
   function thumbSrc(el){

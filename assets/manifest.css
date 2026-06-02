@@ -1,6 +1,10 @@
 
 :root{
-  /* ─── DARK PREMIUM THEME — palette inverted (was a light theme) ─── */
+  /* ─── DARK PREMIUM THEME — palette only. ───
+     Shared tokens (fonts, --accent*, grid, --ease-out, --t-h1/--t-body/
+     --t-eyebrow/--t-mono-sm, the z-index scale) live in core.css, which is
+     linked before this file. Only the dark palette + manifest-only tokens
+     stay here. */
   --bg:#0B0C0F;
   --bg-dark:#0B0C0F;
   --ink:#F4F5F7;
@@ -9,57 +13,17 @@
   --mute-2:#A8AEB8;
   --hair:#23262D;
   --hair-dk:#2A2E36;
-  --accent:#FB460D;        /* bright orange — single source of truth for the accent */
-  --accent-hi:#FF6A38;     /* lighter orange for hover / emphasis */
-  --accent-ink:#0C0D11;    /* dark text to sit ON an orange fill (white fails contrast on orange) */
   /* Accent + ink as raw RGB channels, so effects that INTERPOLATE toward the accent
      (e.g. the magnetic pain-list chars) follow the palette automatically. Keep these
-     in sync with --accent / --ink above. */
+     in sync with --accent (core.css) / --ink above. */
   --accent-r:251; --accent-g:70; --accent-b:13;   /* = #FB460D */
   --ink-r:244; --ink-g:245; --ink-b:247;          /* = #F4F5F7 (--ink) */
-  /* --serif kept as the variable name for compatibility, but now a sans (no serifs). */
-  --serif:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  --sans:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',monospace;
-  --container:100%;
-  --gutter:1rem;
-  --nav-safe-right:clamp(0rem,4.5vw,5rem);
-  --col-gap:clamp(0.875rem,1.8vw,2rem);
-  /* ─── z-index scale (semantic layers, see audit) ─── */
-  --z-behind: 0;
-  --z-base: 1;
-  --z-content: 2;
-  --z-content-top: 3;
-  --z-header: 5;
-  --z-active: 6;
-  --z-header-hi: 10;
-  --z-aside: 20;
-  --z-aside-top: 21;
-  --z-aside-hover: 25;
-  --z-whisper-hover: 50;
-  --z-tip: 60;
-  --z-nav: 100;
-  --z-overlay: 200;
-  --z-skip: 1000;
-  --z-top: 9999;
-
+  /* Theme-specific type sizes (the shared scale is in core.css) */
   --t-hero:clamp(3.25rem,8vw,7.5rem);
-  --t-h1:clamp(2.25rem,5vw,5rem);
-  --t-body:clamp(1.0625rem,1.2vw,1.1875rem);
-  --t-eyebrow:0.9375rem;
   --t-tag:0.9rem;
-  --t-mono-sm:0.875rem;
-  --ease-out:cubic-bezier(0.16,1,0.3,1);
 }
 
-*,*::before,*::after{box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-/* Lenis smooth-scroll (overrides native smooth while active) */
-html.lenis,html.lenis body{height:auto}
-.lenis.lenis-smooth{scroll-behavior:auto!important}
-.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
-.lenis.lenis-stopped{overflow:hidden}
-.lenis.lenis-smooth iframe{pointer-events:none}
+/* Reset, smooth-scroll (Lenis) and ::selection live in core.css (loaded first). */
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:var(--t-body);line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1;word-break:normal;overflow-wrap:normal;hyphens:manual;-webkit-hyphens:manual}
 
 /* ─── CURSOR CROSS — typographic registration mark following the pointer ─── */
@@ -71,7 +35,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font
 .cursor-dot.is-hovering-link{width:30px;height:30px}
 .cursor-dot.is-hovering-link::before,.cursor-dot.is-hovering-link::after{opacity:0}
 .cursor-dot.is-hovering-link{border:1px solid var(--accent);border-radius:50%;opacity:0.7}
-@media (max-width:900px),(hover:none){.cursor-dot{display:none}}
+@media (max-width:1024px),(hover:none){.cursor-dot{display:none}}
 @media (prefers-reduced-motion:reduce){.cursor-dot{display:none}}
 
 img,svg{max-width:100%;display:block}
@@ -80,16 +44,19 @@ a:hover{color:var(--accent)}
 h1,h2,h3,h4{margin:0;font-weight:400;line-height:1.04;letter-spacing:-0.022em}
 p{margin:0}
 ul{padding:0;margin:0;list-style:none}
-::selection{background:var(--accent);color:var(--accent-ink)}
 .skip-link{position:absolute;left:-9999px;top:0;background:var(--accent);color:var(--accent-ink);padding:0.75rem 1.25rem;font-family:var(--mono);font-size:0.8125rem;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;z-index: var(--z-skip);border-radius:0 0 6px 0}
 .skip-link:focus{left:0;color:#fff}
 .container{max-width:var(--container);margin:0 auto;padding:0 var(--gutter);padding-right:calc(var(--gutter) + var(--nav-safe-right));width:100%}
 section.hero > .container, #hero > .container{padding-right:var(--gutter)}
+/* Full-width section wrapper (replaces former inline style="width:100%") */
+.sec-full{width:100%}
 /* 12-column grid primitive — used inside .container where needed */
-nav.top{position:fixed;top:0;left:0;right:0;padding:1.25rem var(--gutter);display:flex;align-items:center;justify-content:space-between;z-index: var(--z-nav);background:transparent;border-bottom:1px solid transparent;transition:background 0.4s var(--ease-out),backdrop-filter 0.4s var(--ease-out),border-color 0.4s var(--ease-out),color 0.4s var(--ease-out)}
-nav.top.scrolled{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);background:color-mix(in srgb,var(--bg) 78%,transparent);border-bottom-color:var(--hair)}
+nav.top{position:fixed;top:0;left:0;right:0;padding:1.25rem var(--gutter);display:flex;align-items:center;justify-content:space-between;z-index: var(--z-nav);background:transparent;border-bottom:1px solid transparent;transition:background 0.4s var(--ease-out),border-color 0.4s var(--ease-out),color 0.4s var(--ease-out)}
+/* No backdrop-filter: the live blur was the 2nd-heaviest constant GPU cost. Instead the
+   scrolled bar uses a fully opaque background so content doesn't bleed through. */
+nav.top.scrolled{background:var(--bg);border-bottom-color:var(--hair)}
 nav.top.on-dark{color:#fff}
-nav.top.on-dark.scrolled{background:color-mix(in srgb,var(--bg-dark) 70%,transparent);border-bottom-color:var(--hair-dk)}
+nav.top.on-dark.scrolled{background:var(--bg-dark);border-bottom-color:var(--hair-dk)}
 nav .brand{background:none;border:none;padding:0;margin:0;color:inherit;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:color 0.3s var(--ease-out);font-weight:400;line-height:inherit}
 nav button.brand:hover{color:var(--accent)}
 nav .brand b{font-weight:500;color:var(--accent)}
@@ -106,6 +73,10 @@ section.dark>*{position:relative;z-index: var(--z-base)}
 section.dark+section.dark{padding-top:7vh}
 section.dark+section.dark::before{display:none}
 section.dark:has(+ section.dark)::after{display:none}
+/* #ds inherits the body background (--bg === --bg-dark === #0B0C0F), so a dark
+   section directly before it would draw a hairline between two identical surfaces —
+   a line that separates nothing. Suppress it like the +section.dark case. */
+section.dark:has(+ #ds)::after{display:none}
 section:not(.dark):has(+ section.dark){padding-bottom:clamp(11rem,18vh,17rem)}
 section.dark+section:not(.dark){padding-top:clamp(11rem,18vh,17rem)}
 
@@ -117,12 +88,12 @@ section.dark h1,section.dark h2{color:#fff}
   .sec-head > div:nth-child(2){grid-column:1 / -1}
 }
 .eyebrow{font-family:var(--mono);font-size:var(--t-eyebrow);letter-spacing:0.11em;text-transform:uppercase;color:var(--mute-2);font-weight:500;display:inline-flex;align-items:center;gap:0.6rem}
-[data-reveal]{opacity:0;transform:translateY(40px);filter:blur(6px);transition:opacity 1.6s var(--ease-out),transform 1.5s cubic-bezier(0.22,1,0.36,1),filter 1s var(--ease-out)}
-[data-reveal].in-view{opacity:1;transform:translateY(0);filter:blur(0)}
-[data-reveal-num]{opacity:0;transform:translateY(52px);filter:blur(8px);transition:opacity 1.8s var(--ease-out),transform 1.7s cubic-bezier(0.22,1,0.36,1),filter 1.1s var(--ease-out)}
-[data-reveal-num].in-view{opacity:1;transform:translateY(0);filter:blur(0)}
-.stagger>[data-stagger]{opacity:0;transform:translateY(32px);filter:blur(6px);transition:opacity 1.3s var(--ease-out),transform 1.25s cubic-bezier(0.22,1,0.36,1),filter 0.9s var(--ease-out)}
-.stagger.in-view>[data-stagger]{opacity:1;transform:translateY(0);filter:blur(0)}
+[data-reveal]{opacity:0;transform:translateY(40px);transition:opacity 1.6s var(--ease-out),transform 1.5s var(--ease-out-strong)}
+[data-reveal].in-view{opacity:1;transform:translateY(0)}
+[data-reveal-num]{opacity:0;transform:translateY(52px);transition:opacity 1.8s var(--ease-out),transform 1.7s var(--ease-out-strong)}
+[data-reveal-num].in-view{opacity:1;transform:translateY(0)}
+.stagger>[data-stagger]{opacity:0;transform:translateY(32px);transition:opacity 1.3s var(--ease-out),transform 1.25s var(--ease-out-strong)}
+.stagger.in-view>[data-stagger]{opacity:1;transform:translateY(0)}
 @media (prefers-reduced-motion:reduce){[data-reveal],[data-reveal-num],.stagger>[data-stagger]{opacity:1;transform:none;filter:none;transition:none}*{animation:none!important}html{scroll-behavior:auto}}
 .hero{align-items:stretch;padding:0;min-height:100vh;min-height:100svh}
 #cta{min-height:100vh;min-height:100svh}
@@ -156,7 +127,7 @@ section.dark h1,section.dark h2{color:#fff}
 .hero-bottom .item .label{font-family:var(--mono);font-size:var(--t-eyebrow);color:var(--mute-2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.65rem;font-weight:500}
 .hero-bottom .item .value{color:#fff;font-size:1.0625rem;line-height:1.45}
 .hero-bottom .item .value a:hover{color:var(--accent)}
-@media (max-width:900px){
+@media (max-width:1024px){
   .hero-eyebrow-bottom,
   .intro-mark,
   .intro-stamp,
@@ -170,7 +141,7 @@ section.dark h1,section.dark h2{color:#fff}
   padding-top: clamp(6rem, 11vw, 8.5rem);
   padding-bottom: clamp(6rem, 11vw, 8.5rem);
 }
-@media (min-width: 901px){
+@media (min-width: 1025px){
   /* Поднять всё содержимое секции на 100px без изменения высоты чёрного фона.
      Translate применяется и к .container (cosmos), и к asides-bar (whisper + kicker),
      чтобы сохранить вертикальное выравнивание между ними. */
@@ -216,7 +187,7 @@ section.dark h1,section.dark h2{color:#fff}
      play. Previously the parallax loop rewrote `transform` every frame via CSS vars, which
      constantly re-targeted the CSS transition — so the scale-up never visibly happened. */
   transform: translateX(-50%);
-  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+  transition: transform 0.55s var(--ease-out-strong),
               color 0.4s var(--ease-out);
 }
 #mentor .sec-aside--right{
@@ -263,21 +234,18 @@ section.dark h1,section.dark h2{color:#fff}
   text-align: center;
   text-transform: none;
   text-wrap: balance;
-  opacity: 0;
-  filter: blur(10px);
-  animation: mentor-core-in 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.25s forwards;
-  animation-play-state: paused;
-  will-change: transform, opacity, filter;
+  will-change: transform;
   pointer-events: none;
 }
-.mentor-cosmos.has-entered .mentor-core{
-  animation-play-state: running;
-}
-@keyframes mentor-core-in {
-  to {
-    opacity: 1;
-    filter: blur(0px);
-  }
+/* No blur entrance on the title — it caused a "stuck blurred" state when the entry
+   trigger was missed/paused, and the section already has plenty of motion (lines +
+   satellites animate in). The title is simply always sharp. */
+/* Safety guard: the mobile accordion (manifest.js mentorMobile, builds at ≤1024)
+   injects .msat-desc / .msat-ind. If the page was built ≤1024 and then widened past
+   1024 into the cosmos layout, hide those artifacts so they don't litter the cosmos. */
+@media (min-width:1025px){
+  #mentor .msat-desc,
+  #mentor .msat-ind{display:none !important}
 }
 .mentor-lines{
   position: absolute;
@@ -294,7 +262,7 @@ section.dark h1,section.dark h2{color:#fff}
   opacity: 0.3;
   stroke-dasharray: 2000;
   stroke-dashoffset: 2000;
-  animation: mentor-line-draw 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: mentor-line-draw 1.5s var(--ease-bounce) forwards;
   animation-delay: var(--line-delay, 0s);
   animation-play-state: paused;
 }
@@ -344,7 +312,7 @@ section.dark h1,section.dark h2{color:#fff}
              translate(var(--entry-dx, 0px), var(--entry-dy, 0px))
              scale(0.4);
   transition: color 0.25s var(--ease-out);
-  animation: msat-burst 2.5s cubic-bezier(0.34, 1.56, 0.64, 1) var(--entry-delay, 0s) forwards,
+  animation: msat-burst 2.5s var(--ease-bounce) var(--entry-delay, 0s) forwards,
              msat-idle 6s ease-in-out var(--idle-delay, 2.5s) infinite;
   animation-play-state: paused;
   will-change: transform, opacity;
@@ -428,7 +396,7 @@ section.dark h1,section.dark h2{color:#fff}
   transform: translateX(-50%) translateY(8px) scale(0.97);
   transform-origin: center bottom;
   transition: opacity 0.28s var(--ease-out),
-              transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+              transform 0.42s var(--ease-out-strong);
   will-change: transform, opacity;
   z-index: var(--z-overlay);
 }
@@ -436,7 +404,7 @@ section.dark h1,section.dark h2{color:#fff}
   opacity: 1;
   transform: translateX(-50%) translateY(0) scale(1);
 }
-@media (max-width: 900px){
+@media (max-width: 1024px){
   /* ─── MOBILE / TABLET: cosmos collapses to a clean stacked list ───
      The tag-cloud + radial-lines pattern only works with a mouse — on touch devices
      hover doesn't exist, the constellation falls apart, and there's nowhere for a tooltip
@@ -449,8 +417,9 @@ section.dark h1,section.dark h2{color:#fff}
     padding-top: clamp(3rem, 8vw, 5rem);
     padding-bottom: clamp(3rem, 8vw, 5rem);
   }
-  /* Revert unique aside placement — default mobile flow (whisper top-left, kicker top-right) */
-  #mentor > .sec-asides-bar{ position: static !important; }
+  /* Revert unique aside placement — default mobile flow (whisper top-left, kicker top-right).
+     Gutter so the whisper/kicker line up with the content grid (was flush to the edge). */
+  #mentor > .sec-asides-bar{ position: static !important; padding-left: var(--gutter) !important; padding-right: var(--gutter) !important; }
   #mentor .sec-aside--left,
   #mentor .sec-aside--right{
     position: static !important;
@@ -544,6 +513,8 @@ section.dark h1,section.dark h2{color:#fff}
 @media (prefers-reduced-motion: reduce){
   .mentor-lines line{ animation: none; stroke-dashoffset: 0; }
   .msat{ animation: none; opacity: 1; transition: color 0.25s ease; }
+  /* animation is killed globally under reduced-motion, so clear the core's blur directly */
+  .mentor-core{ filter: none; }
 }
 
 /* ═══════════════ INTRO — fluid-vw scale (heatbit/awwwards pattern): design reference at 1440px, scales proportionally between 900-1920px, line count preserved across resolutions ═══════════════ */
@@ -658,7 +629,7 @@ section.dark h1,section.dark h2{color:#fff}
 .intro-spread .intro-p .iw__in{
   display:inline-block;
   transform-origin:center;
-  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1);
+  transition:transform 0.45s var(--ease-out-strong);
   cursor:default;
 }
 /* Hover — use scaleX (no layout reflow) instead of letter-spacing (which would change intrinsic width and break line wrapping) */
@@ -679,7 +650,7 @@ section.dark h1,section.dark h2{color:#fff}
 }
 
 /* Mobile fallback — below 900px switch to rem-based sizes */
-@media (max-width:900px){
+@media (max-width:1024px){
   #intro{
     align-items: center;
     padding-top: clamp(4rem, 8vh, 5.5rem);
@@ -735,12 +706,12 @@ section.dark h1,section.dark h2{color:#fff}
 }
 .pain-list{margin-top:clamp(1rem,3vw,2rem)}
 .pain-list ol{list-style:none;padding:0;margin:0;border-top:1px solid var(--hair)}
-.pain-list li{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);padding:clamp(0.95rem,1.5vw,1.25rem) 0;border-bottom:1px solid var(--hair);align-items:center;position:relative;transition:padding-left 0.55s cubic-bezier(0.16,1,0.3,1);cursor:default;isolation:isolate}
+.pain-list li{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);padding:clamp(0.95rem,1.5vw,1.25rem) 0;border-bottom:1px solid var(--hair);align-items:center;position:relative;transition:padding-left 0.55s var(--ease-out);cursor:default;isolation:isolate}
 .pain-list li:hover{padding-left:clamp(0.65rem,1.2vw,1rem)}
 
 /* ─── PAIN HOVER WOW v6 — Magnetic chars only (waveline removed for perf) ─── */
 /* Baseline accent underline — simple scaleX on hover */
-.pain-list li::after{content:'';position:absolute;left:0;bottom:-1px;width:100%;height:1px;background:rgba(255,255,255,0.22);transform:scaleX(0);transform-origin:left center;transition:transform 0.7s cubic-bezier(0.16,1,0.3,1);pointer-events:none}
+.pain-list li::after{content:'';position:absolute;left:0;bottom:-1px;width:100%;height:1px;background:rgba(255,255,255,0.22);transform:scaleX(0);transform-origin:left center;transition:transform 0.7s var(--ease-out);pointer-events:none}
 .pain-list li:hover::after{transform:scaleX(1)}
 
 /* Number — subtle shrink */
@@ -750,12 +721,12 @@ section.dark h1,section.dark h2{color:#fff}
 /* Char-by-char magnetic pull — controlled via --lift and --mag (set by JS in real-time) */
 .pain-list .pt{position:relative}
 .pain-list .pt .word{display:inline-block;white-space:nowrap}
-.pain-list .pt .char{display:inline-block;transform:translateY(var(--lift,0));color:var(--ink);transition:transform 0.28s cubic-bezier(0.22,1,0.36,1)}
+.pain-list .pt .char{display:inline-block;transform:translateY(var(--lift,0));color:var(--ink);transition:transform 0.28s var(--ease-out-strong)}
 .pain-list .pt .char.is-space{display:inline}
 
 /* Mono-note magnetic + arrow indicator */
-.pain-list .pnote{transition:transform 0.6s cubic-bezier(0.16,1,0.3,1),color 0.35s var(--ease-out);transform-origin:right center;position:relative}
-.pain-list .pnote::before{content:'→';display:inline-block;margin-right:0.4em;opacity:0;transform:translateX(8px);transition:opacity 0.5s var(--ease-out) 0.15s,transform 0.55s cubic-bezier(0.16,1,0.3,1) 0.15s;color:var(--mute-2);font-family:var(--serif);font-style:normal;font-weight:300}
+.pain-list .pnote{transition:transform 0.6s var(--ease-out),color 0.35s var(--ease-out);transform-origin:right center;position:relative}
+.pain-list .pnote::before{content:'→';display:inline-block;margin-right:0.4em;opacity:0;transform:translateX(8px);transition:opacity 0.5s var(--ease-out) 0.15s,transform 0.55s var(--ease-out) 0.15s;color:var(--mute-2);font-family:var(--serif);font-style:normal;font-weight:300}
 .pain-list li:hover .pnote{transform:translateX(-6px) scale(1.08)}
 .pain-list li:hover .pnote::before{opacity:1;transform:translateX(0)}
 
@@ -771,7 +742,7 @@ section.dark h1,section.dark h2{color:#fff}
 .pain-list .pn{grid-column:1 / 2;font-family:var(--serif);font-style:italic;font-weight:300;color:var(--mute-2);font-size:clamp(1.875rem,3vw,2.75rem);line-height:1;letter-spacing:-0.04em;transition:color 0.35s var(--ease-out)}
 .pain-list .pt{grid-column:4 / 10;font-family:var(--serif);font-weight:400;font-size:clamp(1.375rem,1.9vw,1.75rem);line-height:1.25;color:var(--ink);letter-spacing:-0.022em;transition:color 0.4s var(--ease-out);margin:0}
 .pain-list .pnote{grid-column:10 / -1;font-family:var(--mono);font-size:var(--t-mono-sm);color:var(--mute);text-align:right;max-width:30ch;line-height:1.55;letter-spacing:0.02em;justify-self:end}
-@media (max-width:900px){
+@media (max-width:1024px){
   .pain-list .pt{grid-column:2 / -1}
   .pain-list .pnote{grid-column:2 / -1;text-align:left;margin-top:0.85rem;align-self:start;padding-bottom:0;justify-self:start;max-width:none}
 }
@@ -780,14 +751,14 @@ section.dark h1,section.dark h2{color:#fff}
 .pain-quote em,.partner-final em,.aud-quote em em{color:var(--accent);font-style:italic;font-weight:400}
 .pain-quote{grid-column:4 / -1}
 /* conclusion statements: ink at rest → orange on hover (unified) — keep reveal transition intact */
-.pain-quote,.aud-quote,.ev-bmp-foot,.ds-quote{transition:opacity 1.6s var(--ease-out),transform 1.5s cubic-bezier(0.22,1,0.36,1),filter 1s var(--ease-out),color .35s var(--ease-out)}
+.pain-quote,.aud-quote,.ev-bmp-foot,.ds-quote{transition:opacity 1.6s var(--ease-out),transform 1.5s var(--ease-out-strong),filter 1s var(--ease-out),color .35s var(--ease-out)}
 .partner-final{transition:color .35s var(--ease-out)}
 .pain-quote:hover,.partner-final:hover,.aud-quote:hover,.ev-bmp-foot:hover,.ds-quote:hover{color:var(--accent);cursor:default}
 /* shrink hover hit-area to the text itself (box was full column width → hover fired far from text) */
 @media (hover:hover) and (pointer:fine){
   .pain-quote,.partner-final,.aud-quote,.ev-bmp-foot,.ds-quote{width:fit-content}
 }
-@media (max-width:900px){
+@media (max-width:1024px){
   .pain-quote,.partner-final,.aud-quote{max-width:none}
   .pain-quote{grid-column:1 / -1}
 }
@@ -804,7 +775,7 @@ section.dark h1,section.dark h2{color:#fff}
 .partner-compare .col{padding:0;background:transparent;min-height:0;display:flex;flex-direction:column;border:none}
 .partner-compare .col.service{grid-column:4 / 8}
 .partner-compare .col.partner-col{grid-column:8 / -1}
-@media (max-width:900px){
+@media (max-width:1024px){
   .partner-compare .col.service,.partner-compare .col.partner-col{grid-column:1 / -1}
 }
 .partner-compare .col.service .col-title,.partner-compare .col.service ul li{color:var(--mute)}
@@ -841,7 +812,7 @@ section.dark h1,section.dark h2{color:#fff}
 /* Bmp-cols when used inside Partner section (after merge) */
 #partner .bmp-cols{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2rem,3.5vw,3rem);margin-top:0}
 #partner .bmp-col{grid-column:span 4}
-@media (max-width:900px){#partner .bmp-col{grid-column:1 / -1}}
+@media (max-width:1024px){#partner .bmp-col{grid-column:1 / -1}}
 /* ─── Team section: unified rhythm — manifesto rows + practice blocks share grid ─── */
 #team{padding-top:clamp(12rem,20vh,20rem);padding-bottom:clamp(12rem,20vh,20rem)}
 .principles-grid{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2.5rem,5vw,5rem);margin-top:clamp(1rem,3vw,2rem)}
@@ -887,7 +858,7 @@ section.dark h1,section.dark h2{color:#fff}
   line-height:1;
   letter-spacing:-0.04em;
   transform-origin:left center;
-  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1),opacity 0.5s var(--ease-out),color 0.35s var(--ease-out);
+  transition:transform 0.45s var(--ease-out-strong),opacity 0.5s var(--ease-out),color 0.35s var(--ease-out);
 }
 .aud-row:hover .ar-num{transform:translateY(-0.4rem) scale(0.92);opacity:0.6}
 
@@ -904,7 +875,7 @@ section.dark h1,section.dark h2{color:#fff}
   letter-spacing:-0.026em;
   margin:0;
   text-wrap:balance;
-  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1);
+  transition:transform 0.45s var(--ease-out-strong);
 }
 .aud-row:hover .ar-title{transform:translateY(-0.4rem)}
 
@@ -924,7 +895,7 @@ section.dark h1,section.dark h2{color:#fff}
   max-width:24ch;
   justify-self:end;
   text-wrap:balance;
-  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1);
+  transition:transform 0.45s var(--ease-out-strong);
 }
 .aud-row:hover .ar-tag{transform:translateY(-0.4rem)}
 
@@ -944,7 +915,7 @@ section.dark h1,section.dark h2{color:#fff}
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  transition:transform 0.45s cubic-bezier(0.22,1,0.36,1);
+  transition:transform 0.45s var(--ease-out-strong);
 }
 .aud-row .ar-data .num{color:var(--ink);font-weight:600}
 .aud-row .ar-data .sep{color:var(--mute-2);opacity:0.55;padding:0 0.5em}
@@ -963,7 +934,7 @@ section.dark h1,section.dark h2{color:#fff}
   overflow:hidden;
   opacity:0;
   transform:translateY(100%);
-  transition:transform 0.4s cubic-bezier(0.22,1,0.36,1),opacity 0.25s var(--ease-out);
+  transition:transform 0.4s var(--ease-out-strong),opacity 0.25s var(--ease-out);
   pointer-events:none;
   -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,0.4) 2.5%,rgba(0,0,0,0.75) 5%,#000 7%,#000 93%,rgba(0,0,0,0.75) 95%,rgba(0,0,0,0.4) 97.5%,transparent 100%);
           mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,0.4) 2.5%,rgba(0,0,0,0.75) 5%,#000 7%,#000 93%,rgba(0,0,0,0.75) 95%,rgba(0,0,0,0.4) 97.5%,transparent 100%);
@@ -980,6 +951,8 @@ section.dark h1,section.dark h2{color:#fff}
   padding-left:clamp(1rem,2vw,1.5rem);
   will-change:transform;
 }
+/* Desktop: the strip + marquee reveal only on hover (mobile/tablet ≤1024 shows it
+   inline always — see the @media block below). */
 .aud-row:hover .ar-stream .stream-track{
   animation-play-state:running;
   animation-delay:0.5s;
@@ -1006,7 +979,7 @@ section.dark h1,section.dark h2{color:#fff}
   opacity:0;
   filter:blur(6px);
   transform:translateY(6px);
-  transition:opacity 0.35s var(--ease-out),filter 0.4s var(--ease-out),transform 0.45s cubic-bezier(0.22,1,0.36,1);
+  transition:opacity 0.35s var(--ease-out),filter 0.4s var(--ease-out),transform 0.45s var(--ease-out-strong);
 }
 .aud-row .ar-stream .stream-track > span::after{
   content:'·';
@@ -1054,7 +1027,7 @@ section.dark h1,section.dark h2{color:#fff}
 }
 
 /* Mobile — stack, show thoughts inline below data (no animation) */
-@media (max-width:900px){
+@media (max-width:1024px){
   .aud-row{
     grid-template-columns:1fr;
     grid-template-rows:auto auto auto auto auto;
@@ -1066,7 +1039,8 @@ section.dark h1,section.dark h2{color:#fff}
   .aud-row .ar-title{grid-column:1;grid-row:2;font-size:clamp(1.375rem,5vw,1.75rem)}
   .aud-row .ar-tag{grid-column:1;grid-row:3;text-align:left;max-width:none;justify-self:start;font-size:0.9375rem;padding-top:0.25rem;align-self:start}
   .aud-row .ar-data{grid-column:1;grid-row:4;font-size:0.6875rem;white-space:normal;text-overflow:initial}
-  /* Stream becomes static inline text block under data */
+  /* Stream becomes static inline text block under data — always visible on
+     tablet/mobile (≤1024); desktop keeps the hover-reveal (base opacity:0). */
   .aud-row .ar-stream{
     display:block;
     grid-column:1;
@@ -1074,6 +1048,7 @@ section.dark h1,section.dark h2{color:#fff}
     position:static;
     height:auto;
     background-color:transparent;
+    opacity:1;
     transform:none;
     padding:0.85rem 0 0;
     overflow:visible;
@@ -1132,7 +1107,7 @@ section.dark h1,section.dark h2{color:#fff}
   .brand-steps > .bstep:nth-child(2n+1){grid-column:1 / 7}
   .brand-steps > .bstep:nth-child(2n){grid-column:7 / -1}
 }
-@media (max-width:900px){
+@media (max-width:1024px){
   /* ─── Simplified intermediate layout (tablet portrait, narrow tablet) ─── */
   /* All multi-column section grids → single column, all children full-width */
   
@@ -1181,7 +1156,7 @@ section.dark h1,section.dark h2{color:#fff}
   /* Team rows full width */
   .team-manifesto .tm-row{grid-template-columns:1fr !important;row-gap:0.75rem !important}
   .team-manifesto .tm-row .tm-tag{grid-column:1 / -1 !important}
-  .team-manifesto .tm-row .tm-text{grid-column:1 / -1 !important}
+  .team-manifesto .tm-row .tm-cell{grid-column:1 / -1 !important}
   
   /* Team blocks (4) — single column handled by the main rules below at 1024px */
   
@@ -1262,6 +1237,9 @@ section.dark h1,section.dark h2{color:#fff}
 .bmp-split .side .pct em{font-style:italic;color:var(--accent);font-weight:300}
 .bmp-split .side .label{font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.12em;text-transform:uppercase;color:var(--mute);margin-top:0.85rem;line-height:1.6;max-width:30ch;font-weight:500}
 .bmp-split .vs{font-family:var(--serif);font-style:italic;color:var(--mute-2);font-size:2.5rem;font-weight:300;line-height:1}
+/* Right-hand side alignment (replaces former inline text-align:right / margin-left:auto) */
+.bmp-split .side:nth-child(3){text-align:right}
+.bmp-split .side:nth-child(3) .label{margin-left:auto}
 
 /* ─── SCROLL-DRIVEN BMP — numbers grow as section enters (moved from #evaluation → #evaluation) ─── */
 #evaluation{--bp:0}
@@ -1300,7 +1278,7 @@ section{--tp:0}
   max-width:46ch;
   text-wrap:balance;
 }
-@media (max-width:900px){
+@media (max-width:1024px){
   .ev-bmp-foot{grid-column:1 / -1; font-size:clamp(1.125rem,4vw,1.5rem)}
 }
 .bmp-dotgrid .d{aspect-ratio:1;border-radius:50%;background:var(--mute-2);opacity:0.35;transition:opacity 0.4s var(--ease-out),transform 0.4s var(--ease-out)}
@@ -1308,14 +1286,14 @@ section{--tp:0}
 .bmp-dotgrid:hover .d{opacity:0.25}
 .bmp-dotgrid:hover .d.accent{opacity:1;transform:scale(1.05)}
 .levels{border-top:1px solid var(--hair)}
-.level{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);padding:clamp(0.95rem,1.5vw,1.25rem) 0;border-bottom:1px solid var(--hair);align-items:center;position:relative;transition:padding-left 0.5s cubic-bezier(0.22,1,0.36,1),border-color 0.5s var(--ease-out);cursor:default;overflow:hidden;isolation:isolate}
+.level{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);padding:clamp(0.95rem,1.5vw,1.25rem) 0;border-bottom:1px solid var(--hair);align-items:center;position:relative;transition:padding-left 0.5s var(--ease-out-strong),border-color 0.5s var(--ease-out);cursor:default;overflow:hidden;isolation:isolate}
 .level:hover{padding-left:clamp(0.75rem,1.5vw,1.25rem);border-bottom-color:var(--accent)}
 .level .ln{grid-column:1 / 2;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.12em;text-transform:uppercase;color:var(--mute);font-weight:500;transition:color 0.35s var(--ease-out),transform 0.5s var(--ease-out),opacity 0.5s var(--ease-out);position:relative;z-index: var(--z-base);transform-origin:left center}
 .level:hover .ln{color:var(--accent);transform:scale(0.88);opacity:0.55}
-.level .ltitle{grid-column:4 / 6;font-family:var(--serif);font-weight:400;font-size:clamp(1.25rem,1.6vw,1.5rem);letter-spacing:-0.022em;line-height:1;color:var(--ink);transition:transform 0.7s cubic-bezier(0.22,1,0.36,1),color 0.45s var(--ease-out),letter-spacing 0.7s cubic-bezier(0.22,1,0.36,1);display:inline-block;transform-origin:left 30%;white-space:nowrap;pointer-events:none;position:relative;z-index: var(--z-behind)}
+.level .ltitle{grid-column:4 / 6;font-family:var(--serif);font-weight:400;font-size:clamp(1.25rem,1.6vw,1.5rem);letter-spacing:-0.022em;line-height:1;color:var(--ink);transition:transform 0.7s var(--ease-out-strong),color 0.45s var(--ease-out),letter-spacing 0.7s var(--ease-out-strong);display:inline-block;transform-origin:left 30%;white-space:nowrap;pointer-events:none;position:relative;z-index: var(--z-behind)}
 .level:hover .ltitle{color:var(--accent);transform:scale(2.6);letter-spacing:0.01em}
 .level .ltitle em{font-style:italic;color:var(--accent);font-weight:400;display:block;margin-bottom:0.25rem}
-.level .ldesc{grid-column:7 / 11;color:var(--ink-2);max-width:34ch;line-height:1.45;font-size:0.9375rem;padding-top:0.25rem;transition:color 0.35s var(--ease-out),transform 0.7s cubic-bezier(0.22,1,0.36,1),opacity 0.55s var(--ease-out);transform-origin:left center}
+.level .ldesc{grid-column:7 / 11;color:var(--ink-2);max-width:34ch;line-height:1.45;font-size:0.9375rem;padding-top:0.25rem;transition:color 0.35s var(--ease-out),transform 0.7s var(--ease-out-strong),opacity 0.55s var(--ease-out);transform-origin:left center}
 .level:hover .ldesc{color:var(--accent);transform:translateX(clamp(1.25rem,2.5vw,2.5rem)) scale(0.96);opacity:0.85}
 @media (max-width:1024px){
   .level{grid-template-columns:1fr auto;gap:0.4rem 1.5rem;padding:1.25rem 0}
@@ -1325,7 +1303,7 @@ section{--tp:0}
   .level .lq{grid-column:1 / -1;grid-row:3;text-align:left;padding-top:0.35rem}
 }
 .level .lq{grid-column:11 / -1;font-family:var(--mono);font-size:var(--t-tag);letter-spacing:0.1em;text-transform:uppercase;color:var(--mute);text-align:right;padding-top:0.3rem;padding-right:0.15rem;font-weight:500;transition:color 0.5s var(--ease-out),font-size 0.7s var(--ease-out),font-style 0.5s var(--ease-out),letter-spacing 0.7s var(--ease-out),font-family 0.5s var(--ease-out);display:inline-block;justify-self:end;position:relative}
-.level .lq::before{content:'•';display:inline-block;margin-right:0.55em;opacity:0;transform:translateX(8px);transition:opacity 0.55s var(--ease-out) 0.25s,transform 0.7s cubic-bezier(0.22,1,0.36,1) 0.25s,color 0.4s var(--ease-out);color:var(--accent);font-family:var(--serif);font-style:normal;font-weight:400;font-size:1.4em;line-height:0.5;vertical-align:middle}
+.level .lq::before{content:'•';display:inline-block;margin-right:0.55em;opacity:0;transform:translateX(8px);transition:opacity 0.55s var(--ease-out) 0.25s,transform 0.7s var(--ease-out-strong) 0.25s,color 0.4s var(--ease-out);color:var(--accent);font-family:var(--serif);font-style:normal;font-weight:400;font-size:1.4em;line-height:0.5;vertical-align:middle}
 .level:hover .lq{color:var(--accent);font-family:var(--serif);font-style:italic;font-weight:300;text-transform:none;letter-spacing:-0.01em;font-size:clamp(1.125rem,1.4vw,1.375rem)}
 .level:hover .lq::before{opacity:1;transform:translateX(0)}
 /* Team manifesto — 2-column layout: title left, content stack right; unified .tm-text style for all 3 rows */
@@ -1334,6 +1312,7 @@ section{--tp:0}
   grid-template-columns:repeat(12,1fr);
   column-gap:var(--col-gap);
   width:100%;
+  position:relative;
 }
 .team-manifesto .tm-head{
   grid-column:1 / 6;
@@ -1377,6 +1356,13 @@ section{--tp:0}
   font-weight:500;
   white-space:nowrap;
 }
+/* Cell is the grid item; the text inside is inline so the hover highlight can
+   hug each line (box-decoration-break) instead of being a full-width rectangle. */
+.team-manifesto .tm-cell{
+  /* In rem, not ch — the cell's font-size (smaller, inherited) made 32ch resolve to
+     ~half the intended measure and over-wrapped the text. 36rem ≈ the original width. */
+  max-width:36rem;
+}
 .team-manifesto .tm-text{
   font-family:var(--serif);
   font-weight:400;
@@ -1385,14 +1371,26 @@ section{--tp:0}
   line-height:1.25;
   color:#fff;
   margin:0;
-  max-width:32ch;
   letter-spacing:-0.022em;
   text-wrap:balance;
+  display:inline;
+  /* Static padding (no hover layout shift) — gives the marker fill some breathing room. */
+  padding:0.06em 0.18em;
+  -webkit-box-decoration-break:clone;
+  box-decoration-break:clone;
+  background:transparent;
+  transition:background 0.35s var(--ease-out),color 0.35s var(--ease-out);
 }
-.team-manifesto .tm-text em{color:var(--accent);font-style:italic;font-weight:400}
-@media (max-width:900px){
+.team-manifesto .tm-text em{color:var(--accent);font-style:italic;font-weight:400;transition:color 0.35s var(--ease-out)}
+/* Hover marker — orange fill hugging the text, dark ink for contrast (desktop only). */
+@media (hover:hover) and (pointer:fine){
+  .team-manifesto .tm-text{cursor:default}
+  .team-manifesto .tm-text:hover{background:var(--accent);color:var(--accent-ink)}
+  .team-manifesto .tm-text:hover em{color:var(--accent-ink)}
+}
+@media (max-width:1024px){
   .team-manifesto{grid-template-columns:1fr}
-  .team-manifesto .tm-head{grid-column:1;position:static;margin-bottom:1.75rem}
+  .team-manifesto .tm-head{grid-column:1;position:static;margin-bottom:1.75rem;padding-right:clamp(96px,16vw,128px)}
   .team-manifesto .tm-stack{grid-column:1}
   .team-manifesto .tm-row{grid-template-columns:1fr;row-gap:0.75rem}
   .team-manifesto .tm-tag{padding-top:0;margin-bottom:0.25rem}
@@ -1525,11 +1523,11 @@ section{--tp:0}
   max-width:46ch;
   text-wrap:balance;
 }
-@media (max-width:900px){
+@media (max-width:1024px){
   .ds-quote{font-size:clamp(1.125rem,4vw,1.5rem);max-width:none}
 }
 
-@media (max-width:900px){
+@media (max-width:1024px){
   .craft-stack{flex-direction:column;height:auto;gap:0}
   .craft-card{flex:1 !important;padding:clamp(1.5rem,5vw,2rem) 0 !important;min-height:auto;border-left:none;border-top:1px solid var(--hair);background:transparent !important}
   .craft-card:first-child{border-top:none}
@@ -1548,6 +1546,54 @@ section{--tp:0}
 /* Mark square at bottom-left of team-system section */
 .ts-mark{position:absolute;left:var(--gutter);bottom:clamp(13rem,22vh,18rem);width:clamp(0.625rem,0.9vw,0.875rem);aspect-ratio:1;background:var(--accent);z-index: var(--z-header)}
 section.dark > .ts-mark{position:absolute}
+
+/* ─── LOOK badge — replaces the morphing shape mark: LOOK monogram + rotating circular text ─── */
+.ts-mark.look-badge{
+  /* Anchored to the content block (.team-manifesto): bottom flush with the last row's
+     hairline, left flush with the content's left edge. */
+  left:0;
+  bottom:0;
+  width:clamp(92px,9vw,120px);
+  background:none;
+  display:grid;
+  place-items:center;
+  color:var(--accent);
+}
+/* RU / EN circular text — toggled by the document language (same pattern as the mentor cloud). */
+.look-badge__ring .lb-en{display:none}
+html[lang="en"] .look-badge__ring .lb-ru{display:none}
+html[lang="en"] .look-badge__ring .lb-en{display:inline}
+.look-badge__ring{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  transform-origin:center;
+  animation:look-spin 7s linear infinite;
+}
+.look-badge__ring text{
+  font-family:var(--mono);
+  font-size:12.6px;
+  letter-spacing:0.02em;
+  text-transform:uppercase;
+  font-weight:500;
+  fill:var(--accent);
+}
+.look-badge__logo{
+  position:relative;
+  width:34%;
+  height:auto;
+  display:block;
+}
+@keyframes look-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.look-badge__ring{animation:none}}
+/* Tablet/stacked layout (≤900): the manifesto is single-column, so the badge can no
+   longer sit bottom-left (it overlapped the last row's text). Move it to the top-right
+   corner next to the title — placed after the base rule so it wins the cascade. */
+@media (max-width:1024px){
+  .ts-mark.look-badge{top:0;right:0;left:auto;bottom:auto;width:clamp(84px,15vw,108px)}
+}
+@media (max-width:720px){.ts-mark.look-badge{display:none!important}}
 .co-list{border-top:1px solid var(--hair)}
 .co{display:grid;grid-template-columns:110px 1.4fr 2.5fr auto;gap:clamp(1rem,3vw,2.5rem);padding:clamp(1.85rem,3vw,2.5rem) 0;border-bottom:1px solid var(--hair);align-items:start;position:relative;transition:padding-left 0.45s var(--ease-out),border-bottom-color 0.4s var(--ease-out);cursor:default}
 .co:hover{padding-left:0.5rem;border-bottom-color:var(--accent)}
@@ -1589,12 +1635,12 @@ section.dark > .ts-mark{position:absolute}
 .cta-mega-item:hover .cta-mega-name{transform:translateX(4px);color:var(--accent-ink)}
 .cta-mega-handle{grid-area:handle;font-family:var(--mono);font-size:0.875rem;letter-spacing:0.04em;color:var(--mute-2);margin-top:0.85rem;transition:color 0.4s var(--ease-out)}
 .cta-mega-item:hover .cta-mega-handle{color:rgba(12,13,17,0.8)}
-@media (max-width:900px){
+@media (max-width:1024px){
   .cta-mega{grid-template-columns:1fr;grid-column:1 / -1}
   .cta-mega-item{border-right:none;min-height:auto}
   .cta-mega-name{font-size:clamp(2rem,7vw,3rem);margin-top:clamp(1.5rem,3vw,2rem)}
 }
-@media (max-width:900px){
+@media (max-width:1024px){
   .cta-head,.cta-title,.cta-lead,.cta-mega{grid-column:1 / -1}
 }
 footer.foot{background:var(--bg-dark);color:var(--mute-2);padding:1.25rem var(--gutter);display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.08em;text-transform:uppercase;border-top:1px solid var(--hair-dk);gap:1rem}
@@ -1610,7 +1656,7 @@ section.dark /* position variants */
 .tip-num-block.is-active{z-index: var(--z-overlay)}
 section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,transparent);border-color:var(--hair-dk);color:#d0d3d8}
 @media (max-width:1100px){.brand-steps{grid-template-columns:repeat(2,1fr)}.partner-compare{grid-template-columns:1fr}section{min-height:clamp(60vh,75vh,90vh);padding-top:clamp(7rem,11vh,10rem);padding-bottom:clamp(4.5rem,8vh,7rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(8rem,14vh,12rem)}section.dark+section:not(.dark){padding-top:clamp(8rem,14vh,12rem)}}
-@media (max-width:720px){section{min-height:auto;padding-top:clamp(5.5rem,9vh,8rem);padding-bottom:clamp(3.5rem,7vh,6rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(6rem,11vh,9rem)}section.dark+section:not(.dark){padding-top:clamp(6rem,11vh,9rem)}.principle,.bstep,.ds-layer,[data-reveal],[data-reveal-num]{transform:translateY(36px);filter:blur(6px);transition-duration:1.4s,1.3s,0.9s}.stagger>[data-stagger]{transform:translateY(28px);filter:blur(5px);transition-duration:1.2s,1.15s,0.85s}.principles-grid{grid-template-columns:1fr}.brand-steps{grid-template-columns:1fr}.level{grid-template-columns:1fr auto;gap:0.5rem 1.25rem;padding:1.5rem 0}.level .ltitle{grid-column:1;grid-row:1}.level .ln{grid-column:2;grid-row:1;text-align:right;padding-top:0.65rem;align-self:start;white-space:nowrap}.level .ldesc{grid-column:1 / -1;grid-row:2;margin-top:0.5rem}.level .lq{grid-column:1 / -1;grid-row:3;text-align:left;padding-top:0.5rem}.ds-layers{grid-template-columns:1fr}.co{grid-template-columns:1fr;gap:0.85rem}.co .award{text-align:left}.hero-bottom{grid-template-columns:1fr;gap:1.5rem}.sec-head{grid-template-columns:1fr}.bmp-split{grid-template-columns:1fr}.bmp-split .vs{display:none}.bmp-dotgrid{grid-template-columns:repeat(20,1fr)}.bmp-top > *{grid-column:1 / -1}}
+@media (max-width:720px){section{min-height:auto;padding-top:clamp(5.5rem,9vh,8rem);padding-bottom:clamp(3.5rem,7vh,6rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(6rem,11vh,9rem)}section.dark+section:not(.dark){padding-top:clamp(6rem,11vh,9rem)}.principle,.bstep,.ds-layer,[data-reveal],[data-reveal-num]{transform:translateY(36px);transition-duration:1.4s,1.3s}.stagger>[data-stagger]{transform:translateY(28px);transition-duration:1.2s,1.15s}.principles-grid{grid-template-columns:1fr}.brand-steps{grid-template-columns:1fr}.level{grid-template-columns:1fr auto;gap:0.5rem 1.25rem;padding:1.5rem 0}.level .ltitle{grid-column:1;grid-row:1}.level .ln{grid-column:2;grid-row:1;text-align:right;padding-top:0.65rem;align-self:start;white-space:nowrap}.level .ldesc{grid-column:1 / -1;grid-row:2;margin-top:0.5rem}.level .lq{grid-column:1 / -1;grid-row:3;text-align:left;padding-top:0.5rem}.ds-layers{grid-template-columns:1fr}.co{grid-template-columns:1fr;gap:0.85rem}.co .award{text-align:left}.hero-bottom{grid-template-columns:1fr;gap:1.5rem}.sec-head{grid-template-columns:1fr}.bmp-split{grid-template-columns:1fr}.bmp-split .vs{display:none}.bmp-dotgrid{grid-template-columns:repeat(20,1fr)}.bmp-top > *{grid-column:1 / -1}}
 
 /* ─── WOW EFFECTS ─── */
 .scroll-progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;z-index: var(--z-overlay);pointer-events:none;transition:width 0.1s linear;opacity:0.7}
@@ -1662,29 +1708,32 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
    displaces the hero typography. It must stay absolute + z-behind. */
 #hero > canvas.hero-neuro{position:absolute !important;inset:0;width:100%;height:100%;display:block;z-index: var(--z-behind) !important;pointer-events:none;opacity:0;transition:opacity 1.4s var(--ease-out)}
 #hero > canvas.hero-neuro.is-ready{opacity:0.55}
-@media (max-width:900px),(hover:none){#hero > canvas.hero-neuro{display:none !important}}
+@media (max-width:1024px),(hover:none){#hero > canvas.hero-neuro{display:none !important}}
 @media (prefers-reduced-motion:reduce){#hero > canvas.hero-neuro{display:none !important}}
-.hero-title .word{display:inline-block;opacity:0;transform:translateY(55px);transition:opacity 1.5s var(--ease-out),transform 1.6s var(--ease-out);transition-delay:calc(var(--w-i,0) * 0.14s);filter:blur(6px)}
-.hero-title.in-view .word{opacity:1;transform:translateY(0);filter:blur(0)}
+/* Headings reveal by focus-in only (blur → sharp), no fade/rise. One-shot transition,
+   so no permanent will-change — the browser promotes a temp layer for the transition
+   and drops it after (cheaper than a persistent will-change layer per heading). */
+.hero-title .word{display:inline-block;filter:blur(6px);transition:filter 1s var(--ease-out);transition-delay:calc(var(--w-i,0) * 0.14s)}
+.hero-title.in-view .word{filter:blur(0)}
 .hero-title .dot{display:inline-block;color:var(--accent)}
 /* BMP dotgrid — wave-style entrance with subtle bounce */
 
 /* ─── SECTION TITLE REVEAL — letter-spacing expansion + opacity + translateY ─── */
 .sec-head h2{opacity:1}
-.sec-head h2 .h2-line{display:block;opacity:0;transform:translateY(22px);filter:blur(6px);transition:opacity 1.3s var(--ease-out),transform 1.2s cubic-bezier(0.22,1,0.36,1),filter 1s var(--ease-out);transition-delay:calc(var(--li,0) * 0.12s)}
-.sec-head h2.h2-in .h2-line{opacity:1;transform:translateY(0);filter:blur(0)}
-.intro-title .h2-line{display:block;opacity:0;transform:translateY(22px);filter:blur(6px);transition:opacity 1.3s var(--ease-out),transform 1.2s cubic-bezier(0.22,1,0.36,1),filter 1s var(--ease-out);transition-delay:calc(var(--li,0) * 0.12s)}
-.intro-title.h2-in .h2-line, .numbers-title.h2-in .h2-line{opacity:1;transform:translateY(0);filter:blur(0)}
+.sec-head h2 .h2-line{display:block;filter:blur(6px);transition:filter 1s var(--ease-out);transition-delay:calc(var(--li,0) * 0.12s)}
+.sec-head h2.h2-in .h2-line{filter:blur(0)}
+.intro-title .h2-line{display:block;filter:blur(6px);transition:filter 1s var(--ease-out);transition-delay:calc(var(--li,0) * 0.12s)}
+.intro-title.h2-in .h2-line, .numbers-title.h2-in .h2-line{filter:blur(0)}
 
 .bmp-dotgrid .d{opacity:0;transform:scale(0.2);transform-origin:center}
-.bmp-dotgrid.in-view .d{animation:dot-pop 1.55s cubic-bezier(0.22,1.2,0.36,1) forwards;animation-delay:calc(var(--d-i,0) * 0.018s + 0.1s)}
+.bmp-dotgrid.in-view .d{animation:dot-pop 0.7s cubic-bezier(0.22,1.2,0.36,1) forwards;animation-delay:calc(var(--d-i,0) * 0.03s + 0.1s)}
 @keyframes dot-pop{
   0%{opacity:0;transform:scale(0.15)}
   40%{opacity:0.45;transform:scale(1.18)}
   62%{opacity:0.4;transform:scale(0.94)}
   100%{opacity:0.35;transform:scale(1)}
 }
-.bmp-dotgrid.in-view .d.accent{animation:dot-pop-a 1.55s cubic-bezier(0.22,1.2,0.36,1) forwards;animation-delay:calc(var(--d-i,0) * 0.018s + 0.1s)}
+.bmp-dotgrid.in-view .d.accent{animation:dot-pop-a 0.7s cubic-bezier(0.22,1.2,0.36,1) forwards;animation-delay:calc(var(--d-i,0) * 0.03s + 0.1s)}
 @keyframes dot-pop-a{
   0%{opacity:0;transform:scale(0.15)}
   40%{opacity:1;transform:scale(1.25)}
@@ -1700,15 +1749,15 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
 .brand-marquee-track:hover .brand-marquee-row{animation-play-state:paused}
 .hero-bottom .value a,
 .hero-bottom .value a::after,
-.hero-bottom .value a:hover::after,
-.cta-title .word{display:inline-block;opacity:0;transform:translateY(65px);transition:opacity 1.3s var(--ease-out),transform 1.45s var(--ease-out);transition-delay:calc(var(--w-i,0) * 0.1s);filter:blur(7px)}
-.cta-title.in-view .word{opacity:1;transform:translateY(0);filter:blur(0)}
+.hero-bottom .value a:hover::after{display:inline-block;opacity:0;transform:translateY(65px);transition:opacity 1.3s var(--ease-out),transform 1.45s var(--ease-out);transition-delay:calc(var(--w-i,0) * 0.1s)}
+.cta-title .word{display:inline-block;filter:blur(6px);transition:filter 1s var(--ease-out);transition-delay:calc(var(--w-i,0) * 0.1s)}
+.cta-title.in-view .word{filter:blur(0)}
 .stat-counter{display:inline-block;font-variant-numeric:tabular-nums}
 .hero .container{}
 .hero-title{transition:filter 0.6s var(--ease-out)}
-.h2-line{display:inline-block;opacity:0;transform:translateY(40px);filter:blur(6px);transition:opacity 1s var(--ease-out),transform 1.1s var(--ease-out),filter 0.9s var(--ease-out);transition-delay:calc(var(--li,0) * 0.12s + 0.05s)}
-.h2-in .h2-line{opacity:1;transform:translateY(0);filter:blur(0)}
-@media (prefers-reduced-motion:reduce){.scroll-progress{display:none}.brand-marquee-row{animation:none}.hero-title .word,.cta-title .word{opacity:1;transform:none}.hero-title .dot{animation:none}.sec-head.in-view.bmp-dotgrid.in-view .d{animation:none;opacity:0.35}.bmp-dotgrid.in-view .d.accent{opacity:1}.has-tip::after,.tip-num-block::after,.ft-top .arr{transition:none!important}.bicon-spark-core,.bicon-spark-sat,.bicon-compass,.bicon-pos-dot,.bicon-eq,.bicon-aa-letter,.bicon-sys-ray,.bicon-ripple{animation:none}.h2-line{opacity:1;transform:none}.sec-aside{opacity:1;transform:none}.principle,.ds-layer,.bstep{animation:none}}
+.h2-line{display:inline-block;filter:blur(6px);transition:filter 0.9s var(--ease-out);transition-delay:calc(var(--li,0) * 0.12s + 0.05s)}
+.h2-in .h2-line{filter:blur(0)}
+@media (prefers-reduced-motion:reduce){.scroll-progress{display:none}.brand-marquee-row{animation:none}.hero-title .word,.cta-title .word,.h2-line,.sec-head h2 .h2-line,.intro-title .h2-line{filter:none!important}.hero-title .dot{animation:none}.sec-head.in-view.bmp-dotgrid.in-view .d{animation:none;opacity:0.35}.bmp-dotgrid.in-view .d.accent{opacity:1}.has-tip::after,.tip-num-block::after,.ft-top .arr{transition:none!important}.bicon-spark-core,.bicon-spark-sat,.bicon-compass,.bicon-pos-dot,.bicon-eq,.bicon-aa-letter,.bicon-sys-ray,.bicon-ripple{animation:none}.h2-line{opacity:1;transform:none}.sec-aside{opacity:1;transform:none}.principle,.ds-layer,.bstep{animation:none}}
 @media (max-width:720px){.brand-marquee-row{animation-duration:35s}}
 
 /* ─── LANGUAGE SWITCHER ─── */
@@ -1727,7 +1776,7 @@ nav.top.on-dark .nav-center{color:var(--mute-2)}
 .nav-center .nav-sep{opacity:0.5}
 .nav-center a.is-active{color:var(--accent)}
 nav.top.on-dark .nav-center a.is-active{color:var(--accent)}
-@media (max-width:720px){
+@media (max-width:1024px){
   .nav-center{display:none}
 }
 .lang-switch{display:inline-flex;align-items:center;gap:0.55rem;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.1em;text-transform:uppercase;font-weight:500;line-height:1;user-select:none}
@@ -1783,7 +1832,7 @@ section.dark .sec-aside--right{color:var(--mute-2)}
   .sec-aside--left{
     cursor:default;
     transition:opacity 1.2s var(--ease-out),
-               transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+               transform 0.55s var(--ease-out-strong),
                color 0.4s var(--ease-out);
 }
   .sec-aside--left.kicker-in:hover{
@@ -1808,7 +1857,7 @@ section.dark .sec-head--new .sec-title{color:#fff}
 .sec-head--new .sec-title em{font-style:italic;font-weight:400;color:var(--accent)}
 .sec-head--new .sec-sub{margin-top:clamp(1.25rem,2vw,1.75rem);font-family:var(--serif);font-weight:400;font-style:normal;font-size:clamp(1.125rem,1.6vw,1.375rem);line-height:1.4;color:var(--mute);max-width:56ch;letter-spacing:-0.018em}
 section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
-@media (max-width:900px){
+@media (max-width:1024px){
   /* Section as column on mobile so sec-asides-bar sits above content */
   section{flex-direction:column;align-items:stretch}
   .hero{flex-direction:row}
@@ -1820,7 +1869,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   .sec-head--new .sec-title-wrap{grid-column:1 / -1}
 }
 /* === MOBILE-STACK — все списки в одну колонку, друг под другом === */
-@media (max-width:900px){
+@media (max-width:1024px){
   /* Pain list */
   .pain-list li{grid-template-columns:1fr;row-gap:0.4rem;padding:1.25rem 0}
   .pain-list .pn{grid-column:1;font-size:1rem}
@@ -1879,7 +1928,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 }
 
 /* —— TABLET (≤900px) —— */
-@media (max-width:900px){
+@media (max-width:1024px){
   /* Section asides on mobile — show whispers above section title, hide right index */
   .sec-asides-bar{position:static !important;display:block !important;margin-bottom:1.25rem;height:auto !important}
   .sec-aside--right{display:none !important}
@@ -2030,13 +2079,13 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 }
 
 /* —— SAFETY: prevent horizontal scroll on any device —— */
-@media (max-width:900px){
+@media (max-width:1024px){
   html, body{overflow-x:hidden}
   .container, section, .hero, footer.foot{max-width:100vw}
 }
 
 /* —— REDUCED MOTION & SLOW DEVICES — disable expensive effects —— */
-@media (max-width:900px){
+@media (max-width:1024px){
   /* Hero scroll-driven exit completely off */
   .hero{--hp:0 !important}
   /* BMP scaling off */
@@ -2167,7 +2216,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   transform-origin:left bottom;
   /* Scale from 0.85 (off-center) → 1.18 (centered) — extra emphasis at center */
   transform:scale(calc(0.85 + var(--p-prox, 1) * 0.33));
-  transition:transform 0.5s cubic-bezier(0.22,1,0.36,1);
+  transition:transform 0.5s var(--ease-out-strong);
 }
 .rs-card__body{
   display:flex;
@@ -2177,7 +2226,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   transform-origin:left center;
   /* Subtle: body slides slightly forward as panel approaches center */
   transform:translateY(calc((1 - var(--p-prox, 1)) * 0.5rem));
-  transition:transform 0.5s cubic-bezier(0.22,1,0.36,1);
+  transition:transform 0.5s var(--ease-out-strong);
 }
 .rs-card__label{
   font-family:var(--mono);
@@ -2230,7 +2279,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   height:1px;
   background:var(--mute-2);
   opacity:0.45;
-  transition:width 0.55s cubic-bezier(0.22,1,0.36,1),background-color 0.4s var(--ease-out),opacity 0.4s var(--ease-out);
+  transition:width 0.55s var(--ease-out-strong),background-color 0.4s var(--ease-out),opacity 0.4s var(--ease-out);
   pointer-events:none;
 }
 .rs-step.is-past{
@@ -2243,7 +2292,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   opacity:1;
 }
 
-@media (max-width:900px){
+@media (max-width:1024px){
   .rs-pin-outer{height:auto}
   .rs-pin-wrap{position:static;height:auto;overflow:visible;display:block;padding:clamp(5.5rem,9vh,8rem) 0 clamp(3.5rem,7vh,6rem)}
   .rs-asides{margin-bottom:1.5rem;flex-direction:column;gap:0.75rem}
@@ -2345,7 +2394,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 }
 .hero-title--corner{
   position:absolute;
-  bottom:clamp(8rem,15vh,11rem);
+  bottom:clamp(12rem,21vh,15rem);
   right:6px;
   margin:0;
   font-family:var(--serif);
@@ -2478,7 +2527,8 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   margin-top:0;
   padding:1.75rem clamp(1rem,2.5vw,2.5rem) clamp(1.5rem,3vw,2.5rem);
   width:100%;
-  border-top:1px solid var(--hair-dk);
+  /* Semi-transparent hairline — lets the neuro graphic show through instead of cutting across it */
+  border-top:1px solid color-mix(in srgb,var(--hair-dk) 45%,transparent);
   display:grid;
   grid-template-columns:repeat(12,1fr);
   column-gap:var(--col-gap);
@@ -2491,7 +2541,7 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   text-align:left;
 }
 
-@media (max-width:900px){
+@media (max-width:1024px){
   .hero-static{font-size:clamp(3rem,13vw,5rem);top:clamp(3.5rem,8vh,5rem);max-width:90%}
   .hero-title--corner{font-size:clamp(3rem,13vw,5rem);bottom:clamp(9rem,18vh,12rem)}
 }
@@ -2796,7 +2846,7 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   .hero-bottom{
     margin-top: auto !important;
     padding-top: 1.5rem !important;
-    padding-bottom: 0 !important;
+    padding-bottom: 1.5rem !important;
   }
 
   /* ── B. CTA — eyebrow left, author right (NOT stacked column) ── */
@@ -3094,6 +3144,8 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
     position: static !important;
     inset: auto !important;
     left: auto !important; right: auto !important;
+    padding-left: var(--gutter) !important;
+    padding-right: var(--gutter) !important;
     margin-bottom: 0.5cm !important;
   }
   #mentor .sec-aside--left,
@@ -3245,4 +3297,21 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
     filter: none !important;
     visibility: visible !important;
   }
+}
+
+/* ═══════════════ Absorbed from index.html's former inline <style> ═══════════════
+   The inline block sat at the end of <body>, i.e. after this stylesheet in the
+   cascade — so it's kept at the very end of this file to preserve that order.
+   The shared burger/dropdown rules it also contained now live in core.css. */
+/* anti-flicker: keep the hero title morph / scatter / curtain on stable GPU layers
+   (kills the repaint flicker at the hero → intro transition; no visual change) */
+.hero-title,.hero-title em,.hero-curtain,.hero-static{-webkit-backface-visibility:hidden;backface-visibility:hidden;will-change:transform,opacity;transform:translateZ(0)}
+@media (max-width:720px){
+  footer.foot > *:last-child{display:none}
+  /* mobile: hide the decorative orange shape-cycle marks (misplaced on small screens) */
+  .shape-cycle{display:none!important}
+  /* mobile: more air between the headline and the rule under the main screen */
+  #intro .intro-rule{margin-top:clamp(1.6rem,6vw,2.4rem)}
+  /* mobile: speed up the brand marquee so motion is clearly visible (80s reads as static) */
+  .brand-marquee-row{animation-duration:32s!important}
 }
