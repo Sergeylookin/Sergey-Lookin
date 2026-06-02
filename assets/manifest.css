@@ -377,11 +377,9 @@ section.dark h1,section.dark h2{color:#fff}
   left: calc(50vw - var(--nav-safe-right) / 2);
   max-width: min(28rem, calc(100vw - 2rem));
   padding: 0.875rem 1.25rem;
-  background: rgba(255,255,255,0.045);
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 0.5rem;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: #070707;
+  border: 1px solid var(--hair);
+  border-radius: 0;
   font-family: var(--serif);
   font-size: clamp(0.95rem, 1.05vw, 1.0625rem);
   line-height: 1.45;
