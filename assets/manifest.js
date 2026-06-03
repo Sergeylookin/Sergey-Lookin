@@ -51,7 +51,12 @@ function enhancePainList(){
     li.dataset.magBound = '';
     const pt = li.querySelector('.pt');
     if(!pt) return;
-    const text = pt.textContent;
+    /* Cache pristine text once. Re-runs (resize across 720px, language switch)
+       must NOT read it back from the DOM: the desktop char-wrap turns every
+       space into a non-breaking &nbsp; (is-space spans), and reading that back
+       gave an all-&nbsp; string that could never wrap on mobile → overflow. */
+    let text = pt.getAttribute('data-pt-raw');
+    if(text === null){ text = pt.textContent; pt.setAttribute('data-pt-raw', text); }
     if(isMobile){
       pt.textContent = text;
       pt.setAttribute('aria-label', text);
@@ -192,7 +197,10 @@ function applyLang(lang){
     }
   });
 
-  /* pain-list — re-enhance after language switch (text was replaced) */
+  /* pain-list — re-enhance after language switch (text was replaced).
+     Drop the cached pristine text first so it re-captures the NEW language
+     (otherwise the cache would replay the previous language's text). */
+  document.querySelectorAll('.pain-list .pt[data-pt-raw]').forEach(function(pt){ pt.removeAttribute('data-pt-raw'); });
   enhancePainList();
 
   /* Re-observe reveal elements that may have lost state during innerHTML replacement.

@@ -2637,46 +2637,56 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
              more compact, less scrolling.
         Override the grid completely; <span> grid items had quirks
         that caused pnote to shrink to longest-word width. ── */
+  /* Two-column layout on mobile: number spans the top row, then
+     symptom (left) + note (right) — compact, mirrors the desktop intent. */
   .pain-list li{
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    grid-template-columns: none !important;
-    gap: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0,1.5fr) minmax(0,1fr) !important;
+    gap: 0.5rem clamp(0.9rem,3.2vw,1.5rem) !important;
+    align-items: start !important;
     padding: 1.5rem 0 !important;
     width: 100%;
   }
   .pain-list .pn{
     display: block;
     width: 100%;
-    grid-column: auto !important;
-    grid-row: auto !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 1 !important;
     font-family: var(--serif);
     font-style: italic;
     font-weight: 300;
     color: var(--accent);
     font-size: 1rem;
     line-height: 1;
-    margin-bottom: 0.85rem;
+    margin: 0 0 0.15rem;
   }
     .pain-list .pt{
     display: block !important;
     width: 100% !important;
     max-width: none !important;
-    grid-column: auto !important;
-    grid-row: auto !important;
+    grid-column: 1 !important;
+    grid-row: 2 !important;
     justify-self: stretch !important;
     font-family: var(--serif);
     font-weight: 400;
-    font-size: clamp(1.15rem, 4.6vw, 1.4rem);
+    font-size: clamp(1.05rem, 4.2vw, 1.35rem);
     line-height: 1.22;
     letter-spacing: -0.02em;
     text-wrap: pretty;
     margin: 0;
   }
-      .pain-list .pnote,
-    /* aud .anote sits in column 2 with the rest */
-    /* JS removes <br>s; the legacy CSS hide rule no longer matters */
+  /* pnote sits in the SECOND column, beside the symptom (JS strips its <br>s).
+     The scroll-active reveal only tweaks color/transform, so it must not be display:none. */
+  .pain-list .pnote{
+    display:block;
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    align-self: start;
+    margin: 0.3rem 0 0;
+    max-width:none;
+    text-align:left;
+    justify-self:start;
+  }
   .pain-list .pnote br br{display:none}
   /* preserve magnetic-char styling neutrality on mobile (chars become words) */
   .pain-list .pt .word{
