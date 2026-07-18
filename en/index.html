@@ -1,0 +1,786 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0C0D11" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F2F2" media="(prefers-color-scheme: light)">
+<title>Sergey Lukin — Head of Design</title>
+<link rel="alternate" hreflang="ru" href="https://sergeylookin.github.io/Sergey-Lookin/"><link rel="alternate" hreflang="en" href="https://sergeylookin.github.io/Sergey-Lookin/en/"><link rel="alternate" hreflang="x-default" href="https://sergeylookin.github.io/Sergey-Lookin/"><link rel="icon" href="../assets/favicon-dark.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/favicon-light.svg" type="image/svg+xml" media="(prefers-color-scheme: light)">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="description" content="Sergey Lukin — Head of Design and Art Director. Design across brand, marketing, web and product: a manifesto, portfolio and selected case studies.">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="en_US">
+<!-- ─── OpenGraph / Twitter Card / Schema — relative paths (host-agnostic; works under any domain or sub-path) ─── -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sergeylookin.github.io/Sergey-Lookin/en/">
+<link rel="canonical" href="https://sergeylookin.github.io/Sergey-Lookin/en/">
+<meta property="og:site_name" content="Сергей Лукин — Head of Design">
+<meta property="og:title" content="Sergey Lukin — Head of Design">
+<meta property="og:description" content="Sergey Lukin — Head of Design and Art Director. Design across brand, marketing, web and product: a manifesto, portfolio and selected case studies.">
+<meta property="og:image" content="https://sergeylookin.github.io/Sergey-Lookin/assets/og/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Сергей Лукин — Head of Design / Art Director">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sergey Lukin — Head of Design">
+<meta name="twitter:description" content="Sergey Lukin — Head of Design and Art Director. Design across brand, marketing, web and product: a manifesto, portfolio and selected case studies.">
+<meta name="twitter:image" content="https://sergeylookin.github.io/Sergey-Lookin/assets/og/og-cover.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Сергей Лукин",
+  "alternateName": "Sergey Lukin",
+  "jobTitle": "Head of Design",
+  "url": "https://sergeylookin.github.io/Sergey-Lookin/",
+  "image": "https://sergeylookin.github.io/Sergey-Lookin/assets/img/about.webp",
+  "description": "Head of Design / Art Director. Работа на стыке бренда, маркетинга, веба и продукта.",
+  "knowsLanguage": ["ru", "en"],
+  "sameAs": [
+    "https://t.me/Lookin_Sergey",
+    "https://www.behance.net/lookin_sergey",
+    "https://sergeylookin.framer.website/"
+  ]
+}
+</script>
+<!-- ─────────────────────────────────────────────────────────────────────────── -->
+<!-- Fonts self-hosted (@font-face in core.css) — no external Google request.
+     Preload the two above-the-fold Cyrillic faces (RU default) to avoid a swap flash. -->
+<link rel="preload" href="../assets/fonts/inter-tight-normal-300_700-cyrillic.woff2" as="font" type="font/woff2" crossorigin="">
+<link rel="preload" href="../assets/fonts/inter-tight-italic-300_700-cyrillic.woff2" as="font" type="font/woff2" crossorigin="">
+<link rel="stylesheet" href="../assets/core.min.css?v=74">
+<link rel="stylesheet" href="../assets/manifest.min.css?v=74">
+</head>
+<body>
+<div class="hero-curtain" id="heroCurtain" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+<script>
+/* Entry preloader — five accent columns collapse upward (staggered) to reveal the hero.
+   First load per session only. */
+(function curtainEntry(){
+  const c = document.getElementById('heroCurtain');
+  if(!c) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ c.remove(); return; }
+  /* sessionStorage throws SecurityError when cookies are fully blocked — without the
+     try/catch the script would die BEFORE revealing the page and it would stay
+     covered forever. No storage → just skip the preloader. */
+  try{
+    if(sessionStorage.getItem('hero-curtain-seen')){ c.remove(); return; }
+    sessionStorage.setItem('hero-curtain-seen','1');
+  }catch(e){ c.remove(); return; }
+  /* Reveal after first paint + a short hold so the columns are actually seen */
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      c.classList.add('lift');
+      /* remove once the last (most-delayed) column finishes; timeout is a safety net */
+      let done = false;
+      const fin = () => { if(done) return; done = true; c.remove(); };
+      const last = c.querySelector('i:last-child');
+      if(last) last.addEventListener('transitionend', fin, { once:true });
+      setTimeout(fin, 1600);
+    }, 220);
+  }, { once:true });
+})();
+</script>
+<script>
+/* Single scroll dispatcher — one passive listener + one rAF runs every registered
+   scroll handler once per frame. Replaces the ~7 separate scroll listeners that each
+   scheduled their own rAF (nav, side-progress, 69/31 --bp, section-title --tp,
+   giant-number parallax, DS pin/clip, intro dispersion). */
+window.__scroll=(function(){
+  var fns=[],raf=null;
+  function run(){ raf=null; for(var i=0;i<fns.length;i++){ try{ fns[i](); }catch(e){} } }
+  function schedule(){ if(raf===null) raf=requestAnimationFrame(run); }
+  window.addEventListener('scroll',schedule,{passive:true});
+  return { add:function(fn){ fns.push(fn); return fn; } };
+})();
+</script>
+<div class="cursor-dot" aria-hidden="true"></div>
+<a href="#hero" class="skip-link" data-i18n="skip">Skip to content</a>
+<nav class="top" id="nav">
+<a class="brand" href="index.html" id="navHome" data-i18n="nav.brand">Sergey Lukin <b>—</b> Head of Design</a>
+<div class="nav-center">
+<a href="index.html" class="nav-contact is-active" aria-current="page" data-i18n="nav.manifesto">Manifesto</a>
+<span class="nav-sep" aria-hidden="true">·</span>
+<a href="about.html" class="nav-contact" data-i18n="nav.about">About</a>
+<span class="nav-sep" aria-hidden="true">·</span>
+<a href="portfolio.html" class="nav-contact" data-i18n="nav.pf">Portfolio</a>
+</div>
+<div class="nav-right">
+<div class="lang-switch" id="langSwitch" role="group" aria-label="Язык" data-aria-ru="Язык" data-aria-en="Language">
+<button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
+<span class="sep" aria-hidden="true">·</span>
+<button type="button" data-lang="en" aria-pressed="false">EN</button>
+</div>
+<div class="meta" data-i18n="nav.meta">Manifesto · 2026</div>
+</div>
+</nav>
+<main id="main">
+<section class="hero dark" id="hero">
+<canvas class="hero-neuro" aria-hidden="true"></canvas>
+<div class="container">
+<div class="hero-static" data-i18n="hero.title.static">How I&nbsp;build</div>
+<h1 class="hero-title hero-title--corner" aria-label="Как я строю дизайн.">
+  <em>дизайн.</em>
+</h1>
+<p class="hero-sub hero-sub--hidden" data-i18n="hero.center">A philosophy built over years of work, observation and rethinking what design should&nbsp;be.</p>
+<div class="hero-bottom" data-reveal="">
+<span class="eyebrow hero-eyebrow-bottom" data-i18n="hero.issue">Issue 01 · 2026</span>
+<div class="hero-bottom-items">
+<div class="item"><div class="label" data-i18n="hero.author.l">Author</div><div class="value" data-i18n="hero.author.v">Sergey Lukin<br>Head of Design / Art Director</div></div>
+<div class="item"><div class="label" data-i18n="hero.today.l">Recognition</div><div class="value" data-i18n="hero.today.v">Best New Fintech APAC<br>Tagline Awards</div></div>
+<div class="item"><div class="label" data-i18n="hero.focus.l">Focus</div><div class="value" data-i18n="hero.focus.v">Brand&nbsp;· Marketing<br>Web&nbsp;· Product</div></div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="intro">
+<div class="sec-asides-bar">
+<div class="sec-aside sec-aside--left" data-i18n="whisper.intro">Design is for people.<br>Not for portfolios.</div>
+<div class="sec-aside sec-aside--right"><b>00</b> / 11 → <span data-i18n="intro.kicker">Beginning</span></div>
+</div>
+<div class="container">
+<div class="intro-spread">
+<h2 class="intro-title" data-reveal="" data-i18n="intro.title">Twelve years in design — and less and less about layouts.</h2>
+<hr class="intro-rule">
+<div class="intro-cols">
+<p class="intro-p" data-reveal="" data-i18n="intro.p1">From graphic designer&nbsp;— to <strong>Head of Design</strong>. From a federal-scale <strong>enterprise</strong> studio&nbsp;— to a fintech in Southeast Asia.</p>
+<p class="intro-p" data-reveal="" data-i18n="intro.p2">I work at the intersection of brand, marketing, web and product. I build one unified system so the company sounds coherent.</p>
+</div>
+<div class="intro-mark shape-cycle" aria-hidden="true"></div>
+<div class="intro-stamp" data-i18n="intro.stamp">12+ years · 3 countries · 3 companies</div>
+</div>
+</div>
+</section>
+
+<section id="pain">
+<div class="sec-asides-bar">
+<div class="sec-aside sec-aside--left" data-i18n="whisper.pain">“Just design it”&nbsp;—<br>the start of a weak project.</div>
+<div class="sec-aside sec-aside--right"><b>01</b> / 11 → <span data-i18n="pain.kicker">Symptoms</span></div>
+</div>
+<div class="container">
+<div class="sec-full">
+<header class="sec-head sec-head--new" data-reveal="">
+<div class="sec-title-wrap">
+<h2 class="sec-title" data-i18n="pain.title">Sound familiar?</h2>
+<p class="sec-sub" data-i18n="pain.sub">The signs that design has<br>stopped working for the business.</p>
+</div>
+</header>
+<div class="pain-list stagger" data-reveal="">
+<ol>
+<li data-stagger=""><span class="pn">01</span><p class="pt" data-i18n="pain.1">Marketing, product and engineering pull in different directions.</p><span class="pnote" data-i18n="pain.1.note">Blurs focus.<br>Slows launches.</span></li>
+<li data-stagger=""><span class="pn">02</span><p class="pt" data-i18n="pain.2">Every launch is built from scratch&nbsp;— past projects don't speed up the next.</p><span class="pnote" data-i18n="pain.2.note">Effort doesn't become speed.</span></li>
+<li data-stagger=""><span class="pn">03</span><p class="pt" data-i18n="pain.3">The team is busy, but the system gets no stronger.</p><span class="pnote" data-i18n="pain.3.note">Knowledge doesn't become a system.</span></li>
+<li data-stagger=""><span class="pn">04</span><p class="pt" data-i18n="pain.4">The brand drifts across channels. The look depends on whoever picked it up.</p><span class="pnote" data-i18n="pain.4.note">Recognition drops, trust fades.</span></li>
+<li data-stagger=""><span class="pn">05</span><p class="pt" data-i18n="pain.5">Leadership is buried in review rounds. There's less and less room for strategy.</p><span class="pnote" data-i18n="pain.5.note">Strategy keeps slipping.</span></li>
+</ol>
+</div>
+<p class="pain-quote" data-reveal="" data-i18n="pain.quote">Chaos rarely looks like chaos.<br>More often, it looks like<br>a temporary fix that quietly<br>stayed forever.</p>
+<p class="pain-foot" data-reveal="" data-i18n="pain.foot">There's no single button<br>for this. No quick mockup, either.</p>
+</div>
+</div>
+</section>
+
+<section id="partner">
+<div class="sec-asides-bar">
+<div class="sec-aside sec-aside--left" data-i18n="whisper.partner">The longest argument<br>of my career.</div>
+<div class="sec-aside sec-aside--right"><b>02</b> / 11 → <span data-i18n="partner.kicker">Approach</span></div>
+</div>
+<div class="container">
+<div class="partner">
+<header class="sec-head sec-head--new" data-reveal="">
+<div class="sec-title-wrap">
+<h2 class="sec-title" data-i18n="partner.title">A co-author, not a contractor.</h2>
+<p class="sec-sub" data-i18n="partner.sub">Design enters the task before the brief is written.<br>Otherwise it fixes symptoms, not the problem.</p>
+</div>
+</header>
+<div class="partner-compare stagger" data-reveal="">
+<div class="col service" data-stagger="">
+<span class="col-tag" data-i18n="partner.svc.tag">Service</span>
+<div class="col-title" data-i18n="partner.svc.title">Receives a brief,<br>returns a mockup</div>
+<ul>
+<li data-i18n="partner.svc.1">Gets the brief already framed</li>
+<li data-i18n="partner.svc.2">Asks how, not why</li>
+<li data-i18n="partner.svc.3">Solves whatever lands on the desk</li>
+<li data-i18n="partner.svc.4">Sits at the end of the pipeline</li>
+</ul>
+</div>
+<div class="col partner-col" data-stagger="">
+<span class="col-tag" data-i18n="partner.prt.tag">Partner</span>
+<div class="col-title" data-i18n="partner.prt.title">Shapes the decision<br>from idea to launch</div>
+<ul>
+<li data-i18n="partner.prt.1">Helps frame the brief itself</li>
+<li data-i18n="partner.prt.2">Talks directly to marketing, product, leadership</li>
+<li data-i18n="partner.prt.3">Changes the what, not just the how</li>
+<li data-i18n="partner.prt.4">Sits at the start of the pipeline</li>
+</ul>
+</div>
+</div>
+<div class="partner-final-row" data-reveal="">
+<p class="partner-final" data-i18n="partner.final">Design is a co-author<br>of the business. A voice<br>at the table where<br>decisions are made.</p>
+<div class="partner-mark shape-cycle" aria-hidden="true"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="principles">
+<div class="sec-asides-bar">
+<div class="sec-aside sec-aside--left" data-i18n="whisper.pr">What doesn't fit<br>in a portfolio.</div>
+<div class="sec-aside sec-aside--right"><b>03</b> / 11 → <span data-i18n="pr.kicker">Principles</span></div>
+</div>
+<div class="container">
+<div class="sec-full">
+<header class="sec-head sec-head--new" data-reveal="">
+<div class="sec-title-wrap">
+<h2 class="sec-title" data-i18n="pr.title">What I stand on.</h2>
+<p class="sec-sub" data-i18n="pr.sub">Four statements that hold up the rest.</p>
+</div>
+</header>
+<div class="principles-grid stagger" data-reveal="">
+<div class="principle" data-stagger="">
+<div class="pnum">01</div>
+<div class="ptitle" data-i18n="pr.1.t">Form doesn't save<br><em>a weak idea</em></div>
+<p class="pdesc" data-i18n="pr.1.d">The problem, context and answer come first. The visual language comes after — to make it precise and visible.</p>
+</div>
+<div class="principle" data-stagger="">
+<div class="pnum">02</div>
+<div class="ptitle" data-i18n="pr.2.t">A system works<br><em>without its author</em></div>
+<p class="pdesc" data-i18n="pr.2.d">Rules, components and logic should hold up under new briefs, new people and new channels.</p>
+</div>
+<div class="principle" data-stagger="">
+<div class="pnum">03</div>
+<div class="ptitle" data-i18n="pr.3.t">Beautiful and working&nbsp;—<br><em>not two requirements, but one.</em></div>
+<p class="pdesc" data-i18n="pr.3.d">Design has to earn trust, speed up decisions, lift conversion and build recognition.</p>
+</div>
+<div class="principle" data-stagger="">
+<div class="pnum">04</div>
+<div class="ptitle" data-i18n="pr.4.t">The team understands<br>not just what, but <em>why</em></div>
+<p class="pdesc" data-i18n="pr.4.d">The team has to understand the criteria, the language, the constraints — and why each decision was made.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="audience">
+<div class="sec-asides-bar">
+<div class="sec-aside sec-aside--left" data-i18n="whisper.aud">It's not pictures<br>that create the impression.<br>It's design.</div>
+<div class="sec-aside sec-aside--right"><b>04</b> / 11 → <span data-i18n="aud.kicker">Audience</span></div>
+</div>
+<div class="container">
+<div class="sec-full">
+<header class="sec-head sec-head--new" data-reveal="">
+<div class="sec-title-wrap">
+<h2 class="sec-title" data-i18n="aud.title">People, not numbers.</h2>
+<p class="sec-sub" data-i18n="aud.sub">Analytics has no mood. A person does.</p>
+</div>
+</header>
+<div class="aud-stack stagger" data-reveal="">
+<div class="aud-row" data-stagger="">
+<span class="ar-num" aria-hidden="true">01</span>
+<span class="ar-title" data-i18n="aud.1.n">First impression</span>
+<p class="ar-tag" data-i18n="aud.1.tag">Reaction comes before understanding.</p>
+<div class="ar-data" data-i18n="aud.1.data"><span class="num">0.5s</span>&nbsp;impression<span class="sep">·</span><span class="num">10s</span>&nbsp;to decide<span class="sep">·</span><span class="num">38%</span>&nbsp;leave<span class="sep">·</span><span class="num">94%</span>&nbsp;—&nbsp;design</div>
+<div class="ar-stream" aria-hidden="true">
+<div class="stream-track">
+<span data-i18n="aud.1.t1">Looks like a scam</span>
+<span data-i18n="aud.1.t2">Feels like a bank</span>
+<span data-i18n="aud.1.t3">Not clear who this is for</span>
+<span data-i18n="aud.1.t4">Feels professional</span>
+<span data-i18n="aud.1.t5">Not for me</span>
+<span data-i18n="aud.1.t6">Looks like fraud</span>
+<span data-i18n="aud.1.t7">Serious company</span>
+<span data-i18n="aud.1.t8">Want to understand</span>
+<span data-i18n="aud.1.t9">Afraid of being tricked</span>
+<span data-i18n="aud.1.t10">Trust from the first second</span>
+<span data-i18n="aud.1.t11">You can tell they invested</span>
+<span data-i18n="aud.1.t12">Strange aesthetic</span>
+<span data-i18n="aud.1.t1">Looks like a scam</span>
+<span data-i18n="aud.1.t2">Feels like a bank</span>
+<span data-i18n="aud.1.t3">Not clear who this is for</span>
+<span data-i18n="aud.1.t4">Feels professional</span>
+<span data-i18n="aud.1.t5">Not for me</span>
+<span data-i18n="aud.1.t6">Looks like fraud</span>
+<span data-i18n="aud.1.t7">Serious company</span>
+<span data-i18n="aud.1.t8">Want to understand</span>
+<span data-i18n="aud.1.t9">Afraid of being tricked</span>
+<span data-i18n="aud.1.t10">Trust from the first second</span>
+<span data-i18n="aud.1.t11">You can tell they invested</span>
+<span data-i18n="aud.1.t12">Strange aesthetic</span>
+</div>
+</div>
+</div>
+<div class="aud-row" data-stagger="">
+<span class="ar-num" aria-hidden="true">02</span>
+<span class="ar-title" data-i18n="aud.2.n">Decision in the moment</span>
+<p class="ar-tag" data-i18n="aud.2.tag">Good design isn’t looked at — it’s felt.</p>
+<div class="ar-data" data-i18n="aud.2.data"><span class="num">01:42</span>&nbsp;session<span class="sep">·</span><span class="num">44%</span>&nbsp;abandon forms<span class="sep">·</span><span class="num">27%</span>&nbsp;drop-off<span class="sep">·</span><span class="num">+27%</span>&nbsp;return</div>
+<div class="ar-stream" aria-hidden="true">
+<div class="stream-track">
+<span data-i18n="aud.2.t1">Why so much data from me</span>
+<span data-i18n="aud.2.t2">Don’t get what they want</span>
+<span data-i18n="aud.2.t3">Make it simpler</span>
+<span data-i18n="aud.2.t4">Too many steps</span>
+<span data-i18n="aud.2.t5">Where do I find this</span>
+<span data-i18n="aud.2.t6">Show me what's in it first</span>
+<span data-i18n="aud.2.t7">Why do I need this</span>
+<span data-i18n="aud.2.t8">Just show the price</span>
+<span data-i18n="aud.2.t9">Can I skip signup?</span>
+<span data-i18n="aud.2.t10">Already a form, I haven't even started</span>
+<span data-i18n="aud.2.t11">Lost</span>
+<span data-i18n="aud.2.t12">Too lazy to read all this</span>
+<span data-i18n="aud.2.t1">Why so much data from me</span>
+<span data-i18n="aud.2.t2">Don’t get what they want</span>
+<span data-i18n="aud.2.t3">Make it simpler</span>
+<span data-i18n="aud.2.t4">Too many steps</span>
+<span data-i18n="aud.2.t5">Where do I find this</span>
+<span data-i18n="aud.2.t6">Show me what's in it first</span>
+<span data-i18n="aud.2.t7">Why do I need this</span>
+<span data-i18n="aud.2.t8">Just show the price</span>
+<span data-i18n="aud.2.t9">Can I skip signup?</span>
+<span data-i18n="aud.2.t10">Already a form, I haven't even started</span>
+<span data-i18n="aud.2.t11">Lost</span>
+<span data-i18n="aud.2.t12">Too lazy to read all this</span>
+</div>
+</div>
+</div>
+<div class="aud-row" data-stagger="">
+<span class="ar-num" aria-hidden="true">03</span>
+<span class="ar-title" data-i18n="aud.3.n">What lingers</span>
+<p class="ar-tag" data-i18n="aud.3.tag">Memory keeps the feeling, not the interface.</p>
+<div class="ar-data" data-i18n="aud.3.data"><span class="num">+31%</span>&nbsp;share<span class="sep">·</span><span class="num">48%</span>&nbsp;return<span class="sep">·</span><span class="num">+19%</span>&nbsp;recall<span class="sep">·</span><span class="num">+11</span>&nbsp;NPS</div>
+<div class="ar-stream" aria-hidden="true">
+<div class="stream-track">
+<span data-i18n="aud.3.t1">I’ll share with coworkers, well done</span>
+<span data-i18n="aud.3.t2">They’re really easy to use</span>
+<span data-i18n="aud.3.t3">Remembered them from minute one</span>
+<span data-i18n="aud.3.t4">One of the best I’ve seen</span>
+<span data-i18n="aud.3.t5">I’ll tell the team</span>
+<span data-i18n="aud.3.t6">I couldn’t make it that good</span>
+<span data-i18n="aud.3.t7">I’ll definitely come back</span>
+<span data-i18n="aud.3.t8">Shared the link right away</span>
+<span data-i18n="aud.3.t9">Seriously well made</span>
+<span data-i18n="aud.3.t10">I remember how pleasant it was</span>
+<span data-i18n="aud.3.t11">An example for competitors</span>
+<span data-i18n="aud.3.t12">Remembered the name</span>
+<span data-i18n="aud.3.t1">I’ll share with coworkers, well done</span>
+<span data-i18n="aud.3.t2">They’re really easy to use</span>
+<span data-i18n="aud.3.t3">Remembered them from minute one</span>
+<span data-i18n="aud.3.t4">One of the best I’ve seen</span>
+<span data-i18n="aud.3.t5">I’ll tell the team</span>
+<span data-i18n="aud.3.t6">I couldn’t make it that good</span>
+<span data-i18n="aud.3.t7">I’ll definitely come back</span>
+<span data-i18n="aud.3.t8">Shared the link right away</span>
+<span data-i18n="aud.3.t9">Seriously well made</span>
+<span data-i18n="aud.3.t10">I remember how pleasant it was</span>
+<span data-i18n="aud.3.t11">An example for competitors</span>
+<span data-i18n="aud.3.t12">Remembered the name</span>
+</div>
+</div>
+</div>
+</div>
+<p class="aud-quote" data-reveal="" data-i18n="aud.lead">Feeling comes before reading.<br>If the first impression is weak,<br>every feature has to earn <em>trust</em><br>back on its own.</p>
+</div>
+</div>
+</section>
+
+<section id="brand">
+<div class="sec-asides-bar">
+<div class="sec-aside sec-aside--left" data-i18n="whisper.br">A designer almost never<br>works freely&nbsp;—<br>they’re always bargaining<br>with constraints.</div>
+<div class="sec-aside sec-aside--right"><b>05</b> / 11 → <span data-i18n="br.kicker">Brand strategy</span></div>
+</div>
+<div class="container">
+<div class="sec-full">
+<header class="sec-head sec-head--new" data-reveal="">
+<div class="sec-title-wrap">
+<h2 class="sec-title" data-i18n="br.title">How a brand takes shape.</h2>
+<p class="sec-sub" data-i18n="br.sub">A brand isn't a logo. It's repeated decisions: how we sound, how we look, how we move, how we hold the bar.</p>
+</div>
+</header>
+<div class="brand-steps stagger" data-reveal="">
+<div class="bstep" data-stagger=""><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path class="bicon-spark-core" d="M 32 12 Q 32 30 46 32 Q 32 34 32 52 Q 32 34 18 32 Q 32 30 32 12 Z"></path><path class="bicon-spark-sat bicon-spark-a-fill" d="M 52 6 Q 52 10.5 57 11 Q 52 11.5 52 16 Q 52 11.5 47 11 Q 52 10.5 52 6 Z"></path><path class="bicon-spark-sat bicon-spark-a-line" d="M 52 6 Q 52 10.5 57 11 Q 52 11.5 52 16 Q 52 11.5 47 11 Q 52 10.5 52 6 Z" fill="none" stroke="currentColor" stroke-width="1.3"></path><path class="bicon-spark-sat bicon-spark-b-fill" d="M 12 48 Q 12 52.5 17 53 Q 12 53.5 12 58 Q 12 53.5 7 53 Q 12 52.5 12 48 Z"></path><path class="bicon-spark-sat bicon-spark-b-line" d="M 12 48 Q 12 52.5 17 53 Q 12 53.5 12 58 Q 12 53.5 7 53 Q 12 52.5 12 48 Z" fill="none" stroke="currentColor" stroke-width="1.3"></path><path class="bicon-spark-sat bicon-spark-c-fill" d="M 14 15 Q 14 17.5 17 18 Q 14 18.5 14 21 Q 14 18.5 11 18 Q 14 17.5 14 15 Z"></path><path class="bicon-spark-sat bicon-spark-c-line" d="M 14 15 Q 14 17.5 17 18 Q 14 18.5 14 21 Q 14 18.5 11 18 Q 14 17.5 14 15 Z" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg></div><div class="bname" data-i18n="br.1.n">Context</div><p class="bdesc" data-i18n="br.1.d">Market, competitors, audience, business goals. What we know — and what we're only guessing.</p></div>
+<div class="bstep" data-stagger=""><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle class="bicon-pos-dot bicon-pos-d1" cx="57" cy="32" r="1.4"></circle><circle class="bicon-pos-dot bicon-pos-d2" cx="53.65" cy="44.5" r="1.4"></circle><circle class="bicon-pos-dot bicon-pos-d3" cx="44.5" cy="53.65" r="1.4"></circle><circle class="bicon-pos-dot bicon-pos-d4" cx="32" cy="57" r="1.4"></circle><circle class="bicon-pos-dot bicon-pos-d5" cx="19.5" cy="53.65" r="1.4"></circle><circle class="bicon-pos-dot bicon-pos-d6" cx="10.35" cy="44.5" r="1.4"></circle><circle class="bicon-pos-dot bicon-pos-d7" cx="7" cy="32" r="1.4"></circle><circle class="bicon-pos-dot bicon-pos-d8" cx="10.35" cy="19.5" r="1.4"></circle><circle class="bicon-pos-dot bicon-pos-d9" cx="19.5" cy="10.35" r="1.4"></circle><circle class="bicon-pos-dot bicon-pos-d10" cx="32" cy="7" r="1.4"></circle><circle class="bicon-pos-dot bicon-pos-d11" cx="44.5" cy="10.35" r="1.4"></circle><circle class="bicon-pos-dot bicon-pos-d12" cx="53.65" cy="19.5" r="1.4"></circle><path class="bicon-compass" d="M 32 22 L 40 42 L 32 38 L 24 42 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg></div><div class="bname" data-i18n="br.2.n">Position</div><p class="bdesc" data-i18n="br.2.d">Who we're for, who we're against, and what we deliberately stay silent on. Without the second, the first doesn't work.</p></div>
+<div class="bstep" data-stagger=""><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect class="bicon-eq bicon-eq-1" x="7" y="28" width="2.5" height="8" rx="1.25"></rect><rect class="bicon-eq bicon-eq-2" x="14" y="23" width="2.5" height="18" rx="1.25"></rect><rect class="bicon-eq bicon-eq-3" x="21" y="18" width="2.5" height="28" rx="1.25"></rect><rect class="bicon-eq bicon-eq-4" x="28" y="25" width="2.5" height="14" rx="1.25"></rect><rect class="bicon-eq bicon-eq-5" x="35" y="20" width="2.5" height="24" rx="1.25"></rect><rect class="bicon-eq bicon-eq-6" x="42" y="27" width="2.5" height="10" rx="1.25"></rect><rect class="bicon-eq bicon-eq-7" x="49" y="23" width="2.5" height="18" rx="1.25"></rect><rect class="bicon-eq bicon-eq-8" x="56" y="29" width="2.5" height="6" rx="1.25"></rect></svg></div><div class="bname" data-i18n="br.3.n">Voice</div><p class="bdesc" data-i18n="br.3.d">How the brand reads in an email, on a banner, in support. The tone people recognise.</p></div>
+<div class="bstep" data-stagger=""><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><text class="bicon-aa-letter" x="22" y="46" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="44" fill="currentColor">A</text><text class="bicon-aa-letter" x="44" y="46" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="32" fill="currentColor">a</text></svg></div><div class="bname" data-i18n="br.4.n">Visual language</div><p class="bdesc" data-i18n="br.4.d">Typography, colour, imagery, motion, photography. Not just a logo and palette — a whole grammar.</p></div>
+<div class="bstep" data-stagger=""><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><line class="bicon-sys-ray bicon-sys-r1" x1="54" y1="32" x2="40" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></line><line class="bicon-sys-ray bicon-sys-r2" x1="43" y1="13" x2="36" y2="25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></line><line class="bicon-sys-ray bicon-sys-r3" x1="21" y1="13" x2="28" y2="25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></line><line class="bicon-sys-ray bicon-sys-r4" x1="10" y1="32" x2="24" y2="32" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></line><line class="bicon-sys-ray bicon-sys-r5" x1="21" y1="51" x2="28" y2="39" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></line><line class="bicon-sys-ray bicon-sys-r6" x1="43" y1="51" x2="36" y2="39" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></line><circle cx="56" cy="32" r="2"></circle><circle cx="44" cy="11" r="2"></circle><circle cx="20" cy="11" r="2"></circle><circle cx="8" cy="32" r="2"></circle><circle cx="20" cy="53" r="2"></circle><circle cx="44" cy="53" r="2"></circle><circle cx="32" cy="32" r="5"></circle></svg></div><div class="bname" data-i18n="br.5.n">System</div><p class="bdesc" data-i18n="br.5.d">How the identity scales into web, social, product, decks, OOH.</p></div>
+<div class="bstep" data-stagger=""><div class="bnum"><svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle class="bicon-ripple" cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="1.5"></circle><circle class="bicon-ripple bicon-ripple-2" cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="1.5"></circle><circle cx="32" cy="32" r="4"></circle></svg></div><div class="bname" data-i18n="br.6.n">Launch</div><p class="bdesc" data-i18n="br.6.d">Measurement, iteration, share of voice, brand recall. A brand isn't a launch. It's upkeep.</p></div>
+</div>
+</div>
+</div>
+</section>
+<section id="evaluation">
+<div class="sec-asides-bar">
+<div class="sec-aside sec-aside--left" data-i18n="whisper.ev">Work is done<br>when it works<br>in reality.</div>
+<div class="sec-aside sec-aside--right"><b>06</b> / 11 → <span data-i18n="ev.kicker">Evaluation</span></div>
+</div>
+<div class="container">
+<div class="sec-full">
+<header class="sec-head sec-head--new" data-reveal="">
+<div class="sec-title-wrap">
+<h2 class="sec-title" data-i18n="ev.title">How I evaluate the work.</h2>
+<p class="sec-sub" data-i18n="ev.sub">Four levels. A solution only passes<br>if it works on all four.</p>
+</div>
+</header>
+<div class="levels stagger" data-reveal="">
+<div class="level" data-stagger=""><div class="ln" data-i18n="ev.1.ln">Level 1</div><div class="ltitle" data-i18n="ev.1.t">Logic</div><div class="ldesc" data-i18n="ev.1.d">The user gets it: where to tap, what happens, why it matters. If it needs explaining, the solution is weak.</div><div class="lq" data-i18n="ev.1.q">Got it?</div></div>
+<div class="level" data-stagger=""><div class="ln" data-i18n="ev.2.ln">Level 2</div><div class="ltitle" data-i18n="ev.2.t">Form</div><div class="ldesc" data-i18n="ev.2.d">Hierarchy, contrast, rhythm, typography, balance. This is where craft lives — and where expression earns its place.</div><div class="lq" data-i18n="ev.2.q">Crafted?</div></div>
+<div class="level" data-stagger=""><div class="ln" data-i18n="ev.3.ln">Level 3</div><div class="ltitle" data-i18n="ev.3.t">System</div><div class="ldesc" data-i18n="ev.3.d">Will it scale to ten channels? Hold up under new scenarios? Stay aligned with the brand?</div><div class="lq" data-i18n="ev.3.q">Holds?</div></div>
+<div class="level" data-stagger=""><div class="ln" data-i18n="ev.4.ln">Level 4</div><div class="ltitle" data-i18n="ev.4.t">Business</div><div class="ldesc" data-i18n="ev.4.d">Does it help the business? Conversion, retention, recognition, speed.</div><div class="lq" data-i18n="ev.4.q">Worked?</div></div>
+</div>
+<div class="ev-bmp-spacer" aria-hidden="true"></div>
+<div class="bmp-top">
+<div class="bmp-split" data-reveal="">
+<div class="side"><div class="pct"><span class="stat-counter">69</span><em>%</em></div><p class="label" data-i18n="bmp.s1.label">Strategy, process, team&nbsp;— what makes the visual possible</p></div>
+<div class="vs">/</div>
+<div class="side"><div class="pct"><span class="stat-counter">31</span><em>%</em></div><p class="label" data-i18n="bmp.s2.label">The visual&nbsp;— the final form of everything that came before</p></div>
+</div>
+<div class="bmp-dotgrid" id="dotgrid" data-reveal=""></div>
+</div>
+<p class="ev-bmp-foot" data-reveal="" data-i18n="ev.bmp.foot">You can ship the perfect screen and still lose the project. You can ship a weak one and still win. The difference is in that 69%.</p>
+</div>
+</div>
+</section>
+
+<section id="team" class="dark">
+<div class="sec-asides-bar">
+<div class="sec-aside sec-aside--left" data-i18n="whisper.tm">Teams break<br>from a lack of clarity,<br>not from workload.</div>
+<div class="sec-aside sec-aside--right"><b>07</b> / 11 → <span data-i18n="tm.kicker">Team</span></div>
+</div>
+<div class="container">
+<div class="team-manifesto">
+<header class="tm-head" data-reveal="">
+<h2 class="sec-title" data-i18n="tm.title">Working with<br>the team.</h2>
+</header>
+<div class="tm-stack">
+<div class="tm-row" data-reveal="">
+<span class="tm-tag" data-i18n="tm.tag1">Approach</span>
+<div class="tm-cell"><p class="tm-text" data-i18n="tm.lead">I lead the team&nbsp;— and I keep <em>drawing</em>.</p></div>
+</div>
+<div class="tm-row" data-reveal="">
+<span class="tm-tag" data-i18n="tm.tag2">In practice</span>
+<div class="tm-cell"><p class="tm-text" data-i18n="tm.sub1">I stay inside the work: reviewing files, fighting for decisions, staying close to the business.</p></div>
+</div>
+<div class="tm-row" data-reveal="">
+<span class="tm-tag" data-i18n="tm.tag3">Principle</span>
+<div class="tm-cell"><p class="tm-text" data-i18n="tm.sub2">A team that understands the principles doesn't wait for <em>sign-off</em> on every step.</p></div>
+</div>
+</div>
+<div class="ts-mark look-badge" aria-hidden="true">
+<svg class="look-badge__ring" viewBox="0 0 100 100" aria-hidden="true">
+<defs><path id="lookRingPath" d="M50,11 a39,39 0 1,1 0,78 a39,39 0 1,1 0,-78"></path></defs>
+<text class="lb-ru" xml:space="preserve"><textPath href="#lookRingPath" startOffset="0" textLength="245" lengthAdjust="spacing">СЕРГЕЙ ЛУКИН · HEAD OF DESIGN · </textPath></text>
+<text class="lb-en" xml:space="preserve"><textPath href="#lookRingPath" startOffset="0" textLength="245" lengthAdjust="spacing">SERGEY LOOKIN · HEAD OF DESIGN · </textPath></text>
+</svg>
+<svg class="look-badge__logo" viewBox="0 0 131 140" fill="currentColor" aria-hidden="true">
+<path d="M22.8833 70.1523C10.2692 70.1523 0 59.8831 0 47.269V0.65918H21.7975V47.269C21.7975 47.8697 22.2826 48.3549 22.8833 48.3549H62.5392V70.1523H22.8833Z"></path>
+<path d="M95.461 70.7291C85.6192 70.7291 76.1355 66.5706 69.4588 59.3164C62.7821 52.0621 59.4091 42.2665 60.2177 32.4132C61.6154 15.398 75.5002 1.51323 92.5154 0.115514C93.4972 0.0346542 94.4906 0 95.461 0C105.268 0 114.729 4.1354 121.417 11.355C128.186 18.667 131.49 28.1738 130.727 38.1542C129.399 55.3427 115.445 69.3083 98.2448 70.6252C97.3207 70.6945 96.3851 70.7291 95.461 70.7291ZM95.461 21.7975C94.5484 21.7975 93.6127 21.8899 92.6886 22.0747C87.5598 23.1143 83.3551 27.2151 82.2231 32.2861C81.3221 36.3291 82.3039 40.5107 84.9145 43.7567C87.5483 47.0372 91.3833 48.9201 95.461 48.9201C96.4428 48.9201 97.4362 48.8046 98.4297 48.5851C103.547 47.4415 107.694 43.2022 108.745 38.0156C109.565 33.9726 108.583 29.9989 105.984 26.8223C103.362 23.6226 99.527 21.7859 95.461 21.7859V21.7975Z"></path>
+<path d="M35.3701 139.579C25.5284 139.579 16.0447 135.42 9.36798 128.166C2.67972 120.923 -0.681728 111.116 0.115318 101.275C1.51304 84.2593 15.3978 70.3746 32.413 68.9768C33.3949 68.896 34.3883 68.8613 35.3586 68.8613C45.1657 68.8613 54.6263 72.9967 61.3146 80.2163C68.0837 87.5284 71.3874 97.0352 70.6134 107.016C69.285 124.204 55.3309 138.17 38.1309 139.487C37.2068 139.556 36.2712 139.59 35.347 139.59L35.3701 139.579ZM35.3701 90.6588C34.4576 90.6588 33.5219 90.7512 32.5978 90.936C27.469 91.9757 23.2643 96.0764 22.1323 101.147C21.2312 105.19 22.2131 109.372 24.8237 112.618C27.4574 115.899 31.2925 117.781 35.3586 117.781C36.3405 117.781 37.3339 117.666 38.3273 117.446C43.4446 116.303 47.5915 112.064 48.6427 106.877C49.4628 102.834 48.481 98.8603 45.8819 95.6836C43.2597 92.4839 39.4247 90.6472 35.3586 90.6472L35.3701 90.6588Z"></path>
+<path d="M106.088 139.645L98.7871 125.691C97.9439 124.154 97.2046 122.791 96.5577 121.578C95.2177 119.072 93.82 116.484 93.1616 115.745C92.919 115.71 92.3992 115.653 91.2787 115.653C90.8744 115.653 90.447 115.653 89.985 115.664V139.633H68.1875V70.1401H89.985V94.0284C90.5048 94.0284 90.9899 94.0399 91.4404 94.0399C92.4339 94.0399 92.9306 93.9937 93.1616 93.959C93.8085 93.2082 95.1369 90.7362 96.4306 88.3451C97.1122 87.086 97.8861 85.6421 98.7987 83.9902L106.088 70.0361H130.681L117.997 94.3634C117.639 94.9987 117.2 95.8535 116.703 96.8469C115.548 99.1456 114.104 102.01 112.198 104.817C114.15 107.694 115.617 110.651 116.796 113.007C117.246 113.92 117.651 114.74 118.032 115.41L130.704 139.599H106.088V139.645Z"></path>
+</svg>
+</div>
+</div>
+</div>
+
+</section>
+
+<section id="mentor" class="dark">
+<div class="sec-asides-bar">
+<div class="sec-aside sec-aside--left kicker-in" data-i18n="whisper.mentor">Skills can be hired.<br>A strong team can only be grown.</div>
+<div class="sec-aside sec-aside--right"><b>08</b> / 11 → <span data-i18n="mentor.kicker">Mentorship</span></div>
+</div>
+<div class="container">
+<div class="mentor-cosmos">
+<svg class="mentor-lines" aria-hidden="true"></svg>
+<h2 class="mentor-core" data-i18n="mentor.title">Mentorship</h2>
+<div class="mentor-satellites">
+<button class="msat" data-side="left" data-i18n="mentor.sat.1" data-desc-ru="Регулярный диалог тет-а-тет. Место, где можно говорить честно — не для протокола." data-desc-en="A regular conversation, just the two of us. The place where things can be said honestly — off the record." type="button">1:1 calls</button>
+<button class="msat" data-side="left" data-i18n="mentor.sat.2" data-desc-ru="Работаем вместе над одной задачей. Показываю не результат — ход мысли." data-desc-en="We work the same task together. I show the thinking, not the outcome." type="button">Pair design</button>
+<button class="msat" data-side="left" data-i18n="mentor.sat.3" data-desc-ru="Не «нравится / не нравится». А «почему так» и «где можно лучше»." data-desc-en="Not “like” or “don’t like.” Why it’s done this way — and where it could be better." type="button">Mockup reviews</button>
+<button class="msat" data-side="left" data-i18n="mentor.sat.5" data-desc-ru="Учу аргументировать перед бизнесом. Дизайн без защиты — просто картинка." data-desc-en="Learning to argue the work in front of the business. Design that can’t be defended is just a picture." type="button">Defending decisions</button>
+<button class="msat" data-side="left" data-i18n="mentor.sat.6" data-desc-ru="Стыки с продуктом, разработкой, маркетингом. Дизайнер не работает в вакууме." data-desc-en="The seams with product, engineering, marketing. Designers don’t work in a vacuum." type="button">Cross-team</button>
+<button class="msat" data-side="left" data-i18n="mentor.sat.7" data-desc-ru="Не насмотренность ради насмотренности. Умение видеть приём — и переносить его в свою задачу." data-desc-en="Not collecting for the sake of it. Seeing the move — and bringing it into your own work." type="button">Sharing references</button>
+<button class="msat" data-side="left" data-i18n="mentor.sat.19" data-desc-ru="Короткие выступления внутри команды. Систематизирую опыт, чтобы он не лежал в одной голове." data-desc-en="Short talks inside the team. Turning experience into something the team owns, not just one head." type="button">Talks</button>
+<button class="msat" data-side="left" data-i18n="mentor.sat.20" data-desc-ru="Свои и чужие. Что сработало, что нет — и почему именно так." data-desc-en="Ours and theirs. What worked, what didn’t — and why exactly." type="button">Case reviews</button>
+<button class="msat" data-side="left" data-i18n="mentor.sat.16" data-desc-ru="Мыслить системой, а не отдельным макетом. Айдентика начинается с логики — не со стиля." data-desc-en="Thinking in systems, not in single mockups. Identity starts with logic, not style." type="button">Branding</button>
+<button class="msat" data-side="left" data-i18n="mentor.sat.25" data-desc-ru="Конкретно и по делу. Без «молодец» — и без «переделай всё»." data-desc-en="Specific, on the work. No “nice job” — and no “redo everything.”" type="button">Praise and critique</button>
+<button class="msat" data-side="right" data-i18n="mentor.sat.8" data-desc-ru="Где сейчас. Куда идём. Что прокачиваем по пути." data-desc-en="Where you are now. Where you’re going. What you sharpen on the way." type="button">Growth plan</button>
+<button class="msat" data-side="right" data-i18n="mentor.sat.9" data-desc-ru="Прозрачные критерии для junior, middle, senior. Чтобы рост не зависел от настроения руководителя." data-desc-en="Transparent criteria for junior, middle, senior. So growth doesn’t depend on the lead’s mood." type="button">Promotions</button>
+<button class="msat" data-side="right" data-i18n="mentor.sat.11" data-desc-ru="Учу читать данные. Принимать решения — не только вкусом." data-desc-en="Learning to read the data. Not deciding by taste alone." type="button">Skill analytics</button>
+<button class="msat" data-side="right" data-i18n="mentor.sat.12" data-desc-ru="Коммуникация, переговоры, обратная связь. Половина успеха дизайнера — вне Figma." data-desc-en="Communication, negotiation, feedback. Half of a designer’s success lives outside Figma." type="button">Soft skills</button>
+<button class="msat" data-side="right" data-i18n="mentor.sat.14" data-desc-ru="Помогаю выбрать траекторию. Вглубь экспертизы — или вширь, в менеджмент." data-desc-en="Helping pick the path. Deeper into craft — or wider into management." type="button">Career chats</button>
+<button class="msat" data-side="right" data-i18n="mentor.sat.15" data-desc-ru="База, которую почти все недоучили. Возвращаемся к ней снова и снова." data-desc-en="The foundation almost everyone half-learned. We come back to it again and again." type="button">Typography</button>
+<button class="msat" data-side="right" data-i18n="mentor.sat.17" data-desc-ru="Когда стоит выйти за пределы статики. И — главное — когда не стоит." data-desc-en="When to step beyond static. And, more importantly, when not to." type="button">Motion &amp; 3D</button>
+<button class="msat" data-side="right" data-i18n="mentor.sat.18" data-desc-ru="Формулируем гипотезы. Проверяем на пользователях — не на коллегах." data-desc-en="We form hypotheses. We test them on users — not on coworkers." type="button">UX research</button>
+<button class="msat" data-side="right" data-i18n="mentor.sat.21" data-desc-ru="Формат менторства под человека. Кому-то план, кому-то вопросы, кому-то пауза." data-desc-en="Mentorship shaped to the person. Some need a plan, some need questions, some need silence." type="button">Designer psychology</button>
+<button class="msat" data-side="right" data-i18n="mentor.sat.22" data-desc-ru="Слышать до того, как объяснили. Без этого менторство — инструкция." data-desc-en="Hearing what wasn’t said. Without it, mentorship is just an instruction manual." type="button">Empathy</button>
+</div>
+<div class="msat-tooltip" id="msatTooltip" aria-hidden="true"></div>
+</div>
+</div>
+</section>
+
+<section id="ds">
+<div class="sec-asides-bar">
+<div class="sec-aside sec-aside--left" data-i18n="whisper.ds">They see the result.<br>Not the work.</div>
+<div class="sec-aside sec-aside--right"><b>09</b> / 11 → <span data-i18n="ds.kicker">Craft</span></div>
+</div>
+<div class="container">
+<div class="sec-full">
+<header class="sec-head sec-head--new" data-reveal="">
+<div class="sec-title-wrap">
+<h2 class="sec-title" data-i18n="ds.title">Not a science. Not an art.</h2>
+<p class="sec-sub" data-i18n="ds.sub">What people feel — and cannot put into words.</p>
+</div>
+</header>
+<div class="craft-stack" data-reveal="">
+<article class="craft-card" data-craft-i="1">
+<span class="craft-num">01</span>
+<span class="craft-pill" aria-hidden="true"><span data-i18n="ds.p1.a">One brand red.</span></span>
+<div class="craft-body">
+<p class="craft-eye"><span class="craft-eye-label">Со&nbsp;стороны</span><span class="craft-eye-obs" data-i18n="ds.p1.a">One brand red.</span></p>
+<p class="craft-reality" data-i18n="ds.p1.b">Thousands of shades of one red. Warm reads as trust. Cool reads as alarm. Light disappears, dark crushes. Without context and a pair beside it, colour means nothing.</p>
+</div>
+</article>
+<article class="craft-card" data-craft-i="2">
+<span class="craft-num">02</span>
+<span class="craft-pill" aria-hidden="true"><span data-i18n="ds.p2.a">One button on the screen.</span></span>
+<div class="craft-body">
+<p class="craft-eye"><span class="craft-eye-label">Со&nbsp;стороны</span><span class="craft-eye-obs" data-i18n="ds.p2.a">One button on the screen.</span></p>
+<p class="craft-reality" data-i18n="ds.p2.b">Nine states. Eight aren't on the screenshot. A button lives in motion — not in the mockup. A good one answers. A bad one doesn't.</p>
+</div>
+</article>
+<article class="craft-card" data-craft-i="3">
+<span class="craft-num">03</span>
+<span class="craft-pill" aria-hidden="true"><span data-i18n="ds.p3.a">One typeface.</span></span>
+<div class="craft-body">
+<p class="craft-eye"><span class="craft-eye-label">Со&nbsp;стороны</span><span class="craft-eye-obs" data-i18n="ds.p3.a">One typeface.</span></p>
+<p class="craft-reality" data-i18n="ds.p3.b">Eighteen weights — for body, headings, numbers, quotes. Size raises the voice. Typography has its own laws. Reading is ours alone.</p>
+</div>
+</article>
+<article class="craft-card" data-craft-i="4">
+<span class="craft-num">04</span>
+<span class="craft-pill" aria-hidden="true"><span data-i18n="ds.p4.a">One composition on the page.</span></span>
+<div class="craft-body">
+<p class="craft-eye"><span class="craft-eye-label">Со&nbsp;стороны</span><span class="craft-eye-obs" data-i18n="ds.p4.a">One composition on the page.</span></p>
+<p class="craft-reality" data-i18n="ds.p4.b">Grid. Hierarchy. Rhythm. The air between blocks — also an element. What the eye reads before the word, and reacts to before the mind.</p>
+</div>
+</article>
+<article class="craft-card" data-craft-i="5">
+<span class="craft-num">05</span>
+<span class="craft-pill" aria-hidden="true"><span data-i18n="ds.p5.a">The task of drawing a mockup.</span></span>
+<div class="craft-body">
+<p class="craft-eye"><span class="craft-eye-label">Со&nbsp;стороны</span><span class="craft-eye-obs" data-i18n="ds.p5.a">The task of drawing a mockup.</span></p>
+<p class="craft-reality" data-i18n="ds.p5.b">Pulling colour, button, type and rhythm — into one feeling. So a person looks and wants, without knowing why. And couldn't describe it if they tried.</p>
+</div>
+</article>
+</div>
+<p class="ds-quote" data-reveal=""><span data-i18n="ds.close.a">Everyone talks about design.</span><br><span data-i18n="ds.close.b">No one really knows what it is.</span></p>
+</div>
+</div>
+</section>
+
+<section id="results">
+<div class="rs-pin-outer">
+<div class="rs-pin-wrap">
+<div class="sec-asides-bar rs-asides">
+<div class="sec-aside sec-aside--left" data-i18n="whisper.rs">Strong design<br>holds up in reality.</div>
+<div class="sec-aside sec-aside--right"><b>10</b> / 11 → <span data-i18n="rs.kicker">Results</span></div>
+</div>
+<div class="container rs-pin-header">
+<header class="sec-head sec-head--new">
+<div class="sec-title-wrap">
+<h2 class="sec-title" data-i18n="rs.title">What the business gets.</h2>
+<p class="sec-sub" data-i18n="rs.sub">What shifts inside the team — and in how the product feels.</p>
+</div>
+</header>
+</div>
+<div class="rs-track" id="rsTrack">
+<article class="rs-panel" data-i="0">
+<div class="rs-card">
+<div class="rs-card__num">01</div>
+<div class="rs-card__body">
+<span class="rs-card__label" data-i18n="rs.1.note">BRAND</span>
+<h3 class="rs-card__title" data-i18n="rs.1.t">One brand across every touchpoint</h3>
+<p class="rs-card__desc" data-i18n="rs.1.d">Landing, product, ads, deck — pieces of one system. The customer sees maturity, not five different companies.</p>
+</div>
+</div>
+</article>
+<article class="rs-panel" data-i="1">
+<div class="rs-card">
+<div class="rs-card__num">02</div>
+<div class="rs-card__body">
+<span class="rs-card__label" data-i18n="rs.2.note">SPEED</span>
+<h3 class="rs-card__title" data-i18n="rs.2.t">Releases ship several times faster</h3>
+<p class="rs-card__desc" data-i18n="rs.2.d">When the team works from a system, design stops being the bottleneck. What took a month ships in a week.</p>
+</div>
+</div>
+</article>
+<article class="rs-panel" data-i="2">
+<div class="rs-card">
+<div class="rs-card__num">03</div>
+<div class="rs-card__body">
+<span class="rs-card__label" data-i18n="rs.3.note">FOCUS</span>
+<h3 class="rs-card__title" data-i18n="rs.3.t">Teams moving the same way</h3>
+<p class="rs-card__desc" data-i18n="rs.3.d">Marketing, product, engineering lean on the same principles. Less politics — more work for the market.</p>
+</div>
+</div>
+</article>
+<article class="rs-panel" data-i="3">
+<div class="rs-card">
+<div class="rs-card__num">04</div>
+<div class="rs-card__body">
+<span class="rs-card__label" data-i18n="rs.4.note">TRUST</span>
+<h3 class="rs-card__title" data-i18n="rs.4.t">The brand reads more expensive</h3>
+<p class="rs-card__desc" data-i18n="rs.4.d">When touchpoints are coherent, price feels earned. Premium isn't gold trim. It's order.</p>
+</div>
+</div>
+</article>
+<article class="rs-panel" data-i="4">
+<div class="rs-card">
+<div class="rs-card__num">05</div>
+<div class="rs-card__body">
+<span class="rs-card__label" data-i18n="rs.5.note">CRITERIA</span>
+<h3 class="rs-card__title" data-i18n="rs.5.t">Decisions by criteria, not by taste</h3>
+<p class="rs-card__desc" data-i18n="rs.5.d">Design stops being personal opinion. The argument shifts from “I don’t like it” to “this works.”</p>
+</div>
+</div>
+</article>
+</div>
+<div class="rs-steps" id="rsSteps" aria-hidden="true">
+<span class="rs-step is-active" data-step="0"></span>
+<span class="rs-step" data-step="1"></span>
+<span class="rs-step" data-step="2"></span>
+<span class="rs-step" data-step="3"></span>
+<span class="rs-step" data-step="4"></span>
+</div>
+</div>
+</div>
+</section>
+
+<section id="companies">
+<div class="sec-asides-bar">
+<div class="sec-aside sec-aside--left" data-i18n="whisper.co">Twelve years<br>in three chapters.</div>
+<div class="sec-aside sec-aside--right"><b>11</b> / 11 → <span data-i18n="co.kicker">Experience</span></div>
+</div>
+<div class="container">
+<div class="sec-full">
+<header class="sec-head sec-head--new" data-reveal="">
+<div class="sec-title-wrap">
+<h2 class="sec-title" data-i18n="co.title">Where I've worked, what I've built.</h2>
+<p class="sec-sub" data-i18n="co.sub">Three companies over 12+ years. From large federal-scale<br>corporates in Russia to a global fintech in Southeast Asia.</p>
+</div>
+</header>
+<div class="co-list stagger" data-reveal="">
+<div class="co" data-stagger="">
+<div class="yrs">2023→Now</div>
+<div><div class="name">Fingular</div><div class="role" data-i18n="co.1.role">Head of Design</div></div>
+<div class="desc" data-i18n="co.1.desc">Global neobank, headquartered in Singapore. Rebuilt the team from <span class="num">2</span> to <span class="num">11</span>, shipped two design systems and <span class="num">15+</span> brand identities.</div>
+<div class="award" data-i18n="co.1.aw">Best New Fintech APAC 2024 · The Next 100 Global Companies</div>
+</div>
+<div class="co" data-stagger="">
+<div class="yrs">2021—2023</div>
+<div><div class="name">Choise.com<br>(ex-Crypterium)</div><div class="role" data-i18n="co.2.role">Lead Designer</div></div>
+<div class="desc" data-i18n="co.2.desc">Web3 ecosystem: a MetaFi crypto-bank with <span class="num">750K+</span> users across <span class="num">170+</span> countries, plus Chobies NTO. Rebranded Crypterium → Choise.com without losing the audience.</div>
+<div class="award" data-i18n="co.2.aw">CHO token: ATH $1.38<br>TOP-500 CoinMarketCap</div>
+</div>
+<div class="co" data-stagger="">
+<div class="yrs">2015—2021</div>
+<div><div class="name">Veonix</div><div class="role" data-i18n="co.3.role">Art Director</div></div>
+<div class="desc" data-i18n="co.3.desc">Moscow enterprise studio. <span class="num">200+</span> projects for federal-scale brands, reaching <span class="num">10M+</span> people daily. The team grew from 5 to 50+ specialists.</div>
+<div class="award" data-i18n="co.3.aw">Tagline Awards<br>70% client retention</div>
+</div>
+</div>
+<div class="brand-marquee" data-reveal="">
+<div class="lbl" data-i18n="co.marquee.lbl">Brands I've worked with</div>
+<div class="brand-list">
+<span>Sber</span><span>Gazprom</span><span>Lukoil</span><span>Rosneft</span><span>Pepsi</span><span>MacCoffee</span><span>McDonald's</span><span>Metro</span><span>Sportmaster</span><span>Sibur</span><span>Beeline</span><span>CTC</span><span>L'Étoile</span><span>Kaspersky</span><span>Kia</span><span>Rosatom</span><span>Evraz</span><span>Darkside</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="cta" class="dark">
+<div class="container">
+<div class="cta">
+<div class="cta-head" data-reveal="">
+<span class="cta-eyebrow" data-i18n="cta.eyebrow">If the approach lands</span>
+<span class="cta-eyebrow cta-author" data-i18n="cta.m.1.v">Author&nbsp;· Sergey Lukin</span>
+</div>
+<h2 class="cta-title" data-reveal-num="" data-i18n="cta.title">Let's <em>talk</em>.</h2>
+<p class="cta-lead" data-reveal="" data-i18n="cta.lead">Not necessarily about work. To start — just say hello. The rest comes later.</p>
+<div class="cta-mega" data-reveal="">
+<a class="cta-mega-item" href="https://t.me/Lookin_Sergey" target="_blank" rel="noopener">
+<span class="cta-mega-num">01</span>
+<span class="cta-mega-arrow" aria-hidden="true">↗</span>
+<span class="cta-mega-name" data-i18n="cta.btn.tg">Telegram</span>
+<span class="cta-mega-handle">@Lookin_Sergey</span>
+</a>
+<a class="cta-mega-item" href="mailto:lookindn@gmail.com">
+<span class="cta-mega-num">02</span>
+<span class="cta-mega-arrow" aria-hidden="true">↗</span>
+<span class="cta-mega-name" data-i18n="cta.btn.em">Email</span>
+<span class="cta-mega-handle">lookindn@gmail.com</span>
+</a>
+<a class="cta-mega-item" href="https://www.behance.net/lookin_sergey" target="_blank" rel="noopener">
+<span class="cta-mega-num">03</span>
+<span class="cta-mega-arrow" aria-hidden="true">↗</span>
+<span class="cta-mega-name" data-i18n="cta.btn.pf">Behance</span>
+<span class="cta-mega-handle">behance.net/lookin_sergey</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+</main>
+
+<footer class="foot">
+<div data-i18n="ft.copy">© 2026 Sergey Lukin</div>
+<button class="ft-top" type="button" id="footTop" data-i18n="ft.top">Top <span class="arr">↑</span></button>
+<div data-i18n="ft.tag">Design manifesto</div>
+</footer>
+
+<script id="i18n-data" type="application/json">{"ru": {"whisper.intro": "Дизайн&nbsp;— для людей.<br>Не&nbsp;для портфолио.", "whisper.pain": "«Просто нарисуйте»&nbsp;—<br>начало слабого проекта.", "whisper.partner": "Самый долгий спор<br>моей карьеры.", "whisper.pr": "То, что не&nbsp;помещается<br>в&nbsp;портфолио.", "whisper.aud": "Впечатление создают<br>не&nbsp;картинки. Дизайн.", "whisper.br": "Дизайнер почти никогда<br>не&nbsp;работает свободно&nbsp;—<br>он всё время торгуется<br>с&nbsp;ограничениями.", "whisper.ev": "Работа закончена,<br>когда работает<br>в&nbsp;реальности.", "whisper.tm": "Команда ломается<br>от&nbsp;неясности,<br>не&nbsp;от&nbsp;нагрузки.", "whisper.ds": "Видят результат.<br>Не&nbsp;видят работу.", "whisper.rs": "Сильный дизайн<br>выдерживает реальность.", "whisper.co": "Двенадцать лет<br>в&nbsp;трёх главах.", "meta.title": "Сергей Лукин — Head of Design", "meta.description": "Сергей Лукин — Head of Design и арт-директор. Дизайн на стыке бренда, маркетинга, веба и продукта: манифест о подходе, портфолио и отобранные кейсы.", "skip": "Перейти к&nbsp;содержанию", "nav.brand": "Сергей Лукин <b>—</b> Head of Design", "nav.meta": "Манифест · 2026", "nav.tg": "Telegram", "nav.em": "Email", "nav.pf": "Портфолио", "nav.manifesto": "Манифест", "nav.about": "Обо мне", "hero.focus.l": "Фокус", "hero.focus.v": "Бренд&nbsp;· Маркетинг<br>Веб&nbsp;· Продукт", "hero.issue": "№ 01 · 2026", "hero.title.static": "Как я&nbsp;строю", "hero.center": "Философия, выстроенная через годы работы, наблюдений и&nbsp;переосмысления того, каким должен быть дизайн.", "hero.author.l": "Автор", "hero.author.v": "Сергей Лукин<br>Head of Design / Art Director", "hero.today.l": "Признание", "hero.today.v": "Best New Fintech APAC<br>Tagline Awards", "intro.kicker": "Начало", "intro.stamp": "12+ лет · 3 страны · 3 компании", "intro.title": "Двенадцать лет дизайна&nbsp;— и&nbsp;всё меньше про&nbsp;макеты.", "intro.p1": "От&nbsp;графического дизайнера&nbsp;— до&nbsp;<strong>Head of Design</strong>. От&nbsp;федеральной <strong>enterprise</strong>-студии&nbsp;— до&nbsp;финтеха в&nbsp;Юго-Восточной Азии.", "intro.p2": "Работаю на&nbsp;стыке бренда, маркетинга, веба и&nbsp;продукта. Собираю единую систему, чтобы компания звучала цельно.", "pain.kicker": "Симптомы", "pain.title": "Знакомая ситуация?", "pain.sub": "Симптомы, по&nbsp;которым видно:<br>дизайн перестал работать на&nbsp;бизнес.", "pain.1": "Маркетинг, продукт и&nbsp;разработка работают в&nbsp;разные стороны.", "pain.2": "Каждый запуск собирают заново&nbsp;— прошлые проекты не&nbsp;ускоряют новые.", "pain.3": "Команда занята, но&nbsp;система не&nbsp;становится сильнее.", "pain.4": "Бренд теряется в&nbsp;каналах. Стиль зависит от&nbsp;исполнителя.", "pain.5": "Руководитель тонет в&nbsp;правках. Стратегии остаётся всё меньше.", "pain.1.note": "Размывает фокус.<br>Замедляет запуск.", "pain.2.note": "Темп не&nbsp;превращается в&nbsp;скорость.", "pain.3.note": "Знание не&nbsp;превращается в&nbsp;систему.", "pain.4.note": "Узнаваемость падает, доверие&nbsp;тает.", "pain.5.note": "Стратегические решения откладываются.", "pain.quote": "Хаос редко выглядит как хаос.<br>Чаще&nbsp;— как временное решение,<br>которое осталось навсегда.", "pain.foot": "Это не&nbsp;лечится одной кнопкой.<br>И&nbsp;не&nbsp;парой макетов.", "partner.kicker": "Подход", "partner.title": "Соавтор, а&nbsp;не&nbsp;подрядчик.", "partner.sub": "Дизайн вступает в&nbsp;задачу до&nbsp;того, как написан бриф.<br>Иначе он&nbsp;уже исправляет, а&nbsp;не&nbsp;решает.", "partner.svc.tag": "Сервис", "partner.svc.title": "Получает задачу<br>и&nbsp;возвращает макет", "partner.svc.1": "Получает бриф «в&nbsp;финальной упаковке»", "partner.svc.2": "Спрашивает «как», не «зачем»", "partner.svc.3": "Решает то, что ему дали", "partner.svc.4": "Стоит на&nbsp;конце пайплайна", "partner.prt.tag": "Партнёр", "partner.prt.title": "Влияет на&nbsp;решение<br>от&nbsp;идеи до&nbsp;запуска", "partner.prt.1": "Влияет на&nbsp;постановку задачи", "partner.prt.2": "Идёт к&nbsp;маркетингу, продукту, владельцу", "partner.prt.3": "Меняет «что делаем», а&nbsp;не&nbsp;только «как»", "partner.prt.4": "Стоит в&nbsp;начале пайплайна", "partner.final": "Дизайн&nbsp;— соавтор бизнеса.<br>Голос за&nbsp;столом,<br>где принимают решения.", "pr.kicker": "Принципы", "pr.title": "Во&nbsp;что я&nbsp;верю.", "pr.sub": "Четыре утверждения, на&nbsp;которых стоит всё остальное.", "pr.1.t": "Форма не&nbsp;спасает<br><em>слабую мысль</em>", "pr.1.d": "Сначала задача, контекст и&nbsp;решение. Потом визуальный язык, который делает это точным и&nbsp;видимым.", "pr.2.t": "Система работает<br><em>без автора</em>", "pr.2.d": "Правила, компоненты и&nbsp;логика должны выдерживать новые задачи, новых людей и&nbsp;новые каналы.", "pr.3.t": "Красиво и&nbsp;работает&nbsp;—<br><em>не&nbsp;два требования, а&nbsp;одно.</em>", "pr.3.d": "Дизайн должен помогать доверию, скорости, конверсии и&nbsp;узнаваемости.", "pr.4.t": "Команда понимает не&nbsp;только<br>что, но&nbsp;и&nbsp;<em>почему</em>", "pr.4.d": "Команда должна понимать критерии, язык, ограничения и&nbsp;причину каждого решения.", "aud.kicker": "Аудитория", "aud.title": "Это люди, а&nbsp;не&nbsp;цифры.", "aud.sub": "У&nbsp;аналитики нет настроения. У&nbsp;человека — есть.", "aud.lead": "Человек чувствует раньше, чем&nbsp;читает.<br>Если первое ощущение слабое, функциям<br>приходится заново доказывать <em>доверие</em>.", "aud.1.n": "Первое впечатление", "aud.2.n": "Решение в&nbsp;моменте", "aud.3.n": "След в&nbsp;памяти", "br.kicker": "Бренд-стратегия", "br.title": "Как складывается бренд.", "br.sub": "Бренд&nbsp;— не&nbsp;логотип. Это повторяемые решения: как звучим, как выглядим, как двигаемся, как держим качество.", "br.1.n": "Контекст", "br.1.d": "Рынок, конкуренты, аудитория, цели бизнеса. Что знаем точно, а&nbsp;что только предполагаем.", "br.2.n": "Позиция", "br.2.d": "Для кого мы, против кого, и&nbsp;о&nbsp;чём мы&nbsp;принципиально молчим. Без второго первое не&nbsp;работает.", "br.3.n": "Голос", "br.3.d": "Как звучит бренд в&nbsp;письме, в&nbsp;баннере, в&nbsp;техподдержке. Тон, который узнают.", "br.4.n": "Визуальный язык", "br.4.d": "Типографика, цвет, образ, motion, фотостиль. Не&nbsp;«логотип и&nbsp;палитра», а&nbsp;целая грамматика.", "br.5.n": "Система", "br.5.d": "Как айдентика разворачивается на&nbsp;сайт, соцсети, продукт, презентации, наружку.", "br.6.n": "Запуск", "br.6.d": "Замеры, итерации, доля голоса, brand recall.<br>Бренд&nbsp;— это не&nbsp;запуск. Это поддержка.", "ev.kicker": "Оценка", "ev.title": "Как оцениваю работу.", "ev.sub": "Четыре уровня. Решение проходит проверку<br>только если работает на&nbsp;всех четырёх.", "ev.1.ln": "Уровень 1", "ev.1.t": "Логика", "ev.1.d": "Пользователь понимает: куда нажать, что произойдёт, зачем это нужно. Если требует объяснения — решение слабое.", "ev.1.q": "Понял?", "ev.2.ln": "Уровень 2", "ev.2.t": "Форма", "ev.2.d": "Иерархия, контраст, ритм, типографика, баланс. Здесь живёт ремесло — и&nbsp;здесь работает экспрессия.", "ev.2.q": "Сделано?", "ev.3.ln": "Уровень 3", "ev.3.t": "Система", "ev.3.d": "Можно ли&nbsp;развернуть на&nbsp;десять каналов? Выдержит ли&nbsp;новые сценарии? Насколько решение едино с&nbsp;брендом?", "ev.3.q": "Выдержит?", "ev.4.ln": "Уровень 4", "ev.4.t": "Бизнес", "ev.4.d": "Помогает ли&nbsp;это бизнесу? Конверсии, retention, узнаваемость, скорость.", "ev.4.q": "Сработало?", "tm.kicker": "Команда", "tm.tag1": "Подход", "tm.tag2": "В&nbsp;работе", "tm.tag3": "Принцип", "tm.title": "Как работаю<br>с&nbsp;командой.", "tm.lead": "Я&nbsp;веду команду&nbsp;— и&nbsp;продолжаю <em>рисовать</em>.", "tm.sub1": "Остаюсь внутри работы: смотрю макеты, спорю за&nbsp;решения, держу связь с&nbsp;бизнесом.", "tm.sub2": "Команда, которая понимает принципы, не&nbsp;ждёт <em>согласований</em> на&nbsp;каждый шаг.", "rs.kicker": "Результаты", "rs.title": "Что получает бизнес.", "rs.sub": "Что меняется внутри команды и&nbsp;в&nbsp;восприятии продукта.", "rs.1.t": "Один бренд во&nbsp;всех касаниях", "rs.1.d": "Лендинг, продукт, реклама, презентация&nbsp;— части одной системы. Клиент видит зрелость, а&nbsp;не&nbsp;пять разных компаний.", "rs.2.t": "Релизы быстрее в&nbsp;разы", "rs.2.d": "Когда команда опирается на&nbsp;систему, дизайн перестаёт быть бутылочным горлом. То, что раньше шло месяц, выходит за&nbsp;неделю.", "rs.3.t": "Команды&nbsp;— в&nbsp;одну сторону", "rs.3.d": "Маркетинг, продукт, разработка опираются на&nbsp;одни принципы. Меньше политики&nbsp;— больше работы для рынка.", "rs.5.t": "Решения по&nbsp;критериям, а&nbsp;не по&nbsp;вкусу", "rs.5.d": "Дизайн перестаёт быть личным мнением. Спор переходит из&nbsp;«мне не&nbsp;нравится» в&nbsp;«это работает».", "rs.1.note": "BRAND", "rs.2.note": "SPEED", "rs.3.note": "FOCUS", "rs.5.note": "CRITERIA", "co.kicker": "Опыт", "co.title": "Где работал и&nbsp;над чем.", "co.sub": "Три места работы за&nbsp;12+ лет. От&nbsp;федеральных<br>корпораций до&nbsp;глобального финтеха в&nbsp;ЮВА.", "co.1.role": "Head of Design", "co.1.desc": "Глобальный необанк, штаб-квартира в&nbsp;Сингапуре. Пересобрал команду с&nbsp;<span class=\"num\">2</span> до&nbsp;<span class=\"num\">11</span>, построил две дизайн-системы и&nbsp;<span class=\"num\">15+</span> бренд-айдентик.", "co.1.aw": "Best New Fintech APAC 2024 · The Next 100 Global Companies", "co.2.role": "Lead Designer", "co.2.desc": "Web3-экосистема: MetaFi-криптобанк, <span class=\"num\">750K+</span> пользователей в&nbsp;<span class=\"num\">170+</span> странах, и&nbsp;Chobies NTO. Ребрендинг Crypterium&nbsp;→ Choise.com без потери аудитории.", "co.2.aw": "CHO-токен: ATH $1,38<br>TOP-500 CoinMarketCap", "co.3.role": "Арт-директор", "co.3.desc": "Московская enterprise-студия. <span class=\"num\">200+</span> проектов для федеральных брендов, аудитория <span class=\"num\">10M+</span> в&nbsp;день. Команда выросла с&nbsp;5 до&nbsp;50+ человек.", "co.3.aw": "Tagline Awards<br>Удержание клиентов&nbsp;— 70%", "co.marquee.lbl": "Бренды, с&nbsp;которыми работал", "cta.eyebrow": "Если зацепил подход", "cta.title": "Давайте <em>поговорим</em>.", "cta.lead": "Не&nbsp;обязательно о&nbsp;работе. Для начала&nbsp;— просто познакомиться. Остальное потом.", "cta.btn.tg": "Telegram", "cta.btn.em": "Email", "cta.btn.pf": "Behance", "cta.m.1.v": "Автор&nbsp;· Сергей Лукин", "ft.copy": "© 2026 Сергей Лукин", "ft.tag": "Дизайн-манифест", "ft.top": "Наверх <span class=\"arr\">↑</span>", "rs.4.note": "TRUST", "rs.4.t": "Бренд воспринимается дороже", "rs.4.d": "Когда касания согласованны, цена ощущается оправданной. Премиум&nbsp;— это не&nbsp;позолота, а&nbsp;порядок.", "aud.1.tag": "Реакция&nbsp;— раньше понимания.", "aud.2.tag": "На&nbsp;хороший дизайн не&nbsp;смотрят&nbsp;— его ощущают.", "aud.3.tag": "Память хранит чувство, не&nbsp;интерфейс.", "aud.1.data": "<span class=\"num\">0,5с</span>&nbsp;впечатление<span class=\"sep\">·</span><span class=\"num\">10с</span>&nbsp;до&nbsp;решения<span class=\"sep\">·</span><span class=\"num\">38%</span>&nbsp;уходят<span class=\"sep\">·</span><span class=\"num\">94%</span>&nbsp;—&nbsp;дизайн", "aud.2.data": "<span class=\"num\">01:42</span>&nbsp;сессия<span class=\"sep\">·</span><span class=\"num\">44%</span>&nbsp;бросают форму<span class=\"sep\">·</span><span class=\"num\">27%</span>&nbsp;drop-off<span class=\"sep\">·</span><span class=\"num\">+27%</span>&nbsp;возврат", "aud.3.data": "<span class=\"num\">+31%</span>&nbsp;делятся<span class=\"sep\">·</span><span class=\"num\">48%</span>&nbsp;возвращаются<span class=\"sep\">·</span><span class=\"num\">+19%</span>&nbsp;узнаваемость<span class=\"sep\">·</span><span class=\"num\">+11</span>&nbsp;NPS", "aud.1.t1": "Похоже на&nbsp;скам", "aud.1.t2": "Сделано как у&nbsp;банка", "aud.1.t3": "Не&nbsp;понятно, кому это", "aud.1.t4": "Чувствую профессионализм", "aud.1.t5": "Это не&nbsp;для меня", "aud.1.t6": "Выглядит как мошенники", "aud.1.t7": "Серьёзная компания", "aud.1.t8": "Хочу разобраться", "aud.1.t9": "Боюсь обмана", "aud.1.t10": "Доверие с&nbsp;первой секунды", "aud.2.t1": "Зачем им столько данных", "aud.2.t2": "Не понимаю, что от&nbsp;меня хотят", "aud.2.t3": "Сделали бы&nbsp;проще", "aud.2.t4": "Слишком много шагов", "aud.2.t5": "Где найти то, что нужно", "aud.2.t6": "Сначала покажите, ради чего", "aud.2.t7": "Зачем мне это", "aud.2.t8": "Сначала бы&nbsp;понять цену", "aud.2.t9": "Можно без регистрации?", "aud.2.t10": "Не&nbsp;успел понять&nbsp;— уже форма", "aud.3.t1": "Скину коллегам, грамотно сделано", "aud.3.t2": "У&nbsp;них реально удобно", "aud.3.t3": "Запомнил их&nbsp;с&nbsp;первой минуты", "aud.3.t4": "Один из&nbsp;лучших, что видел", "aud.3.t5": "Расскажу в&nbsp;команде", "aud.3.t6": "Сам бы&nbsp;так не&nbsp;сделал", "aud.3.t7": "Вернусь к&nbsp;ним точно", "aud.3.t8": "Сразу поделился ссылкой", "aud.3.t9": "Сделано на&nbsp;уровне", "aud.3.t10": "Помню, как было приятно", "aud.1.t11": "Видно, что вложились", "aud.1.t12": "Странная эстетика", "aud.2.t11": "Не&nbsp;разобрался", "aud.2.t12": "Лень читать всё это", "aud.3.t11": "Это конкурентам пример", "aud.3.t12": "Запомнил название", "bmp.s1.label": "Стратегия, процессы, команда&nbsp;— то, что делает визуал возможным", "bmp.s2.label": "Визуал&nbsp;— финальная форма того, что было сделано до", "ev.bmp.foot": "Можно нарисовать идеальный экран&nbsp;— и&nbsp;проиграть проект. Можно собрать слабый&nbsp;— и&nbsp;выиграть. Разница в&nbsp;этих 69%.", "whisper.mentor": "Скиллы можно нанять.<br>Сильную команду — только<br>вырастить.", "mentor.kicker": "Менторство", "mentor.title": "Менторство", "mentor.sat.1": "1:1 созвоны", "mentor.sat.2": "Парные сессии", "mentor.sat.3": "Ревью макетов", "mentor.sat.5": "Защита решений", "mentor.sat.6": "Кросс-команды", "mentor.sat.7": "Референсы", "mentor.sat.8": "План развития", "mentor.sat.9": "Грейды", "mentor.sat.11": "Аналитика", "mentor.sat.12": "Софт-скиллы", "mentor.sat.14": "Карьера", "mentor.sat.15": "Типографика", "mentor.sat.16": "Брендинг", "mentor.sat.17": "Моушн и&nbsp;3D", "mentor.sat.18": "UX-исследования", "mentor.sat.19": "Лекции", "mentor.sat.20": "Разбор кейсов", "mentor.sat.21": "Психотип", "mentor.sat.22": "Эмпатия", "mentor.sat.25": "Похвала и&nbsp;критика", "ds.kicker": "Ремесло", "ds.title": "Не&nbsp;наука. Не&nbsp;искусство.", "ds.sub": "Что человек чувствует, но&nbsp;описать не&nbsp;может.", "ds.p1.a": "Один брендовый красный.", "ds.p1.b": "Тысячи оттенков одного красного. Тёплый&nbsp;— про доверие. Холодный&nbsp;— про тревогу. Светлый исчезнет, тёмный раздавит. Без контекста и&nbsp;пары рядом цвет ничего не&nbsp;значит.", "ds.p2.a": "Одна кнопка на&nbsp;экране.", "ds.p2.b": "Девять состояний. Восемь не&nbsp;видны на&nbsp;скриншоте. Кнопка живёт в&nbsp;движении&nbsp;— не&nbsp;в&nbsp;макете. Хорошая отвечает. Плохая молчит.", "ds.p3.a": "Один шрифт.", "ds.p3.b": "Восемнадцать начертаний&nbsp;— для тела, заголовков, цифр, цитат. Размер повышает голос. У&nbsp;типографики свои законы. Чтение&nbsp;— единственное, что умеем только мы.", "ds.p4.a": "Одна композиция на&nbsp;странице.", "ds.p4.b": "Сетка. Иерархия. Ритм. Воздух между блоками&nbsp;— тоже элемент. То, что глаз видит раньше слова и&nbsp;на&nbsp;что отвечает раньше мысли.", "ds.p5.a": "Задача нарисовать макет.", "ds.p5.b": "Собрать цвет, кнопку, шрифт и&nbsp;ритм&nbsp;— в&nbsp;одно ощущение. Чтобы человек посмотрел и&nbsp;захотел, не&nbsp;зная почему. И&nbsp;не&nbsp;смог описать словами.", "ds.close.a": "Все говорят про дизайн.", "ds.close.b": "Никто не&nbsp;знает, что это.", "ds.title.r1.neg": "Не", "ds.title.r1.noun": "наука.", "ds.title.r2.neg": "Не", "ds.title.r2.noun": "искусство."}, "en": {"whisper.intro": "Design is for people.<br>Not for portfolios.", "whisper.pain": "“Just design it”&nbsp;—<br>the start of a weak project.", "whisper.partner": "The longest argument<br>of my career.", "whisper.pr": "What doesn't fit<br>in a portfolio.", "whisper.aud": "It's not pictures<br>that create the impression.<br>It's design.", "whisper.br": "A designer almost never<br>works freely&nbsp;—<br>they’re always bargaining<br>with constraints.", "whisper.ev": "Work is done<br>when it works<br>in reality.", "whisper.tm": "Teams break<br>from a lack of clarity,<br>not from workload.", "whisper.ds": "They see the result.<br>Not the work.", "whisper.rs": "Strong design<br>holds up in reality.", "whisper.co": "Twelve years<br>in three chapters.", "meta.title": "Sergey Lukin — Head of Design", "meta.description": "Sergey Lukin — Head of Design and Art Director. Design across brand, marketing, web and product: a manifesto, portfolio and selected case studies.", "skip": "Skip to content", "nav.brand": "Sergey Lukin <b>—</b> Head of Design", "nav.meta": "Manifesto · 2026", "nav.tg": "Telegram", "nav.em": "Email", "nav.pf": "Portfolio", "nav.manifesto": "Manifesto", "nav.about": "About", "hero.focus.l": "Focus", "hero.focus.v": "Brand&nbsp;· Marketing<br>Web&nbsp;· Product", "hero.issue": "Issue 01 · 2026", "hero.title.static": "How I&nbsp;build", "hero.center": "A philosophy built over years of work, observation and rethinking what design should&nbsp;be.", "hero.author.l": "Author", "hero.author.v": "Sergey Lukin<br>Head of Design / Art Director", "hero.today.l": "Recognition", "hero.today.v": "Best New Fintech APAC<br>Tagline Awards", "intro.kicker": "Beginning", "intro.stamp": "12+ years · 3 countries · 3 companies", "intro.title": "Twelve years in design — and less and less about layouts.", "intro.p1": "From graphic designer&nbsp;— to <strong>Head of Design</strong>. From a federal-scale <strong>enterprise</strong> studio&nbsp;— to a fintech in Southeast Asia.", "intro.p2": "I work at the intersection of brand, marketing, web and product. I build one unified system so the company sounds coherent.", "pain.kicker": "Symptoms", "pain.title": "Sound familiar?", "pain.sub": "The signs that design has<br>stopped working for the business.", "pain.1": "Marketing, product and engineering pull in different directions.", "pain.2": "Every launch is built from scratch&nbsp;— past projects don't speed up the next.", "pain.3": "The team is busy, but the system gets no stronger.", "pain.4": "The brand drifts across channels. The look depends on whoever picked it up.", "pain.5": "Leadership is buried in review rounds. There's less and less room for strategy.", "pain.1.note": "Blurs focus.<br>Slows launches.", "pain.2.note": "Effort doesn't become speed.", "pain.3.note": "Knowledge doesn't become a system.", "pain.4.note": "Recognition drops, trust fades.", "pain.5.note": "Strategy keeps slipping.", "pain.quote": "Chaos rarely looks like chaos.<br>More often, it looks like<br>a temporary fix that quietly<br>stayed forever.", "pain.foot": "There's no single button<br>for this. No quick mockup, either.", "partner.kicker": "Approach", "partner.title": "A co-author, not a contractor.", "partner.sub": "Design enters the task before the brief is written.<br>Otherwise it fixes symptoms, not the problem.", "partner.svc.tag": "Service", "partner.svc.title": "Receives a brief,<br>returns a mockup", "partner.svc.1": "Gets the brief already framed", "partner.svc.2": "Asks how, not why", "partner.svc.3": "Solves whatever lands on the desk", "partner.svc.4": "Sits at the end of the pipeline", "partner.prt.tag": "Partner", "partner.prt.title": "Shapes the decision<br>from idea to launch", "partner.prt.1": "Helps frame the brief itself", "partner.prt.2": "Talks directly to marketing, product, leadership", "partner.prt.3": "Changes the what, not just the how", "partner.prt.4": "Sits at the start of the pipeline", "partner.final": "Design is a co-author<br>of the business. A voice<br>at the table where<br>decisions are made.", "pr.kicker": "Principles", "pr.title": "What I stand on.", "pr.sub": "Four statements that hold up the rest.", "pr.1.t": "Form doesn't save<br><em>a weak idea</em>", "pr.1.d": "The problem, context and answer come first. The visual language comes after — to make it precise and visible.", "pr.2.t": "A system works<br><em>without its author</em>", "pr.2.d": "Rules, components and logic should hold up under new briefs, new people and new channels.", "pr.3.t": "Beautiful and working&nbsp;—<br><em>not two requirements, but one.</em>", "pr.3.d": "Design has to earn trust, speed up decisions, lift conversion and build recognition.", "pr.4.t": "The team understands<br>not just what, but <em>why</em>", "pr.4.d": "The team has to understand the criteria, the language, the constraints — and why each decision was made.", "aud.kicker": "Audience", "aud.title": "People, not numbers.", "aud.sub": "Analytics has no mood. A person does.", "aud.lead": "Feeling comes before reading.<br>If the first impression is weak,<br>every feature has to earn <em>trust</em><br>back on its own.", "aud.1.n": "First impression", "aud.2.n": "Decision in the moment", "aud.3.n": "What lingers", "br.kicker": "Brand strategy", "br.title": "How a brand takes shape.", "br.sub": "A brand isn't a logo. It's repeated decisions: how we sound, how we look, how we move, how we hold the bar.", "br.1.n": "Context", "br.1.d": "Market, competitors, audience, business goals. What we know — and what we're only guessing.", "br.2.n": "Position", "br.2.d": "Who we're for, who we're against, and what we deliberately stay silent on. Without the second, the first doesn't work.", "br.3.n": "Voice", "br.3.d": "How the brand reads in an email, on a banner, in support. The tone people recognise.", "br.4.n": "Visual language", "br.4.d": "Typography, colour, imagery, motion, photography. Not just a logo and palette — a whole grammar.", "br.5.n": "System", "br.5.d": "How the identity scales into web, social, product, decks, OOH.", "br.6.n": "Launch", "br.6.d": "Measurement, iteration, share of voice, brand recall. A brand isn't a launch. It's upkeep.", "ev.kicker": "Evaluation", "ev.title": "How I evaluate the work.", "ev.sub": "Four levels. A solution only passes<br>if it works on all four.", "ev.1.ln": "Level 1", "ev.1.t": "Logic", "ev.1.d": "The user gets it: where to tap, what happens, why it matters. If it needs explaining, the solution is weak.", "ev.1.q": "Got it?", "ev.2.ln": "Level 2", "ev.2.t": "Form", "ev.2.d": "Hierarchy, contrast, rhythm, typography, balance. This is where craft lives — and where expression earns its place.", "ev.2.q": "Crafted?", "ev.3.ln": "Level 3", "ev.3.t": "System", "ev.3.d": "Will it scale to ten channels? Hold up under new scenarios? Stay aligned with the brand?", "ev.3.q": "Holds?", "ev.4.ln": "Level 4", "ev.4.t": "Business", "ev.4.d": "Does it help the business? Conversion, retention, recognition, speed.", "ev.4.q": "Worked?", "tm.kicker": "Team", "tm.tag1": "Approach", "tm.tag2": "In practice", "tm.tag3": "Principle", "tm.title": "Working with<br>the team.", "tm.lead": "I lead the team&nbsp;— and I keep <em>drawing</em>.", "tm.sub1": "I stay inside the work: reviewing files, fighting for decisions, staying close to the business.", "tm.sub2": "A team that understands the principles doesn't wait for <em>sign-off</em> on every step.", "rs.kicker": "Results", "rs.title": "What the business gets.", "rs.sub": "What shifts inside the team — and in how the product feels.", "rs.1.t": "One brand across every touchpoint", "rs.1.d": "Landing, product, ads, deck — pieces of one system. The customer sees maturity, not five different companies.", "rs.2.t": "Releases ship several times faster", "rs.2.d": "When the team works from a system, design stops being the bottleneck. What took a month ships in a week.", "rs.3.t": "Teams moving the same way", "rs.3.d": "Marketing, product, engineering lean on the same principles. Less politics — more work for the market.", "rs.5.t": "Decisions by criteria, not by taste", "rs.5.d": "Design stops being personal opinion. The argument shifts from “I don’t like it” to “this works.”", "rs.1.note": "BRAND", "rs.2.note": "SPEED", "rs.3.note": "FOCUS", "rs.5.note": "CRITERIA", "co.kicker": "Experience", "co.title": "Where I've worked, what I've built.", "co.sub": "Three companies over 12+ years. From large federal-scale<br>corporates in Russia to a global fintech in Southeast Asia.", "co.1.role": "Head of Design", "co.1.desc": "Global neobank, headquartered in Singapore. Rebuilt the team from <span class=\"num\">2</span> to <span class=\"num\">11</span>, shipped two design systems and <span class=\"num\">15+</span> brand identities.", "co.1.aw": "Best New Fintech APAC 2024 · The Next 100 Global Companies", "co.2.role": "Lead Designer", "co.2.desc": "Web3 ecosystem: a MetaFi crypto-bank with <span class=\"num\">750K+</span> users across <span class=\"num\">170+</span> countries, plus Chobies NTO. Rebranded Crypterium → Choise.com without losing the audience.", "co.2.aw": "CHO token: ATH $1.38<br>TOP-500 CoinMarketCap", "co.3.role": "Art Director", "co.3.desc": "Moscow enterprise studio. <span class=\"num\">200+</span> projects for federal-scale brands, reaching <span class=\"num\">10M+</span> people daily. The team grew from 5 to 50+ specialists.", "co.3.aw": "Tagline Awards<br>70% client retention", "co.marquee.lbl": "Brands I've worked with", "cta.eyebrow": "If the approach lands", "cta.title": "Let's <em>talk</em>.", "cta.lead": "Not necessarily about work. To start — just say hello. The rest comes later.", "cta.btn.tg": "Telegram", "cta.btn.em": "Email", "cta.btn.pf": "Behance", "cta.m.1.v": "Author&nbsp;· Sergey Lukin", "ft.copy": "© 2026 Sergey Lukin", "ft.tag": "Design manifesto", "ft.top": "Top <span class=\"arr\">↑</span>", "rs.4.note": "TRUST", "rs.4.t": "The brand reads more expensive", "rs.4.d": "When touchpoints are coherent, price feels earned. Premium isn't gold trim. It's order.", "aud.1.tag": "Reaction comes before understanding.", "aud.2.tag": "Good design isn’t looked at — it’s felt.", "aud.3.tag": "Memory keeps the feeling, not the interface.", "aud.1.data": "<span class=\"num\">0.5s</span>&nbsp;impression<span class=\"sep\">·</span><span class=\"num\">10s</span>&nbsp;to decide<span class=\"sep\">·</span><span class=\"num\">38%</span>&nbsp;leave<span class=\"sep\">·</span><span class=\"num\">94%</span>&nbsp;—&nbsp;design", "aud.2.data": "<span class=\"num\">01:42</span>&nbsp;session<span class=\"sep\">·</span><span class=\"num\">44%</span>&nbsp;abandon forms<span class=\"sep\">·</span><span class=\"num\">27%</span>&nbsp;drop-off<span class=\"sep\">·</span><span class=\"num\">+27%</span>&nbsp;return", "aud.3.data": "<span class=\"num\">+31%</span>&nbsp;share<span class=\"sep\">·</span><span class=\"num\">48%</span>&nbsp;return<span class=\"sep\">·</span><span class=\"num\">+19%</span>&nbsp;recall<span class=\"sep\">·</span><span class=\"num\">+11</span>&nbsp;NPS", "aud.1.t1": "Looks like a scam", "aud.1.t2": "Feels like a bank", "aud.1.t3": "Not clear who this is for", "aud.1.t4": "Feels professional", "aud.1.t5": "Not for me", "aud.1.t6": "Looks like fraud", "aud.1.t7": "Serious company", "aud.1.t8": "Want to understand", "aud.1.t9": "Afraid of being tricked", "aud.1.t10": "Trust from the first second", "aud.2.t1": "Why so much data from me", "aud.2.t2": "Don’t get what they want", "aud.2.t3": "Make it simpler", "aud.2.t4": "Too many steps", "aud.2.t5": "Where do I find this", "aud.2.t6": "Show me what's in it first", "aud.2.t7": "Why do I need this", "aud.2.t8": "Just show the price", "aud.2.t9": "Can I skip signup?", "aud.2.t10": "Already a form, I haven't even started", "aud.3.t1": "I’ll share with coworkers, well done", "aud.3.t2": "They’re really easy to use", "aud.3.t3": "Remembered them from minute one", "aud.3.t4": "One of the best I’ve seen", "aud.3.t5": "I’ll tell the team", "aud.3.t6": "I couldn’t make it that good", "aud.3.t7": "I’ll definitely come back", "aud.3.t8": "Shared the link right away", "aud.3.t9": "Seriously well made", "aud.3.t10": "I remember how pleasant it was", "aud.1.t11": "You can tell they invested", "aud.1.t12": "Strange aesthetic", "aud.2.t11": "Lost", "aud.2.t12": "Too lazy to read all this", "aud.3.t11": "An example for competitors", "aud.3.t12": "Remembered the name", "bmp.s1.label": "Strategy, process, team&nbsp;— what makes the visual possible", "bmp.s2.label": "The visual&nbsp;— the final form of everything that came before", "ev.bmp.foot": "You can ship the perfect screen and still lose the project. You can ship a weak one and still win. The difference is in that 69%.", "whisper.mentor": "Skills can be hired.<br>A strong team can only be grown.", "mentor.kicker": "Mentorship", "mentor.title": "Mentorship", "mentor.sat.1": "1:1 calls", "mentor.sat.2": "Pair design", "mentor.sat.3": "Mockup reviews", "mentor.sat.5": "Defending decisions", "mentor.sat.6": "Cross-team", "mentor.sat.7": "Sharing references", "mentor.sat.8": "Growth plan", "mentor.sat.9": "Promotions", "mentor.sat.11": "Skill analytics", "mentor.sat.12": "Soft skills", "mentor.sat.14": "Career chats", "mentor.sat.15": "Typography", "mentor.sat.16": "Branding", "mentor.sat.17": "Motion & 3D", "mentor.sat.18": "UX research", "mentor.sat.19": "Talks", "mentor.sat.20": "Case reviews", "mentor.sat.21": "Designer psychology", "mentor.sat.22": "Empathy", "mentor.sat.25": "Praise and critique", "ds.kicker": "Craft", "ds.title": "Not a science. Not an art.", "ds.sub": "What people feel — and cannot put into words.", "ds.p1.a": "One brand red.", "ds.p1.b": "Thousands of shades of one red. Warm reads as trust. Cool reads as alarm. Light disappears, dark crushes. Without context and a pair beside it, colour means nothing.", "ds.p2.a": "One button on the screen.", "ds.p2.b": "Nine states. Eight aren't on the screenshot. A button lives in motion — not in the mockup. A good one answers. A bad one doesn't.", "ds.p3.a": "One typeface.", "ds.p3.b": "Eighteen weights — for body, headings, numbers, quotes. Size raises the voice. Typography has its own laws. Reading is ours alone.", "ds.p4.a": "One composition on the page.", "ds.p4.b": "Grid. Hierarchy. Rhythm. The air between blocks — also an element. What the eye reads before the word, and reacts to before the mind.", "ds.p5.a": "The task of drawing a mockup.", "ds.p5.b": "Pulling colour, button, type and rhythm — into one feeling. So a person looks and wants, without knowing why. And couldn't describe it if they tried.", "ds.close.a": "Everyone talks about design.", "ds.close.b": "No one really knows what it is.", "ds.title.r1.neg": "Not", "ds.title.r1.noun": "a science.", "ds.title.r2.neg": "Not", "ds.title.r2.noun": "an art."}}</script>
+<script defer="" src="../assets/i18n.min.js?v=74"></script><script defer="" src="../assets/manifest.min.js?v=74"></script>
+
+<!-- ─── Mobile burger menu (pages + language) + footer cleanup ─── -->
+<!-- Former inline <style> moved to ../assets/core.min.css (shared burger/dropdown)
+     and ../assets/manifest.min.css (anti-flicker + manifest-only mobile tweaks). -->
+<script>
+(function(){
+  var nav=document.querySelector('nav.top'); if(!nav) return;
+  var center=nav.querySelector('.nav-center'); var lang=nav.querySelector('.lang-switch');
+  var right=nav.querySelector('.nav-right')||nav;
+  var burger=document.createElement('button'); burger.className='nav-burger'; burger.type='button';
+  burger.setAttribute('aria-label','Меню'); burger.setAttribute('aria-expanded','false');
+  burger.innerHTML='<span></span><span></span>'; right.appendChild(burger);
+  var drop=document.createElement('div'); drop.className='nav-drop';
+  if(center) Array.prototype.forEach.call(center.querySelectorAll('a'),function(a){
+    var l=document.createElement('a'); l.href=a.getAttribute('href'); l.textContent=a.textContent;
+    var k=a.getAttribute('data-i18n'); if(k) l.setAttribute('data-i18n',k);
+    if(a.classList.contains('is-active')) l.classList.add('is-active'); drop.appendChild(l);
+  });
+  if(lang){ var lr=document.createElement('div'); lr.className='nav-drop__lang';
+    Array.prototype.forEach.call(lang.querySelectorAll('button[data-lang]'),function(b){
+      var nb=document.createElement('button'); nb.type='button'; nb.textContent=b.textContent;
+      nb.setAttribute('data-lang',b.getAttribute('data-lang'));
+      if(b.classList.contains('active')) nb.classList.add('active');
+      nb.addEventListener('click',function(){ b.click(); Array.prototype.forEach.call(lr.children,function(x){x.classList.toggle('active',x===nb);}); close(); });
+      lr.appendChild(nb);
+    });
+    drop.appendChild(lr);
+  }
+  nav.appendChild(drop);
+  function close(){ nav.classList.remove('menu-open'); burger.setAttribute('aria-expanded','false'); }
+  burger.addEventListener('click',function(){ var o=nav.classList.toggle('menu-open'); burger.setAttribute('aria-expanded',o?'true':'false'); });
+  Array.prototype.forEach.call(drop.querySelectorAll('a'),function(a){ a.addEventListener('click',close); });
+  addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+})();
+</script>
+<script defer="" src="../assets/lenis.min.js?v=74"></script><script defer="" src="../assets/smooth-scroll.min.js?v=74"></script>
+
+</body></html>

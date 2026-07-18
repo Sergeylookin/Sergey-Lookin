@@ -5,7 +5,7 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "build": "node tools/minify.mjs && node tools/build-pages.mjs",
+    "build": "node tools/minify.mjs && node tools/build-pages.mjs && node tools/build-en.mjs",
     "check": "node tools/minify.mjs --check && node tools/build-pages.mjs --check",
     "minify": "node tools/minify.mjs",
     "images": "node tools/build-images.mjs --build",
@@ -13,6 +13,7 @@
   },
   "license": "ISC",
   "devDependencies": {
+    "cheerio": "^1.2.0",
     "esbuild": "^0.28.1",
     "lighthouse": "^13.4.0",
     "postcss": "^8.5.19",

@@ -20,8 +20,12 @@
     dict = node ? JSON.parse(node.textContent) : null;
   } catch (e) { dict = null; }
 
-  /* saved choice → browser language → ru */
+  /* Static per-language site: the page's own <html lang> is authoritative (URL decides the
+     language; the switcher navigates between the RU tree and /en/). Fall back to saved
+     choice → browser language only if the page somehow has no lang. */
   function detect() {
+    var pageLang = (document.documentElement.getAttribute('lang') || '').slice(0, 2);
+    if (SUPPORTED.indexOf(pageLang) !== -1) return pageLang;
     var saved = null;
     try { saved = localStorage.getItem(LANG_KEY); } catch (e) {}
     if (saved && SUPPORTED.indexOf(saved) !== -1) return saved;
@@ -86,6 +90,22 @@
       b.addEventListener('click', function () { onPick(b.getAttribute('data-lang')); });
     });
   }
+
+  /* Language switch = NAVIGATION between the RU tree and /en/ (static per-language site).
+     Capture-phase + stopImmediatePropagation so this preempts the pages' old in-place-swap
+     handlers. Uses the baked hreflang alternate as the target — no path math. Falls through
+     (no preventDefault) when there's no counterpart (e.g. 404) so the old swap still works. */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-lang]') : null;
+    if (!b) return;
+    var lang = b.getAttribute('data-lang');
+    if (!lang) return;
+    var cur = (document.documentElement.getAttribute('lang') || 'ru').slice(0, 2);
+    if (lang === cur) { e.preventDefault(); e.stopImmediatePropagation(); return; }
+    var alt = document.querySelector('link[rel="alternate"][hreflang="' + lang + '"]');
+    var href = alt && alt.getAttribute('href');
+    if (href) { e.preventDefault(); e.stopImmediatePropagation(); window.location.href = href; }
+  }, true);
 
   window.SLi18n = { dict: dict, detect: detect, applyStrings: applyStrings, wire: wire, announce: announce };
 })();
