@@ -10,7 +10,7 @@
 // Also regenerates sitemap.xml with both language trees + hreflang alternates.
 
 import { load } from 'cheerio';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve, join } from 'node:path';
 
@@ -34,6 +34,19 @@ const hreflangBlock = (ruUrl, enUrl) =>
   `<link rel="alternate" hreflang="en" href="${enUrl}">` +
   `<link rel="alternate" hreflang="x-default" href="${ruUrl}">`;
 
+// CreativeWork JSON-LD for a project case (localized per language).
+const stripName = (t) => strip(t).split('·')[0].split('|')[0].trim();
+function creativeWork(dictLang, lang, url) {
+  return {
+    '@context': 'https://schema.org', '@type': 'CreativeWork',
+    name: stripName(dictLang['meta.title'] || ''),
+    description: dictLang['meta.description'] || '',
+    inLanguage: lang, url,
+    creator: { '@type': 'Person', name: 'Сергей Лукин', alternateName: 'Sergey Lukin', url: BASE },
+  };
+}
+const ldScript = (o) => `<script type="application/ld+json">${JSON.stringify(o)}</script>`;
+
 function getDict(html) {
   const m = html.match(/<script id="i18n-data"[^>]*>([\s\S]*?)<\/script>/);
   if (!m) return null;
@@ -47,13 +60,19 @@ function ensureRuHreflang(html, ruUrl, enUrl) {
   return html.replace(/(<link rel="icon")/, hreflangBlock(ruUrl, enUrl) + '$1');
 }
 
+// Inject a CreativeWork JSON-LD (RU) into a project page (idempotent), before the first favicon.
+function ensureProjectLdRu(html, dict, ruUrl) {
+  if (/"CreativeWork"/.test(html)) return html;
+  return html.replace(/(<link rel="icon")/, ldScript(creativeWork(dict.ru || {}, 'ru', ruUrl)) + '$1');
+}
+
 // Shift every RELATIVE assets/ reference one directory deeper (…/en/ is one level down).
 // Absolute URLs (https://…/assets/…) are skipped by the lookbehind.
 function bumpAssetDepth(html) {
   return html.replace(/(?<![:/\w.-])((?:\.\.\/)*)assets\//g, '../$1assets/');
 }
 
-function makeEn(ruHtml, dict, ruUrl, enUrl) {
+function makeEn(ruHtml, dict, ruUrl, enUrl, isProject) {
   // Strip a leading BOM — it derails the parser (head content leaks into body, doctype lost).
   const $ = load(ruHtml.replace(/^﻿/, ''));
   const en = dict.en || {};
@@ -84,6 +103,14 @@ function makeEn(ruHtml, dict, ruUrl, enUrl) {
     if (k in en) $(el).attr('aria-label', en[k]);
   });
 
+  if (isProject) {
+    // swap the copied RU CreativeWork for the EN one
+    $('script[type="application/ld+json"]').each((_i, el) => {
+      if (($(el).html() || '').includes('"CreativeWork"')) $(el).remove();
+    });
+    $('head').append(ldScript(creativeWork(en, 'en', enUrl)));
+  }
+
   let out = $.html();
   if (!/^\s*<!doctype/i.test(out)) out = '<!doctype html>\n' + out;  // cheerio drops it; browsers need it (no quirks mode)
   return bumpAssetDepth(out);
@@ -100,12 +127,14 @@ for (const p of PAGES) {
   const dict = getDict(src);
   if (!dict) { console.log('SKIP (no dict):', p.file); continue; }
 
-  // 1) reciprocal hreflang into the RU page
-  const ruOut = ensureRuHreflang(src, ruUrl, enUrl);
-  if (ruOut !== src) { writeFileSync(ruAbs, ruOut); ruChanged++; console.log('ru hreflang +', p.file); }
+  const isProject = p.file.startsWith('projects/');
+  // 1) reciprocal hreflang (+ CreativeWork LD for cases) into the RU page
+  let ruOut = ensureRuHreflang(src, ruUrl, enUrl);
+  if (isProject) ruOut = ensureProjectLdRu(ruOut, dict, ruUrl);
+  if (ruOut !== src) { writeFileSync(ruAbs, ruOut); ruChanged++; console.log('ru updated +', p.file); }
 
   // 2) English twin
-  const enHtml = makeEn(ruOut, dict, ruUrl, enUrl);
+  const enHtml = makeEn(ruOut, dict, ruUrl, enUrl, isProject);
   writeFileSync(join(ROOT, p.enFile), enHtml);
   enWritten++;
   console.log('en written ', p.enFile);
@@ -116,9 +145,11 @@ const sm = ['<?xml version="1.0" encoding="UTF-8"?>',
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'];
 for (const p of PAGES) {
   const ruUrl = BASE + p.ruPath, enUrl = BASE + p.enPath;
+  const lastmod = statSync(join(ROOT, p.file)).mtime.toISOString().slice(0, 10);
   for (const [self, ru, en] of [[ruUrl, ruUrl, enUrl], [enUrl, ruUrl, enUrl]]) {
     sm.push('  <url>');
     sm.push(`    <loc>${self}</loc>`);
+    sm.push(`    <lastmod>${lastmod}</lastmod>`);
     sm.push(`    <xhtml:link rel="alternate" hreflang="ru" href="${ru}"/>`);
     sm.push(`    <xhtml:link rel="alternate" hreflang="en" href="${en}"/>`);
     sm.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${ru}"/>`);
