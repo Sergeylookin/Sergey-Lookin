@@ -1451,8 +1451,8 @@ if(oldBrandList){
   oldBrandList.replaceWith(track);
 }
 
-/* stat-counter removed 18.07 — it only targeted `.numbers-grid .cell .big`, a section
-   that no longer exists on the page (dead code left from a cut "numbers" block). */
+/* Numbers 69% / 31% are STATIC (18.07, Sergey) — no count-up animation.
+   The values live directly in index.html; there is no stat-counter JS anymore. */
 
 /* ─────────────── cta title reveal trigger ─────────────── */
 const wordIO=new IntersectionObserver(entries=>{

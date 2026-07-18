@@ -1712,21 +1712,10 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
 .intro-title .h2-line{display:block;filter:blur(6px);transition:filter 1s var(--ease-out);transition-delay:calc(var(--li,0) * 0.12s)}
 .intro-title.h2-in .h2-line{filter:blur(0)}
 
-.bmp-dotgrid .d{opacity:0;transform:scale(0.2);transform-origin:center}
-.bmp-dotgrid.in-view .d{animation:dot-pop 0.7s cubic-bezier(0.22,1.2,0.36,1) forwards;animation-delay:calc(var(--d-i,0) * 0.03s + 0.1s)}
-@keyframes dot-pop{
-  0%{opacity:0;transform:scale(0.15)}
-  40%{opacity:0.45;transform:scale(1.18)}
-  62%{opacity:0.4;transform:scale(0.94)}
-  100%{opacity:0.35;transform:scale(1)}
-}
-.bmp-dotgrid.in-view .d.accent{animation:dot-pop-a 0.7s cubic-bezier(0.22,1.2,0.36,1) forwards;animation-delay:calc(var(--d-i,0) * 0.03s + 0.1s)}
-@keyframes dot-pop-a{
-  0%{opacity:0;transform:scale(0.15)}
-  40%{opacity:1;transform:scale(1.25)}
-  62%{opacity:0.95;transform:scale(0.96)}
-  100%{opacity:1;transform:scale(1)}
-}
+/* Dots render STATICALLY (18.07, Sergey): the 100-dot staggered "pop" entrance was
+   removed — 100 simultaneous animations (re-fired whenever the section re-entered view)
+   were what lagged the page and flickered. The base `.bmp-dotgrid .d` rule above shows
+   them immediately (69 accent + 31 muted), no animation. */
 .brand-marquee-track{overflow:hidden;mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 8%,#000 92%,transparent 100%);width:100%;display:flex}
 .brand-marquee-row{display:inline-flex;gap:3rem;font-family:var(--serif);font-size:clamp(1.625rem,2.4vw,2.125rem);font-weight:350;color:var(--ink);line-height:1.1;letter-spacing:-0.022em;animation:marquee 75s linear infinite;padding-right:3rem;white-space:nowrap;flex-shrink:0;align-items:center}
 .brand-marquee-row .brand-item{white-space:nowrap;transition:color 0.4s var(--ease-out);cursor:default;display:inline-flex;align-items:center;gap:3rem}
