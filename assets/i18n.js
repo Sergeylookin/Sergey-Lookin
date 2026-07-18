@@ -58,6 +58,12 @@
       var key = el.getAttribute('data-i18n');
       if (key in table) el.innerHTML = table[key];
     });
+    /* localized aria-label — for elements whose accessible name must differ per language
+       (e.g. portfolio card overlay links whose title transliterates: Руна → Runa) */
+    document.querySelectorAll('[data-i18n-aria]').forEach(function (el) {
+      var akey = el.getAttribute('data-i18n-aria');
+      if (akey in table) el.setAttribute('aria-label', table[akey]);
+    });
     /* queried live: the burger clones the switch into .nav-drop__lang after page JS runs */
     document.querySelectorAll('.lang-switch button[data-lang], .nav-drop__lang button[data-lang], .lang-btn[data-lang]').forEach(function (b) {
       var on = b.getAttribute('data-lang') === lang;

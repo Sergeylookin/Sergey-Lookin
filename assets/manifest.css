@@ -2490,8 +2490,11 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   .hero-title--corner{font-size:clamp(3rem,13vw,5rem);bottom:clamp(9rem,18vh,12rem)}
 }
 
-/* ─── Mobile hero (≤720px) — clean linear layout, no desktop tricks ─── */
-@media (max-width:720px){
+/* ─── Mobile hero — clean linear layout: phones (≤720px) AND portrait tablets
+       (≤1024px portrait). The portrait-tablet case fixes the corner-title / stat-block
+       overlap on iPad-portrait etc., where the absolute bottom-anchored title collided
+       with the stacked stats. Reuses the proven, non-overlapping linear layout. ─── */
+@media (max-width:720px), (max-width:1024px) and (orientation:portrait){
   .hero{perspective:none;overflow:visible}
   .hero .container{
     display:flex;flex-direction:column;

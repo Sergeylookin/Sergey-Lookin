@@ -24,7 +24,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = process.argv.includes('--check');
 
 // ── Single source of truth ────────────────────────────────────────────────
-export const VERSION = 70;
+export const VERSION = 72;
 
 // Shared i18n keys that MUST be identical on every site page. The build validates
 // each page's dict against these (values only) and reports drift — it does not rewrite
@@ -78,7 +78,7 @@ const navLink = (href, key, label, on) =>
 const nav = (c) => {
   const p = c.prefix;
   return `<nav class="top on-dark" id="nav">` +
-    `<a class="brand" href="${p}index.html" id="navHome" data-i18n="nav.brand" aria-label="На главную">Сергей Лукин <b>—</b> Head of Design</a>` +
+    `<a class="brand" href="${p}index.html" id="navHome" data-i18n="nav.brand">Сергей Лукин <b>—</b> Head of Design</a>` +
     `<div class="nav-center">` +
       navLink(`${p}index.html`, 'nav.manifesto', 'Манифест', c.active === 'manifesto') +
       `<span class="nav-sep" aria-hidden="true">·</span>` +
@@ -155,6 +155,27 @@ function checkSharedI18n(html, file) {
   return out;
 }
 
+// Every data-i18n / data-i18n-aria key USED in a page's HTML must exist in BOTH ru and en.
+// This catches the realistic drift mode (a shell/markup key dropped, renamed or typo'd in a
+// page's hand-maintained dict) without false-positiving on shared keys a page simply doesn't use.
+function checkI18nCoverage(html, file) {
+  const m = html.match(/<script id="i18n-data" type="application\/json">([\s\S]*?)<\/script>/);
+  if (!m) return [];
+  let dict;
+  try { dict = JSON.parse(m[1]); } catch (e) { return [`${file}: i18n dict does not parse (${e.message})`]; }
+  const used = new Set();
+  const re = /data-i18n(?:-aria)?="([^"]+)"/g;
+  let mm;
+  while ((mm = re.exec(html))) used.add(mm[1]);
+  const out = [];
+  for (const k of used) {
+    for (const lang of ['ru', 'en']) {
+      if (!dict[lang] || !(k in dict[lang])) out.push(`${file}: i18n ${lang}.${k} MISSING (used in HTML)`);
+    }
+  }
+  return out;
+}
+
 // ── Run ────────────────────────────────────────────────────────────────────
 let anyChange = false, allWarnings = [];
 for (const [file, cfg] of Object.entries(PAGES)) {
@@ -164,7 +185,7 @@ for (const [file, cfg] of Object.entries(PAGES)) {
   const html = bustVideos(r.html);
   const changed = html !== src;
   const warnings = r.warnings;
-  allWarnings.push(...warnings.map((w) => `${file}: ${w}`), ...checkSharedI18n(html, file));
+  allWarnings.push(...warnings.map((w) => `${file}: ${w}`), ...checkSharedI18n(html, file), ...checkI18nCoverage(html, file));
   if (changed) {
     anyChange = true;
     if (CHECK) console.log('DRIFT   ', file);
@@ -177,11 +198,15 @@ for (const file of ['index.html', '404.html']) {
   const path = resolve(ROOT, file);
   const src = readFileSync(path, 'utf8');
   const html = bustVideos(src.replace(/\?v=\d+/g, `?v=${VERSION}`));
-  allWarnings.push(...checkSharedI18n(html, file).filter((w) => !w.includes('no i18n dict')));
+  allWarnings.push(...checkSharedI18n(html, file).filter((w) => !w.includes('no i18n dict')), ...checkI18nCoverage(html, file));
   if (html !== src) { anyChange = true; if (!CHECK) { writeFileSync(path, html); console.log('written ', file, '(version only)'); } else console.log('DRIFT   ', file); }
   else console.log('ok      ', file);
 }
 
+const i18nIssues = allWarnings.filter((w) => w.includes(': i18n '));
 if (allWarnings.length) { console.log('\n⚠ warnings:'); allWarnings.forEach((w) => console.log('  -', w)); }
-if (CHECK && anyChange) { console.error('\n✖ pages are out of sync — run `node tools/build-pages.mjs`'); process.exit(1); }
+if (CHECK && (anyChange || i18nIssues.length)) {
+  console.error(`\n✖ out of sync${i18nIssues.length ? ` — ${i18nIssues.length} i18n issue(s) above` : ''} — run \`node tools/build-pages.mjs\` and fix any i18n gaps`);
+  process.exit(1);
+}
 console.log(`\n✔ done (VERSION=${VERSION})`);

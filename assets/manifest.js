@@ -112,7 +112,6 @@ function bindPainMagnetic(){
         let influence = Math.max(0, 1 - dist/R);
         influence = influence * influence * (3 - 2*influence);
         ch.style.setProperty('--lift', `-${(influence*MAX_LIFT).toFixed(1)}px`);
-        ch.style.setProperty('--mag', influence.toFixed(3));
       });
     }
     li._magMove = function(e){
@@ -125,7 +124,6 @@ function bindPainMagnetic(){
       const chars = pt.querySelectorAll('.char');
       chars.forEach(ch => {
         ch.style.setProperty('--lift', '0px');
-        ch.style.setProperty('--mag', '0');
       });
     };
     li.addEventListener('pointermove', li._magMove, {passive:true});
@@ -332,10 +330,6 @@ if(dgWave){
   for(let i=0;i<100;i++){
     const d=document.createElement('div');
     d.className='d'+(i<69?' accent':'');
-    const cols=50;
-    const row=Math.floor(i/cols);
-    const col=i%cols;
-    d.style.setProperty('--d-i',row+col);
     dgWave.appendChild(d);
   }
 }
@@ -1220,7 +1214,6 @@ function updateProgress(){
     if(r.top<=midY && r.bottom>=midY){onDark=true;break}
   }
   sideProgress.classList.toggle('on-dark',onDark);
-  document.body.classList.toggle('is-on-dark',onDark);
 }
 window.__scroll.add(updateProgress);
 buildSideNavigation();
@@ -1489,31 +1482,8 @@ function updateParallax(){
 window.__scroll.add(updateParallax);
 updateParallax();
 
-/* ─────────────── magnetic section numbers ─────────────── */
-if(window.matchMedia('(hover:hover)').matches){
-  document.querySelectorAll('.sec-head .num-block').forEach(block=>{
-    const num=block.querySelector('.num');
-    if(!num)return;
-    let rafId=null;let lastE=null;
-    block.addEventListener('mousemove',(e)=>{
-      lastE=e;
-      if(rafId) return;
-      rafId=requestAnimationFrame(()=>{
-        const rect=block.getBoundingClientRect();
-        const x=(lastE.clientX-rect.left-rect.width/2)/rect.width;
-        const y=(lastE.clientY-rect.top-rect.height/2)/rect.height;
-        num.style.setProperty('--mx',`${x*4}px`);
-        num.style.setProperty('--my',`${y*4}px`);
-        rafId=null;
-      });
-    });
-    block.addEventListener('mouseleave',()=>{
-      if(rafId){cancelAnimationFrame(rafId);rafId=null}
-      num.style.setProperty('--mx','0px');
-      num.style.setProperty('--my','0px');
-    });
-  });
-}
+/* magnetic section numbers — removed 18.07: wrote --mx/--my that no CSS ever consumed
+   (dead effect + per-frame getBoundingClientRect on hover for zero visual output). */
 
 /* ─────────────── line-by-line slide reveal for big h2s ─────────────── */
 /* Split happens once (DOM-heavy); h2-in class toggles bidirectionally

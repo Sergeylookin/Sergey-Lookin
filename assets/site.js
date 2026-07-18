@@ -149,6 +149,7 @@
       if(!overlay) return;
       var href = overlay.getAttribute('href');
       var label = overlay.getAttribute('aria-label') || '';
+      var ariaKey = overlay.getAttribute('data-i18n-aria') || '';   /* localized-aria hook, carried onto the rebuilt links */
       var media = card.querySelector('.case__media');
       var cta = card.querySelector('.case__cta');
       overlay.remove();
@@ -156,12 +157,14 @@
         var ml = document.createElement('a');
         ml.className = 'case__media-link'; ml.href = href;
         if(label) ml.setAttribute('aria-label', label);
+        if(ariaKey) ml.setAttribute('data-i18n-aria', ariaKey);
         media.parentNode.insertBefore(ml, media); ml.appendChild(media);
       }
       if(cta && href){
         var cl = document.createElement('a');
         cl.className = 'case__cta-link'; cl.href = href;
         if(label) cl.setAttribute('aria-label', label);
+        if(ariaKey) cl.setAttribute('data-i18n-aria', ariaKey);
         cta.parentNode.insertBefore(cl, cta); cl.appendChild(cta);
         /* Bottom row: project number (left) opposite the CTA (right).
            The number is relocated out of the image overlay into this footer. */
