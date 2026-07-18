@@ -9,7 +9,8 @@
     "check": "node tools/minify.mjs --check && node tools/build-pages.mjs --check",
     "minify": "node tools/minify.mjs",
     "images": "node tools/build-images.mjs --build",
-    "srcset": "node tools/inject-srcset.mjs"
+    "srcset": "node tools/inject-srcset.mjs",
+    "clean": "node -e \"require('node:fs').rmSync('node_modules',{recursive:true,force:true})\""
   },
   "license": "ISC",
   "devDependencies": {
