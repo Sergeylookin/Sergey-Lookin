@@ -1,0 +1,152 @@
+/* ============================================================
+   core.css — shared foundation for the whole portfolio.
+   Linked FIRST on every page (before manifest.css / site.css),
+   so the page-specific stylesheet always wins on equal specificity.
+
+   Holds ONLY what is theme-agnostic and identical across both
+   themes today: brand/type/grid tokens, the z-index scale, the
+   reset + Lenis rules, ::selection, and the mobile menu (burger +
+   dropdown) — which used to be duplicated in site.css and in
+   index.html's inline <style>.
+
+   Theme palettes (--bg / --ink / --mute / --hair / --t-hero …)
+   stay per-theme: dark in manifest.css, light in site.css. The
+   mobile dropdown reads --bg-dark / --hair-dk / --mute-2 from
+   whichever theme is active, so it keeps its per-page look.
+   ============================================================ */
+:root{
+  /* ─── Brand / fonts (identical in both themes) ─── */
+  --serif:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --sans:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',monospace;
+  --accent:#FB460D;        /* bright orange — single source of truth for the accent */
+  --accent-hi:#FF6A38;     /* lighter orange for hover / emphasis */
+  --accent-ink:#0C0D11;    /* dark text to sit ON an orange fill */
+
+  /* ─── Grid system ─── */
+  --container:100%;
+  --gutter:1rem;
+  --nav-safe-right:clamp(0rem,4.5vw,5rem);
+  --col-gap:clamp(0.875rem,1.8vw,2rem);
+
+  /* ─── Shared type scale (theme-specific --t-hero / --t-tag live per theme) ─── */
+  --t-h1:clamp(2.25rem,5vw,5rem);
+  --t-body:clamp(1.0625rem,1.2vw,1.1875rem);
+  --t-eyebrow:0.9375rem;
+  --t-mono-sm:0.875rem;
+
+  --ease-out:cubic-bezier(0.16,1,0.3,1);
+  --ease-out-strong:cubic-bezier(0.22,1,0.36,1);  /* sharper ease-out, used ~24× */
+  --ease-bounce:cubic-bezier(0.34,1.56,0.64,1);   /* slight overshoot */
+
+  /* ─── z-index scale (semantic layers, structural — not theme-dependent) ─── */
+  --z-behind: 0;
+  --z-base: 1;
+  --z-content: 2;
+  --z-content-top: 3;
+  --z-header: 5;
+  --z-active: 6;
+  --z-header-hi: 10;
+  --z-aside: 20;
+  --z-aside-top: 21;
+  --z-aside-hover: 25;
+  --z-whisper-hover: 50;
+  --z-tip: 60;
+  --z-nav: 100;
+  --z-overlay: 200;
+  --z-skip: 1000;
+  --z-top: 9999;
+}
+
+/* ─── Reset + smooth-scroll (Lenis) — identical in both themes ─── */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+/* Lenis smooth-scroll (overrides native smooth while active) */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+.lenis.lenis-stopped{overflow:hidden}
+.lenis.lenis-smooth iframe{pointer-events:none}
+
+::selection{background:var(--accent);color:var(--accent-ink)}
+
+/* ─── Image deterrents — friction only (the client always has the file; this just
+       stops casual drag-to-save / select. Right-click is blocked via JS in site.js). ─── */
+img,video{-webkit-user-drag:none;-khtml-user-drag:none;user-select:none;-webkit-user-select:none}
+
+/* ─── Mobile menu (burger + dropdown) ───
+   Shared across all pages. Was duplicated in site.css and in
+   index.html's inline <style>. The dropdown's --bg-dark / --hair-dk
+   / --mute-2 resolve to the active theme's palette at use time. */
+.nav-burger{display:none}
+.nav-drop{display:none}
+/* Burger nav kicks in at <=1024 — unified "tablet mode": below this the section
+   layouts also collapse to single column (manifest.css), so nav + content switch
+   to tablet together. Above 1024 the inline nav + multi-column desktop grid apply. */
+@media (max-width:1024px){
+  .nav-burger{display:flex;flex-direction:column;justify-content:center;gap:5px;width:44px;height:44px;background:none;border:0;cursor:pointer;padding:0;margin-left:auto;color:inherit}
+  .nav-burger span{display:block;width:22px;height:1.5px;background:currentColor;margin:0 auto;transition:transform .3s var(--ease-out),opacity .3s var(--ease-out)}
+  nav.top.menu-open .nav-burger span:nth-child(1){transform:translateY(3.25px) rotate(45deg)}
+  nav.top.menu-open .nav-burger span:nth-child(2){transform:translateY(-3.25px) rotate(-45deg)}
+  nav .nav-right .lang-switch{display:none}
+  nav .meta{display:none}
+  /* visibility keeps the CLOSED menu's links/buttons out of the Tab order (opacity:0 alone
+     left 5 invisible focus stops); the 0s .3s delay hides it only after the fade-out ends */
+  .nav-drop{position:fixed;top:clamp(3.4rem,9vh,4.25rem);right:var(--gutter);min-width:210px;display:flex;flex-direction:column;background:color-mix(in srgb,var(--bg-dark) 90%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--hair-dk);border-radius:12px;padding:.9rem 1.25rem 1.1rem;opacity:0;transform:translateY(-8px);pointer-events:none;visibility:hidden;transition:opacity .3s var(--ease-out),transform .3s var(--ease-out),visibility 0s .3s;z-index: var(--z-nav)}
+  nav.top.menu-open .nav-drop{opacity:1;transform:none;pointer-events:auto;visibility:visible;transition:opacity .3s var(--ease-out),transform .3s var(--ease-out),visibility 0s 0s}
+  .nav-drop a{font-family:var(--mono);font-size:.95rem;letter-spacing:.08em;text-transform:uppercase;color:#fff;padding:.62rem 0;text-decoration:none;transition:color .25s var(--ease-out)}
+  .nav-drop a.is-active,.nav-drop a:hover{color:var(--accent)}
+  .nav-drop__lang{display:flex;gap:1.25rem;margin-top:.7rem;padding-top:.85rem;border-top:1px solid var(--hair-dk)}
+  .nav-drop__lang button{background:none;border:0;color:var(--mute-2);font-family:var(--mono);font-size:.95rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:.65rem .55rem;margin:-.4rem -.2rem}
+  .nav-drop__lang button.active{color:var(--accent)}
+}
+
+/* ─── Shared shell bases — top nav, cursor, lang-switch container ───
+   Moved here from BOTH site.css and manifest.css (they held byte-identical copies).
+   Only the parts identical across index (manifest.css) and sub-pages (site.css) live here.
+   Per-page/theme divergences stay in the page stylesheet: nav scrolled-bg (solid vs
+   color-mix), footer + .ft-top arrow, .lang-switch button (position/focus-visible),
+   .sep weight, cursor hide-breakpoint (900 vs 1024), the "View" cursor label, brand
+   hover vs accent dash. core.css loads first, so those page overrides still win. */
+.cursor-dot{position:fixed;top:0;left:0;width:14px;height:14px;pointer-events:none;z-index:var(--z-top);transform:translate(-50%,-50%);opacity:0;transition:width .32s var(--ease-out),height .32s var(--ease-out),opacity .4s var(--ease-out);will-change:transform}
+.cursor-dot::before,.cursor-dot::after{content:"";position:absolute;background:var(--accent);transition:transform .32s var(--ease-out),opacity .32s var(--ease-out)}
+.cursor-dot::before{display:none}
+.cursor-dot::after{width:7px;height:7px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%)}
+.cursor-dot.is-active{opacity:.85}
+.cursor-dot.is-hovering-link{width:30px;height:30px;border:1px solid var(--accent);border-radius:50%;opacity:.7}
+.cursor-dot.is-hovering-link::before,.cursor-dot.is-hovering-link::after{opacity:0}
+nav.top{position:fixed;top:0;left:0;right:0;padding:1.25rem var(--gutter);display:flex;align-items:center;justify-content:space-between;z-index:var(--z-nav);background:transparent;border-bottom:1px solid transparent;transition:background .4s var(--ease-out),border-color .4s var(--ease-out),color .4s var(--ease-out)}
+nav.top.on-dark{color:#fff}
+nav .brand{background:none;border:none;padding:0;margin:0;color:inherit;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:color .3s var(--ease-out);font-weight:400;line-height:inherit}
+nav .brand:hover{color:var(--accent)}
+nav .meta{font-family:var(--mono);font-size:var(--t-mono-sm);color:var(--mute);letter-spacing:.08em;text-transform:uppercase}
+nav.top.on-dark .meta{color:var(--mute-2)}
+.nav-right{display:flex;align-items:center;gap:clamp(1.1rem,2.4vw,2rem)}
+.nav-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:.7rem;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--mute);pointer-events:auto}
+nav.top.on-dark .nav-center{color:var(--mute-2)}
+.nav-center a{color:inherit;transition:color .3s var(--ease-out);position:relative;display:inline-block;padding:.25rem 0}
+.nav-center a:hover{color:var(--accent)}
+.nav-center a.is-active{color:var(--accent)}
+nav.top.on-dark .nav-center a.is-active{color:var(--accent)}
+.nav-center .nav-sep{opacity:.5}
+@media (max-width:1024px){.nav-center{display:none}}
+.lang-switch{display:inline-flex;align-items:center;gap:.55rem;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.1em;text-transform:uppercase;font-weight:500;line-height:1;user-select:none}
+
+/* fonts:start — self-hosted, generated by tools/build-fonts.mjs; do not edit by hand */
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ibm-plex-mono-normal-400-cyrillic.woff2') format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ibm-plex-mono-normal-400-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ibm-plex-mono-normal-400-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/ibm-plex-mono-normal-500-cyrillic.woff2') format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/ibm-plex-mono-normal-500-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/ibm-plex-mono-normal-500-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/ibm-plex-mono-normal-600-cyrillic.woff2') format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/ibm-plex-mono-normal-600-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/ibm-plex-mono-normal-600-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Inter Tight';font-style:italic;font-weight:300 700;font-display:swap;src:url('fonts/inter-tight-italic-300_700-cyrillic.woff2') format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'Inter Tight';font-style:italic;font-weight:300 700;font-display:swap;src:url('fonts/inter-tight-italic-300_700-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Inter Tight';font-style:italic;font-weight:300 700;font-display:swap;src:url('fonts/inter-tight-italic-300_700-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Inter Tight';font-style:normal;font-weight:300 700;font-display:swap;src:url('fonts/inter-tight-normal-300_700-cyrillic.woff2') format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116}
+@font-face{font-family:'Inter Tight';font-style:normal;font-weight:300 700;font-display:swap;src:url('fonts/inter-tight-normal-300_700-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Inter Tight';font-style:normal;font-weight:300 700;font-display:swap;src:url('fonts/inter-tight-normal-300_700-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+/* fonts:end */
