@@ -167,3 +167,12 @@ nav.top.on-dark .nav-center a.is-active{color:var(--accent)}
   filter:none !important;
   will-change:auto !important;
 }
+
+/* ── Keyboard focus ring (WCAG 2.4.7) — shown for keyboard/AT users, suppressed for
+      mouse clicks via :focus-visible. Accent outline reads clearly on the dark theme. ── */
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible,
+select:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}

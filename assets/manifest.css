@@ -343,7 +343,7 @@ section.dark h1,section.dark h2{color:#fff}
 }
 /* Visible focus ring ONLY for keyboard navigation — mouse clicks do not show it.
    Uses --accent (red) at half-opacity offset so it reads as "intentional outline" not "browser default". */
-.msat:focus{ outline: none; }
+.msat:focus:not(:focus-visible){ outline: none; }   /* keep keyboard :focus-visible ring (WCAG 2.4.7), suppress only mouse-focus */
 .msat:focus-visible{
   outline: 1.5px solid var(--accent);
   outline-offset: 6px;
