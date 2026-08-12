@@ -1,12 +1,6 @@
 /* manifest.js — interactive layer for index.html (extracted from inline <script>).
    Reads i18n strings from the #i18n-data JSON island in the HTML. */
 /* ─────────────── i18n (universal core in assets/i18n.js → window.SLi18n) ─────────────── */
-/* Hero morph words — declared up here (not next to startHeroTyper) because applyLang()
-   reads them on the very first call to build the h1 aria-label. */
-const HERO_WORDS={
-  ru:['дизайн.','команду.','бренд.','системы.','продукт.'],
-  en:['design.','teams.','brand.','systems.','product.']
-};
 let currentLang = SLi18n.detect();
 
 /* helpers — re-applied whenever language changes */
@@ -148,12 +142,15 @@ function applyLang(lang, announce){
     wrapWords(ht);
     ht.classList.remove('in-view');
     requestAnimationFrame(()=>requestAnimationFrame(()=>ht.classList.add('in-view')));
-    /* Full headline for AT: the visible h1 holds only the morphing word, so screen
-       readers would otherwise announce a single mid-morph word as the page title. */
-    const staticTxt = (dict['hero.title.static'] || '').replace(/&nbsp;/g, ' ').replace(/<[^>]+>/g, '');
-    const firstWord = (HERO_WORDS[lang] || HERO_WORDS.ru)[0];
-    if(staticTxt) ht.setAttribute('aria-label', staticTxt + ' ' + firstWord);
+    /* Full headline for AT: the visible h1 holds only the closing word, so screen
+       readers would otherwise announce a lone word as the page title. */
+    const clean = v => (v || '').replace(/&nbsp;/g, ' ').replace(/<[^>]+>/g, '');
+    const staticTxt = clean(dict['hero.title.static']);
+    if(staticTxt) ht.setAttribute('aria-label', (staticTxt + ' ' + clean(dict['hero.title.word'])).trim());
   }
+  /* applyStrings() just rewrote innerHTML on both display lines, so the
+     text-pressure spans are gone — re-split against the new language. */
+  hpSetup();
 
   /* cta title — same trick, only fire reveal if in view */
   const ct = document.querySelector('.cta-title');
@@ -207,65 +204,205 @@ SLi18n.wire(function(l){ if(l !== currentLang){ applyLang(l, true); } });
 /* first paint (no screen-reader announcement) */
 applyLang(currentLang, false);
 
-/* fit "Как я строю" to full viewport width; mirror size to bottom title.
-   Canvas measureText is the only reliable way to get true italic glyph bounds
-   (DOM scrollWidth, Range bounds, and getBoundingClientRect all clip italic
-   overhang in various browsers, which is why the text kept getting cropped). */
-const _heroMeasureCanvas = document.createElement('canvas');
-const _heroMeasureCtx = _heroMeasureCanvas.getContext('2d');
+/* ─── Fit the two display statements to the free height of the screen ───
+   Each corner now holds a whole sentence that wraps inside its column, so the
+   old "measure one line, scale to 70% of the width" pass no longer describes
+   the problem: what has to fit is a BLOCK, and what constrains it is the band
+   of empty screen between the statement's anchor and the centred caption.
 
-function measureTrueWidth(text, fontFamily, fontStyle, fontWeight, fontSize, letterSpacingRatio){
-  _heroMeasureCtx.font = `${fontStyle} ${fontWeight} ${fontSize}px "${fontFamily}"`;
-  const m = _heroMeasureCtx.measureText(text);
-  /* actualBoundingBoxLeft/Right are the true visible glyph extents from the
-     drawing origin — they INCLUDE italic overhang on both sides. */
-  const left  = m.actualBoundingBoxLeft  || 0;
-  const right = m.actualBoundingBoxRight || m.width;
-  let width = left + right;
-  /* Canvas measureText ignores CSS letter-spacing, so add it manually */
-  if (letterSpacingRatio && text.length > 1) {
-    width += letterSpacingRatio * fontSize * (text.length - 1);
+   So: binary-search the largest font-size at which the block neither overflows
+   its column nor eats into the caption, do it for both statements, and set the
+   smaller of the two on both — matched size reads as one voice, and the longer
+   sentence is the one that decides. */
+const HERO_FIT_MIN = 20;
+
+/* the hero switches to a linear stacked layout here — same query as the CSS */
+function heroIsStacked(){
+  return window.matchMedia('(max-width:720px), (max-width:1024px) and (orientation:portrait)').matches;
+}
+
+/* Largest size in [HERO_FIT_MIN, hi] that keeps el inside maxH and its column. */
+function fitBlock(el, maxH, hi){
+  const prev = el.style.fontSize;
+  let lo = HERO_FIT_MIN, best = HERO_FIT_MIN;
+  if (maxH < 1) { el.style.fontSize = prev; return best; }
+  for (let i = 0; i < 16 && hi - lo > 0.5; i++) {
+    const mid = (lo + hi) / 2;
+    el.style.fontSize = mid + 'px';
+    /* scrollWidth catches a single word too long for the column — that word would
+       otherwise hang out of the block instead of wrapping. */
+    const fits = el.scrollHeight <= maxH + 0.5 && el.scrollWidth <= el.clientWidth + 1;
+    if (fits) { best = mid; lo = mid; } else { hi = mid; }
   }
-  return width;
+  el.style.fontSize = prev;
+  return best;
 }
 
 function fitHero(){
   const hero = document.querySelector('.hero');
   if (!hero) return;
-  /* On mobile, hero uses CSS clamp() in a flex-stack layout — JS-fitting would oversize */
-  if (window.innerWidth <= 720) {
-    const s = hero.querySelector('.hero-static');
-    const t = hero.querySelector('.hero-title--corner');
-    if (s) s.style.fontSize = '';
-    if (t) t.style.fontSize = '';
-    return;
-  }
   const s = hero.querySelector('.hero-static');
   const t = hero.querySelector('.hero-title--corner');
-  if (!s) return;
-  const cs = getComputedStyle(s);
-  const ff = cs.fontFamily.replace(/["']/g, '').split(',')[0].trim();
-  const fw = cs.fontWeight || '400';
-  const text = s.textContent.trim();
-  if (!text) return;
-  /* letter-spacing as ratio of font-size (so it scales with the final size) */
-  const lsRaw = cs.letterSpacing;
-  let lsRatio = 0;
-  if (lsRaw && lsRaw !== 'normal') {
-    const cur = parseFloat(cs.fontSize) || 1;
-    lsRatio = parseFloat(lsRaw) / cur;
+  if (!s || !t) return;
+  /* Stacked layout sizes itself with CSS clamp() in normal flow — JS would oversize */
+  if (heroIsStacked()) { s.style.fontSize = ''; t.style.fontSize = ''; return; }
+  if (!s.textContent.trim()) return;
+
+  const H = hero.clientHeight;
+  const heroTop = hero.getBoundingClientRect().top;
+  const cap = hero.querySelector('.hero-sub');
+  const gap = Math.max(20, H * 0.032);        /* breathing room around the caption */
+
+  /* Where each statement starts, in hero-local coordinates */
+  const topStart = parseFloat(getComputedStyle(s).top) || 0;
+  const bottomEnd = H - (parseFloat(getComputedStyle(t).bottom) || 0);
+
+  /* The caption is absolutely centred and sized independently, so measuring it
+     here can't feed back into the sizes we are about to set. */
+  let capTop = H * 0.5, capBottom = H * 0.5;
+  if (cap) {
+    const r = cap.getBoundingClientRect();
+    capTop = r.top - heroTop;
+    capBottom = r.bottom - heroTop;
   }
-  const ref = 500;
-  const trueW = measureTrueWidth(text, ff, 'italic', fw, ref, lsRatio);
-  if (!trueW) { requestAnimationFrame(fitHero); return; }
-  const sideGap = 6;
-  /* Fit to ~70% of the width (not edge-to-edge) and cap by viewport height, so the
-     corner headline stays comfortably inside the screen instead of spanning it. */
-  const target = (window.innerWidth - 2 * sideGap) * 0.7;
-  let px = ref * (target / trueW);
-  px = Math.min(px, window.innerHeight * 0.26);
+  const availTop = capTop - gap - topStart;
+  const availBottom = bottomEnd - (capBottom + gap);
+
+  /* Ceiling so a short line can never turn into a full-screen letter */
+  const hi = H * 0.30;
+  const px = Math.min(fitBlock(s, availTop, hi), fitBlock(t, availBottom, hi));
   s.style.fontSize = px + 'px';
-  if (t) t.style.fontSize = px + 'px';
+  t.style.fontSize = px + 'px';
+}
+
+/* ─── Freeze the line breaks ───
+   text-pressure widens glyphs near the pointer (wght 300 → 700 is ~5% of width),
+   and while the browser owns the wrapping that extra width pushes a word onto the
+   next line — the statement visibly jumped between 2 and 3 lines under the cursor.
+   So once the size is settled, the wrap the browser chose at rest is baked into
+   block lines that no longer re-wrap: the pointer may thicken the letters, it can
+   no longer move them. Lines are rebuilt from scratch on every resize / language
+   change (hpSetup re-splits first, so this never compounds). */
+function freezeHeroLines(){
+  document.querySelectorAll(HP_SEL).forEach(el => {
+    const words = Array.prototype.slice.call(el.children).filter(n => n.classList && n.classList.contains('tp-w'));
+    if(!words.length) return;
+    const lines = [];
+    let cur = null, lastTop = null;
+    words.forEach(w => {
+      const top = Math.round(w.getBoundingClientRect().top);
+      if(lastTop === null || Math.abs(top - lastTop) > 2){ cur = []; lines.push(cur); lastTop = top; }
+      cur.push(w);
+    });
+    const frag = document.createDocumentFragment();
+    lines.forEach((ws, li) => {
+      const line = document.createElement('span');
+      line.className = 'tp-line';
+      ws.forEach((w, i) => { if(i) line.appendChild(document.createTextNode(' ')); line.appendChild(w); });
+      frag.appendChild(line);
+      /* A space BETWEEN the line blocks: it renders as nothing, but it keeps
+         textContent readable — the next rebuild reads the copy back from here,
+         and without it the words either side of a break would fuse. */
+      if(li < lines.length - 1) frag.appendChild(document.createTextNode(' '));
+    });
+    el.innerHTML = '';          /* the word nodes already moved into frag */
+    el.appendChild(frag);
+  });
+}
+
+/* ─── Sit the statements on the site's alignment rail — by ink, not by box ───
+   The rail is where nav.top, the intro title and the footer start. At display sizes
+   the glyph box is not the glyph: italic "Я" carries its ink ~1.6% of the font size
+   to the LEFT of the box origin, and a closing "." leaves a gap of several px inside
+   its advance. Aligning the boxes therefore looks misaligned. So the boxes are offset
+   by the measured side bearings, which lands the visible ink exactly on the rail. */
+const _inkCanvas = document.createElement('canvas').getContext('2d');
+function inkBearings(el, ch, last){
+  const cs = getComputedStyle(el);
+  const fs = parseFloat(cs.fontSize) || 0;
+  const fam = cs.fontFamily.split(',')[0].trim();
+  const ls = parseFloat(cs.letterSpacing) || 0;     /* negative here — tight tracking */
+  _inkCanvas.font = `${cs.fontStyle} ${cs.fontWeight} ${fs}px ${fam}`;
+  const m = _inkCanvas.measureText(ch);
+  return {
+    left: m.actualBoundingBoxLeft || 0,                        /* ink starts this far LEFT of the box */
+    right: last ? (m.width + ls) - (m.actualBoundingBoxRight || m.width) : 0  /* dead space after the last ink */
+  };
+}
+/* The page's own fields, measured off a real section container rather than guessed:
+   left = the gutter, right = gutter + --nav-safe-right (the reserve the side-progress
+   indicator sits in). Every section below the cover already lines up on these two. */
+function pageFields(){
+  const ref = document.querySelector('#intro .container') ||
+              document.querySelector('main .container') ||
+              document.querySelector('.container');
+  const docW = document.documentElement.clientWidth;
+  if(!ref) return { left: 16, right: docW - 16 };
+  const cs = getComputedStyle(ref), r = ref.getBoundingClientRect();
+  return {
+    left: r.left + (parseFloat(cs.paddingLeft) || 0),
+    right: r.right - (parseFloat(cs.paddingRight) || 0)
+  };
+}
+function alignHeroToRail(){
+  const hero = document.querySelector('.hero');
+  const s = hero && hero.querySelector('.hero-static');
+  const t = hero && hero.querySelector('.hero-title--corner');
+  if(!hero || !s || !t || heroIsStacked()) return;
+  const F = pageFields();
+
+  /* top-left: the first glyph's ink lands on the left field */
+  const firstCh = s.textContent.trim().charAt(0);
+  if(firstCh){
+    const b = inkBearings(s, firstCh, false);
+    const inkX = s.getBoundingClientRect().left - b.left;
+    s.style.left = (parseFloat(getComputedStyle(s).left) || 0) + (F.left - inkX) + 'px';
+  }
+
+  /* bottom-right: the last glyph's ink lands on the right field */
+  const txt = t.textContent.trim();
+  const lastCh = txt.charAt(txt.length - 1);
+  if(lastCh){
+    const b = inkBearings(t, lastCh, true);
+    const inkR = t.getBoundingClientRect().right - b.right;
+    t.style.right = (parseFloat(getComputedStyle(t).right) || 0) + (inkR - F.right) + 'px';
+  }
+}
+
+/* Park the caption exactly midway between the two statements — equal air above and
+   below — instead of dead-centre in the section, where the two gaps came out 132px
+   and 46px. Runs after the statements are final, so it can't feed back into the fit. */
+function centerHeroCaption(){
+  const hero = document.querySelector('.hero');
+  const cap = hero && hero.querySelector('.hero-sub');
+  const s = hero && hero.querySelector('.hero-static');
+  const t = hero && hero.querySelector('.hero-title--corner');
+  if(!cap || !s || !t) return;
+  if(heroIsStacked()){ cap.style.top = ''; cap.style.bottom = ''; return; }
+  const h = hero.getBoundingClientRect();
+  const sBottom = s.getBoundingClientRect().bottom - h.top;
+  const tTop = t.getBoundingClientRect().top - h.top;
+  const capH = cap.getBoundingClientRect().height;
+  cap.style.top = (sBottom + Math.max(0, (tTop - sBottom - capH) / 2)) + 'px';
+  cap.style.bottom = 'auto';
+}
+
+/* One pass: rebuild the glyph spans → fit the size to the free height → freeze the
+   wrap → put the ink on the rail → centre the caption between the two. Order matters:
+   fitting needs the text still able to re-wrap, and everything after it needs the
+   final size. */
+function layoutHero(){
+  if(typeof hpSetup === 'function') hpSetup();
+  const s = document.querySelector('.hero-static');
+  const t = document.querySelector('.hero-title--corner');
+  if(s) s.style.left = '';                 /* back to the CSS rail before re-measuring */
+  if(t) t.style.right = '';
+  const cap = document.querySelector('.hero .hero-sub');
+  if(cap){ cap.style.top = ''; cap.style.bottom = ''; }   /* re-measure against the neutral centre */
+  fitHero();
+  freezeHeroLines();
+  alignHeroToRail();
+  centerHeroCaption();
 }
 let _fitRaf = null, _fitTimeout = null;
 function scheduleFit(){
@@ -273,7 +410,7 @@ function scheduleFit(){
   _fitTimeout = setTimeout(() => {
     _fitTimeout = null;
     if (_fitRaf) return;
-    _fitRaf = requestAnimationFrame(()=>{ _fitRaf = null; fitHero(); });
+    _fitRaf = requestAnimationFrame(()=>{ _fitRaf = null; layoutHero(); });
   }, 90);
 }
 window.addEventListener('resize', scheduleFit, {passive:true});
@@ -284,15 +421,108 @@ function fitWhenReady(){
        list of fonts the site no longer loads (Fraunces/Playfair were never fetched,
        so the old Promise resolved instantly and fitHero measured a fallback font). */
     document.fonts.load('italic 500px "Inter Tight"').then(()=>{
-      fitHero();
-      requestAnimationFrame(fitHero);
-    }).catch(()=>fitHero());
+      layoutHero();
+      requestAnimationFrame(layoutHero);
+    }).catch(()=>layoutHero());
   } else {
-    fitHero();
+    layoutHero();
   }
 }
 fitWhenReady();
-window.addEventListener('load', fitHero);
+window.addEventListener('load', layoutHero);
+
+/* ─── Hero text-pressure — the 404 headline effect on the two display lines ───
+   Every glyph becomes its own <span>; the pointer's distance to a glyph rides
+   its wght axis from the resting 300 up to 700 — the range the self-hosted
+   Inter Tight actually carries (@font-face in core.css declares 300 700, which
+   is why the 404's nominal 150…900 lands on the same two ends).
+
+   Spans stay display:inline on purpose. Measured live on the page: inline
+   splitting costs 0px of layout width, while display:inline-block added ~11px
+   to "Как я строю" by breaking its space runs — and that headline is fitted to
+   a fraction of the viewport, so a silent 11px is a silent crop.
+
+   State is `var` + function declarations, not `let`: applyLang() calls
+   hpSetup() and runs BEFORE this point in the file, which a `let` would meet
+   with a TDZ ReferenceError. */
+var HP_SEL = '.hero-static, .hero-title--corner em';
+var HP_RADIUS = 460;                 /* px — same falloff radius as the 404 headline */
+var HP_MIN = 300, HP_MAX = 700;      /* the font's real wght range */
+var _hpChars = [], _hpX = 0, _hpY = 0, _hpRaf = null, _hpBound = false;
+
+function hpEnabled(){
+  return !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      && window.matchMedia('(hover:hover)').matches;
+}
+function hpSplit(el){
+  const text = el.textContent || '';
+  if(!text.trim()) return;
+  /* Keep every axis the CSS set (SOFT/opsz) and drop only wght — the pointer
+     owns that one. font-variation-settings is a whole-string property: writing
+     just "wght" would silently discard the others. */
+  const prefix = (getComputedStyle(el).fontVariationSettings || '')
+    .split(',').map(s => s.trim())
+    .filter(s => s && !/^["']wght["']/.test(s))
+    .join(', ');
+  const frag = document.createDocumentFragment();
+  const made = [];
+  /* Word wrappers, not a flat run of glyph spans: the statements wrap now, and a
+     bare per-glyph split would let a line break land inside a word. Only the plain
+     spaces between wrappers stay text nodes, so they are the sole break points —
+     an &nbsp; sits inside a wrapper and keeps doing its job. */
+  text.split(' ').forEach((word, wi) => {
+    if(wi) frag.appendChild(document.createTextNode(' '));
+    if(!word) return;
+    const w = document.createElement('span');
+    w.className = 'tp-w';
+    for(const ch of word){
+      const s = document.createElement('span');
+      s.className = 'tp-ch';
+      s.textContent = ch;
+      w.appendChild(s);
+      made.push({ el: s, prefix: prefix ? prefix + ', ' : '' });
+    }
+    frag.appendChild(w);
+  });
+  el.textContent = '';
+  el.appendChild(frag);
+  _hpChars = _hpChars.concat(made);
+  /* The h1 carries the whole headline in aria-label; per-glyph spans would make
+     screen readers spell the line out letter by letter. */
+  el.setAttribute('aria-hidden', 'true');
+}
+function hpFrame(){
+  _hpRaf = null;
+  const n = _hpChars.length;
+  if(!n) return;
+  /* Rects are re-read every frame instead of cached: fitHero() rewrites the
+     font-size on load/resize/font-ready and the page scrolls under the hero, so
+     a cache would quietly aim at boxes that no longer exist. All reads first,
+     then all writes — one layout pass per frame, no thrash. */
+  const rects = new Array(n);
+  for(let i = 0; i < n; i++) rects[i] = _hpChars[i].el.getBoundingClientRect();
+  for(let i = 0; i < n; i++){
+    const r = rects[i];
+    const d = Math.hypot(_hpX - (r.left + r.width / 2), _hpY - (r.top + r.height / 2));
+    const t = Math.max(0, 1 - d / HP_RADIUS);
+    _hpChars[i].el.style.fontVariationSettings =
+      _hpChars[i].prefix + '"wght" ' + Math.round(HP_MIN + t * (HP_MAX - HP_MIN));
+  }
+}
+function hpSetup(){
+  _hpChars = [];
+  if(!hpEnabled()) return;            /* touch / reduced-motion: leave the markup alone */
+  document.querySelectorAll(HP_SEL).forEach(hpSplit);
+  if(!_hpChars.length || _hpBound) return;
+  _hpBound = true;
+  /* rAF-throttled: pointermove fires far denser than the display refreshes, and
+     between moves nothing is scheduled at all — the effect costs zero at rest. */
+  window.addEventListener('pointermove', (e) => {
+    _hpX = e.clientX; _hpY = e.clientY;
+    if(_hpRaf === null) _hpRaf = requestAnimationFrame(hpFrame);
+  }, { passive: true });
+}
+hpSetup();
 
 /* ─── Hero FX ─── */
 /* Mouse-driven 3D parallax tilt removed by design — the hero stays flat.
@@ -938,93 +1168,6 @@ function initScrollHover(){
   els.forEach(el => _scrollHoverIO.observe(el));
 }
 
-/* ─────────────── hero title — gooey text morphing ─────────────── */
-/* Replaces the old typewriter. Two layered <span>s cross-morph with a
-   per-layer blur + an SVG alpha-threshold filter on the parent, so glyphs
-   melt into one another (Codrops/victorwelander "gooey text" technique).
-   HERO_WORDS lives at the top of the file (applyLang needs it). */
-let heroTyperToken=0;
-function ensureGooFilter(){
-  if(document.getElementById('hero-goo-filter')) return;
-  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('aria-hidden','true');
-  svg.setAttribute('width','0');svg.setAttribute('height','0');
-  svg.style.cssText='position:absolute;width:0;height:0;overflow:hidden';
-  svg.innerHTML='<defs><filter id="hero-goo-filter" color-interpolation-filters="sRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 255 -140" result="goo"/><feGaussianBlur in="goo" stdDeviation="0.55"/></filter></defs>';
-  document.body.appendChild(svg);
-}
-function startHeroTyper(){
-  const em=document.querySelector('.hero-title em');
-  if(!em) return;
-  const myToken=++heroTyperToken;
-  const lang=(document.documentElement.lang||'ru').slice(0,2);
-  const words=(HERO_WORDS[lang]||HERO_WORDS.ru).slice();
-  /* build the two morph layers once */
-  let s1=em.querySelector('.hm1'), s2=em.querySelector('.hm2');
-  if(!s1){
-    em.classList.add('hero-morph');
-    em.textContent='';
-    s1=document.createElement('span'); s1.className='hm hm1';
-    s2=document.createElement('span'); s2.className='hm hm2';
-    em.appendChild(s1); em.appendChild(s2);
-    ensureGooFilter();
-    /* filter is toggled per-frame: applied only while morphing (see doMorph),
-       removed while a word rests (see setCooldown) → resting text stays crisp */
-  }
-  /* Reduced motion: just show the first word, no morphing, no filter. */
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-    s1.textContent=words[0]; s1.style.opacity='1'; s1.style.filter='';
-    s2.textContent=''; s2.style.opacity='0'; em.style.filter='';
-    return;
-  }
-  const morphTime=1.3, cooldownTime=2.4;
-  let i=0;                          /* index of the currently-visible (resting) word — lives in s1 */
-  function setMorph(f){
-    s2.style.filter='blur('+Math.min(8/f-8,100)+'px)';
-    s2.style.opacity=Math.pow(f,0.4);
-    const g=1-f;
-    s1.style.filter='blur('+Math.min(8/g-8,100)+'px)';
-    s1.style.opacity=Math.pow(g,0.4);
-  }
-  function rest(){
-    /* crisp resting state — visible word in s1, no goo filter, and (crucially) NO rAF running */
-    em.style.filter='';
-    s1.style.filter=''; s1.style.opacity=1;
-    s2.style.filter=''; s2.style.opacity=0;
-  }
-  function alive(){ return myToken===heroTyperToken && document.contains(em); }
-  /* The morph only runs rAF during the ~1.3s transition. Between words it just sleeps on a
-     setTimeout — so the hero no longer pegs a rAF loop at 60fps while a word is resting,
-     and it naturally pauses in a backgrounded tab. */
-  function scheduleMorph(){ setTimeout(morphStep, cooldownTime*1000); }
-  function morphStep(){
-    if(!alive()) return;
-    em.style.filter='url(#hero-goo-filter)';   /* goo only during the transition */
-    let start=null;
-    function step(now){
-      if(!alive()) return;
-      if(start===null) start=now;
-      const f=(now-start)/1000/morphTime;
-      if(f>=1){
-        setMorph(1);
-        i=(i+1)%words.length;                  /* the word that just faded in becomes the new resting word */
-        s1.textContent=words[i%words.length];
-        s2.textContent=words[(i+1)%words.length];
-        rest();
-        scheduleMorph();
-        return;
-      }
-      setMorph(f);
-      requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  }
-  s1.textContent=words[i%words.length];
-  s2.textContent=words[(i+1)%words.length];
-  rest();
-  scheduleMorph();
-}
-
 /* ─────────────── scroll progress bar ─────────────── */
 const progressBar=document.createElement('div');
 progressBar.className='scroll-progress';
@@ -1219,7 +1362,6 @@ window.__scroll.add(updateProgress);
 buildSideNavigation();
 updateProgress();
 applyTooltips();
-startHeroTyper();
 fixTypographyOrphans();
 initScrollHover();
 /* Re-run typography fix on viewport resize (e.g. mobile rotation, desktop resize) */
@@ -1409,8 +1551,8 @@ window.addEventListener('resize',()=>{
 });
 
 /* re-read labels when language switches (kickers get new text).
-   Guarded so clicking the ALREADY-active language doesn't restart the hero morph
-   and rebuild the navigation for nothing. */
+   Guarded so clicking the ALREADY-active language doesn't rebuild the navigation
+   for nothing. */
 let _lastUiLang = currentLang;
 document.addEventListener('click',(e)=>{
   const langBtn = e.target.closest('[data-lang]');
@@ -1419,13 +1561,7 @@ document.addEventListener('click',(e)=>{
     if(clicked === _lastUiLang) return;
     _lastUiLang = clicked;
     setTimeout(()=>{
-      const em=document.querySelector('.hero-title em');
-      if(em){
-        const lang=(document.documentElement.lang||'ru').slice(0,2);
-        const words=HERO_WORDS[lang]||HERO_WORDS.ru;
-        em.textContent=words[0];
-      }
-      currentSideLabel='';buildSideNavigation();_lastCurrentId=null;updateProgress();applyTooltips();startHeroTyper();
+      currentSideLabel='';buildSideNavigation();_lastCurrentId=null;updateProgress();applyTooltips();
       clearTypographyFlags();fixTypographyOrphans();
       /* Wait for the language-specific font to load before re-fitting */
       if(typeof fitWhenReady==='function') fitWhenReady();
@@ -1841,154 +1977,3 @@ setupIntroMonument();
     });
   });
 })();
-
-/* ─── NEURO VORTEX — WebGL hero background (vanilla port) ───────────────
-   Ported from the React InteractiveNeuralVortex component. Recolored to the
-   site palette (ember → orange #FB460D), dimmed via CSS. Skipped on reduced-motion,
-   touch/narrow screens, and low-power devices. */
-(function(){
-  const canvas = document.querySelector('.hero-neuro');
-  const hero = document.getElementById('hero');
-  if (!canvas || !hero) return;
-
-  /* Match the site's existing gating (see .cursor-dot / .hero-neuro media queries). */
-  const noMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const isCompact = window.matchMedia('(max-width:1024px),(hover:none)').matches;
-  /* Skip the WebGL background on low-power devices — few cores, little RAM, or data-saver.
-     The hero keeps its solid dark background; everything else is unaffected. */
-  const lowPower = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2)
-    || (navigator.deviceMemory && navigator.deviceMemory <= 2)
-    || window.matchMedia('(prefers-reduced-data: reduce)').matches;
-  if (noMotion || isCompact || lowPower) return;
-
-  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-  if (!gl) return; /* graceful: hero keeps its solid dark background */
-
-  const vsSource = `
-    precision mediump float;
-    attribute vec2 a_position;
-    varying vec2 vUv;
-    void main(){ vUv = .5 * (a_position + 1.); gl_Position = vec4(a_position, 0.0, 1.0); }
-  `;
-  const fsSource = `
-    precision mediump float;
-    varying vec2 vUv;
-    uniform float u_time;
-    uniform float u_ratio;
-    uniform vec2 u_pointer_position;
-    uniform float u_scroll_progress;
-
-    vec2 rotate(vec2 uv, float th){ return mat2(cos(th), sin(th), -sin(th), cos(th)) * uv; }
-
-    float neuro_shape(vec2 uv, float t, float p){
-      vec2 sine_acc = vec2(0.);
-      vec2 res = vec2(0.);
-      float scale = 8.;
-      for (int j = 0; j < 15; j++){
-        uv = rotate(uv, 1.);
-        sine_acc = rotate(sine_acc, 1.);
-        vec2 layer = uv * scale + float(j) + sine_acc - t;
-        sine_acc += sin(layer) + 2.4 * p;
-        res += (.5 + .5 * cos(layer)) / scale;
-        scale *= 1.2;
-      }
-      return res.x + res.y;
-    }
-
-    void main(){
-      vec2 uv = .5 * vUv;
-      uv.x *= u_ratio;
-      vec2 pointer = vUv - u_pointer_position;
-      pointer.x *= u_ratio;
-      float p = clamp(length(pointer), 0., 1.);
-      p = .5 * pow(1. - p, 2.);
-      float t = .001 * u_time;
-      float noise = neuro_shape(uv, t, p);
-      noise = 1.2 * pow(noise, 3.);
-      noise += pow(noise, 10.);
-      noise = max(.0, noise - .5);
-      noise *= (1. - length(vUv - .5));
-
-      /* Palette: ember → bright orange (#FB460D), warm subtle drift */
-      vec3 color = vec3(0.45, 0.14, 0.02);
-      color = mix(color, vec3(0.98, 0.30, 0.05), 0.40 + 0.22 * sin(2.0 * u_scroll_progress + 1.2));
-      color += vec3(0.20, 0.07, 0.0) * sin(2.0 * u_scroll_progress + 1.5);
-      color = color * noise;
-      gl_FragColor = vec4(color, noise);
-    }
-  `;
-
-  const compile = (src, type) => {
-    const s = gl.createShader(type);
-    gl.shaderSource(s, src); gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
-      console.error('neuro shader:', gl.getShaderInfoLog(s)); gl.deleteShader(s); return null;
-    }
-    return s;
-  };
-  const vs = compile(vsSource, gl.VERTEX_SHADER);
-  const fs = compile(fsSource, gl.FRAGMENT_SHADER);
-  if (!vs || !fs) return;
-
-  const program = gl.createProgram();
-  gl.attachShader(program, vs); gl.attachShader(program, fs); gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)){
-    console.error('neuro link:', gl.getProgramInfoLog(program)); return;
-  }
-  gl.useProgram(program);
-
-  const verts = new Float32Array([-1,-1, 1,-1, -1,1, 1,1]);
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
-  const aPos = gl.getAttribLocation(program, 'a_position');
-  gl.enableVertexAttribArray(aPos);
-  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-  const uTime = gl.getUniformLocation(program, 'u_time');
-  const uRatio = gl.getUniformLocation(program, 'u_ratio');
-  const uPointer = gl.getUniformLocation(program, 'u_pointer_position');
-  const uScroll = gl.getUniformLocation(program, 'u_scroll_progress');
-
-  let cssW = 1, cssH = 1;
-  const resize = () => {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    cssW = hero.clientWidth; cssH = hero.clientHeight;
-    canvas.width = Math.max(1, Math.round(cssW * dpr));
-    canvas.height = Math.max(1, Math.round(cssH * dpr));
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.uniform1f(uRatio, canvas.width / canvas.height);
-  };
-  resize();
-  window.addEventListener('resize', resize, { passive: true });
-
-  /* Smoothed pointer, expressed in CSS px relative to the hero box */
-  const ptr = { x: cssW * 0.5, y: cssH * 0.4, tX: cssW * 0.5, tY: cssH * 0.4 };
-  hero.addEventListener('pointermove', (e) => {
-    const r = canvas.getBoundingClientRect();
-    ptr.tX = e.clientX - r.left;
-    ptr.tY = e.clientY - r.top;
-  }, { passive: true });
-
-  /* Pause the loop when the hero is scrolled off-screen */
-  let visible = true, rafId = null;
-  const io = new IntersectionObserver((entries) => {
-    visible = entries[0].isIntersecting;
-    if (visible && rafId === null) rafId = requestAnimationFrame(render);
-  }, { threshold: 0 });
-  io.observe(hero);
-
-  function render(){
-    if (!visible){ rafId = null; return; }
-    ptr.x += (ptr.tX - ptr.x) * 0.2;
-    ptr.y += (ptr.tY - ptr.y) * 0.2;
-    gl.uniform1f(uTime, performance.now());
-    gl.uniform2f(uPointer, ptr.x / cssW, 1 - ptr.y / cssH);
-    gl.uniform1f(uScroll, window.pageYOffset / (2 * window.innerHeight));
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    rafId = requestAnimationFrame(render);
-  }
-
-  requestAnimationFrame(() => { canvas.classList.add('is-ready'); render(); });
-})();
-

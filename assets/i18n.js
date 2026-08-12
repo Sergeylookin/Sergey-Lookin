@@ -91,10 +91,37 @@
     });
   }
 
+  /* Same-origin counterpart of the current page, derived from the page's own relative
+     asset path instead of the baked hreflang URL. The hreflang links are absolute and
+     point at the production host, so following them literally teleports a local preview
+     (or any staging copy) to the live site — which reads as "my changes rolled back".
+     The math below works at any site root: '/' locally, '/Sergey-Lookin/' on Pages,
+     '/' again on a future custom domain. Returns null when it can't be derived. */
+  function sameOriginCounterpart(lang) {
+    var css = document.querySelector('link[rel="stylesheet"][href*="core."]');
+    var href = css && css.getAttribute('href');
+    /* 404.html links assets root-absolutely (it is served for arbitrary URLs) — no
+       relative anchor to measure from, and it has no counterpart anyway. */
+    if (!href || href.charAt(0) === '/' || /^[a-z]+:/i.test(href)) return null;
+    var i = href.indexOf('assets/');
+    if (i < 0) return null;
+    var rootPath = new URL(href.slice(0, i) || './', location.href).pathname;
+    var here = location.pathname;
+    if (here.indexOf(rootPath) !== 0) return null;
+    var rel = here.slice(rootPath.length);
+    var isEn = rel === 'en' || rel.indexOf('en/') === 0;
+    var target = lang === 'en'
+      ? (isEn ? rel : 'en/' + rel)
+      : (isEn ? rel.replace(/^en\/?/, '') : rel);
+    return location.origin + rootPath + target + location.search + location.hash;
+  }
+
   /* Language switch = NAVIGATION between the RU tree and /en/ (static per-language site).
      Capture-phase + stopImmediatePropagation so this preempts the pages' old in-place-swap
-     handlers. Uses the baked hreflang alternate as the target — no path math. Falls through
-     (no preventDefault) when there's no counterpart (e.g. 404) so the old swap still works. */
+     handlers. The baked hreflang alternate is the signal that a counterpart EXISTS; the
+     URL we actually go to is the same-origin one (see above), falling back to the baked
+     href if it can't be derived. Falls through (no preventDefault) when there's no
+     counterpart at all (e.g. 404) so the old in-place swap still works. */
   document.addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('[data-lang]') : null;
     if (!b) return;
@@ -104,7 +131,10 @@
     if (lang === cur) { e.preventDefault(); e.stopImmediatePropagation(); return; }
     var alt = document.querySelector('link[rel="alternate"][hreflang="' + lang + '"]');
     var href = alt && alt.getAttribute('href');
-    if (href) { e.preventDefault(); e.stopImmediatePropagation(); window.location.href = href; }
+    if (href) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      window.location.href = sameOriginCounterpart(lang) || href;
+    }
   }, true);
 
   window.SLi18n = { dict: dict, detect: detect, applyStrings: applyStrings, wire: wire, announce: announce };

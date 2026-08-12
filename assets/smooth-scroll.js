@@ -8,6 +8,14 @@
   if(typeof Lenis === 'undefined') return;
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+  /* On reload the browser restores the old scroll offset, but Lenis starts its own
+     position at 0 — the two desync and the page comes back parked mid-document with
+     scrolling fighting itself (it looked like the layout had broken). Own the
+     restore: every reload starts at the top, which is also what a cover page wants. */
+  if('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
+  window.addEventListener('load', function(){ window.scrollTo(0, 0); });
+
   var lenis = new Lenis({
     lerp: 0.085,          /* inertia weight — lower = heavier, longer glide */
     wheelMultiplier: 1,

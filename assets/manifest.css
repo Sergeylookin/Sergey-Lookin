@@ -92,11 +92,6 @@ section.dark h1,section.dark h2{color:#fff}
 .hero-eyebrow-bottom{grid-column:1 / 4;display:block;color:var(--mute-2);margin-bottom:0}
 .hero-title{font-family:var(--serif);font-size:var(--t-hero);font-weight:400;line-height:0.86;letter-spacing:-0.055em;color:#fff;text-wrap:balance;font-variation-settings:"opsz" 144,"SOFT" 0,"WONK" 0}
 .hero-title em{font-style:italic;font-weight:400;font-variation-settings:"opsz" 144,"SOFT" 30}
-/* ─── Gooey text morphing (replaces typewriter) ─── */
-.hero-title em.hero-morph{display:inline-grid;position:relative;line-height:inherit}
-.hero-title em.hero-morph>.hm{grid-area:1/1;display:block;white-space:nowrap;will-change:filter,opacity}
-.hero-title em.hero-morph::after{content:none !important}
-@keyframes hero-blink{50%{opacity:0}}
 .hero-title .dot{color:var(--accent)}
 .hero-sub{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(1.375rem,2vw,1.75rem);color:#BFC3C9;margin-top:clamp(2rem,3.5vw,3rem);max-width:42ch;line-height:1.35;letter-spacing:-0.015em}
 
@@ -1689,14 +1684,14 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
 @media (prefers-reduced-motion:reduce){.side-progress__label-inner,.side-progress,.side-progress__menu,.side-progress__menu-item{transition:none}}
 .hero{background:var(--bg-dark);position:relative;overflow:hidden}
 .hero>*{position:relative;z-index: var(--z-base)}
-/* ─── NEURO VORTEX — WebGL background layer behind hero content ───
-   Selector is scoped under #hero so it outranks `.hero>*` above, which
-   otherwise forces the canvas into the flex flow (position:relative) and
-   displaces the hero typography. It must stay absolute + z-behind. */
-#hero > canvas.hero-neuro{position:absolute !important;inset:0;width:100%;height:100%;display:block;z-index: var(--z-behind) !important;pointer-events:none;opacity:0;transition:opacity 1.4s var(--ease-out)}
-#hero > canvas.hero-neuro.is-ready{opacity:0.55}
-@media (max-width:1024px),(hover:none){#hero > canvas.hero-neuro{display:none !important}}
-@media (prefers-reduced-motion:reduce){#hero > canvas.hero-neuro{display:none !important}}
+/* ─── Курсорная дымка (fluid.js) — слой ПОД содержимым первого экрана ───
+   Селектор под #hero, чтобы перебить `.hero>*` выше: иначе холст попадает в поток
+   как position:relative и сдвигает типографику. */
+#hero > canvas.hero-fluid{position:absolute !important;inset:0;width:100%;height:100%;display:block;
+  z-index: var(--z-behind) !important;pointer-events:none;opacity:0;transition:opacity 1.2s var(--ease-out)}
+#hero > canvas.hero-fluid.is-ready{opacity:1}
+@media (max-width:1024px),(hover:none){#hero > canvas.hero-fluid{display:none !important}}
+@media (prefers-reduced-motion:reduce){#hero > canvas.hero-fluid{display:none !important}}
 /* Headings reveal by focus-in only (blur → sharp), no fade/rise. One-shot transition,
    so no permanent will-change — the browser promotes a temp layer for the transition
    and drops it after (cheaper than a persistent will-change layer per heading). */
@@ -2292,6 +2287,14 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   .hero-curtain{display:none !important}
 }
 .hero{overflow:hidden;--p1:1 !important;--p2:1 !important;--hp:0 !important;
+  /* One margin for the whole cover — the site's own alignment rail (--gutter is what
+     nav.top, the intro title and the footer all sit on). The two statements are then
+     nudged onto it by the INK, not the glyph box (alignHeroToRail in manifest.js). */
+  /* The page's own fields: every .container uses exactly these — left is the gutter,
+     right adds --nav-safe-right, the reserve the side-progress indicator lives in.
+     The cover now sits on the same two lines as every section below it. */
+  --hero-inset:var(--gutter);
+  --hero-inset-r:calc(var(--gutter) + var(--nav-safe-right));
   --hero-wght:300;
   --hero-soft:30;
   --hero-opsz:144;
@@ -2324,39 +2327,69 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 }
 .hero .hero-title,
 .hero .hero-title--corner{transform:none !important}
-/* Static part — top-left */
+/* ─── The two display statements ───
+   Both are multi-line blocks now, not single nowrap lines: the copy is a full
+   sentence per corner, so they wrap inside a column and JS fits the size to the
+   free height (see fitHero in manifest.js). The columns stop well short of the
+   full width so the top-left and bottom-right statements never read as one
+   block of text. */
 .hero-static{
   position:absolute;
-  top:clamp(4rem,8vh,6rem);
-  left:6px;
+  /* Clears the fixed nav: with line-height 0.9 the first line's ascenders reach
+     ~0.15em above the box, so the old 8vh let the statement graze the menu. */
+  top:clamp(6rem,11vh,8rem);
+  left:var(--hero-inset);
+  max-width:min(76vw,1400px);
   font-family:var(--serif);
   font-style:italic;
-  line-height:0.86;
+  line-height:0.9;
   letter-spacing:-0.03em;
   color:#fff;
   opacity:var(--hero-opacity);
   font-variation-settings:"opsz" var(--hero-opsz),"wght" var(--hero-wght),"SOFT" var(--hero-soft);
   z-index: var(--z-aside);
-  white-space:nowrap;
+  text-wrap:balance;
 }
 .hero-title--corner{
   position:absolute;
-  bottom:clamp(12rem,21vh,15rem);
-  right:6px;
+  bottom:clamp(11.5rem,20.5vh,15rem);
+  right:var(--hero-inset-r);
   margin:0;
+  max-width:min(76vw,1400px);
   font-family:var(--serif);
   font-style:italic;
-  line-height:0.86;
+  line-height:0.9;
   letter-spacing:-0.03em;
   text-align:right;
   z-index: var(--z-aside);
   opacity:var(--hero-opacity);
   font-variation-settings:"opsz" var(--hero-opsz),"wght" var(--hero-wght),"SOFT" var(--hero-soft);
-  white-space:nowrap;
+  text-wrap:balance;
 }
 .hero-title--corner em{
   font-style:italic;
   font-variation-settings:inherit;
+}
+
+/* ─── Text-pressure glyphs (same effect as the 404 headline, see manifest.js) ───
+   Spans stay display:inline — measured on the live page, inline splitting costs
+   0px of width, while inline-block widened "Как я строю" by ~11px. No
+   will-change: font-variation-settings is not compositable, so the hint buys
+   nothing and only pins memory for glyphs this large. */
+.hero-static .tp-ch,
+.hero-title--corner .tp-ch{transition:font-variation-settings 0.14s var(--ease-out)}
+/* Per-glyph spans make every gap between letters a legal line-break point, so each
+   word is fenced in its own nowrap wrapper; the spaces between words stay plain
+   text nodes and remain the only place a line may break. */
+.hero-static .tp-w,
+.hero-title--corner .tp-w{white-space:nowrap}
+/* Frozen line boxes — see freezeHeroLines(). nowrap so a thickened glyph can widen
+   the line but can never push a word onto the next one. */
+.hero-static .tp-line,
+.hero-title--corner .tp-line{display:block;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){
+  .hero-static .tp-ch,
+  .hero-title--corner .tp-ch{transition:none}
 }
 
 /* Unified sans: Inter Tight carries both Latin and Cyrillic with true italics,
@@ -2469,7 +2502,7 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   position:absolute;
   left:0;right:0;bottom:0;
   margin-top:0;
-  padding:1.75rem clamp(1rem,2.5vw,2.5rem) clamp(1.5rem,3vw,2.5rem);
+  padding:1.75rem var(--hero-inset-r) clamp(1.5rem,3vw,2.5rem) var(--hero-inset);
   width:100%;
   /* Semi-transparent hairline — lets the neuro graphic show through instead of cutting across it */
   border-top:1px solid color-mix(in srgb,var(--hair-dk) 45%,transparent);
@@ -2517,15 +2550,18 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
     text-align:left !important;
     margin:0;
   }
-  /* Title block: "Как я строю" + italic typeword, stacked, left-aligned */
+  /* Two statements, stacked and left-aligned. The size is well below the old
+     single-word setting: each corner now carries a whole sentence, and at 12vw the
+     pair overflowed the screen — the closing lines ran straight over the meta row. */
   .hero-static{
-    font-size:clamp(2.4rem,12vw,3.8rem) !important;
-    line-height:0.98;letter-spacing:-0.025em;
+    font-size:clamp(1.55rem, 7vw, 2.35rem) !important;
+    line-height:1;letter-spacing:-0.025em;
     margin-bottom:0.15rem;
   }
   .hero-title--corner{
-    font-size:clamp(2.4rem,12vw,3.8rem) !important;
-    line-height:0.98;letter-spacing:-0.025em;
+    font-size:clamp(1.55rem, 7vw, 2.35rem) !important;
+    line-height:1;letter-spacing:-0.025em;
+    margin-top:1.1rem;
   }
   /* Quote: small mono, uppercase, sits in middle of vertical space */
   .hero-sub--hidden{
@@ -2538,9 +2574,18 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
     text-transform:uppercase;
     color:var(--mute-2);
   }
-  /* Footer row pinned to bottom, divider above the meta items */
-  .hero-bottom{
+  /* Footer row pinned to bottom, divider above the meta items.
+     position:static is the load-bearing bit — the desktop rule pins this row
+     absolutely to the bottom of the section, so in the stacked layout the growing
+     text simply flowed underneath it and the two overlapped. */
+  /* column flex turns align-self:end into "right edge" — the issue number was
+     drifting to the right side of the screen instead of starting the row */
+  .hero .hero-eyebrow-bottom{align-self:flex-start;text-align:left}
+  .hero .hero-bottom{
+    position:static;
     margin-top:auto;
+    /* the container already carries the mobile side padding — no second indent */
+    padding-left:0;padding-right:0;
     padding-top:1.5rem;padding-bottom:0;
     border-top:1px solid var(--hair-dk);
     border-bottom:none;
@@ -2800,16 +2845,19 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
     display: flex !important;
     flex-direction: column !important;
   }
+  /* Sized for a whole sentence per corner — the old 15.5vw was set when each line
+     was one or two words, and at that scale the two statements collided. */
   .hero-static{
-    font-size: clamp(2.85rem, 15.5vw, 5.5rem) !important;
-    line-height: 0.95 !important;
-    letter-spacing: -0.035em !important;
+    font-size: clamp(1.55rem, 7vw, 2.35rem) !important;
+    line-height: 1 !important;
+    letter-spacing: -0.03em !important;
     margin-bottom: 0 !important;
   }
   .hero-title--corner{
-    font-size: clamp(2.85rem, 15.5vw, 5.5rem) !important;
-    line-height: 0.95 !important;
-    letter-spacing: -0.035em !important;
+    font-size: clamp(1.55rem, 7vw, 2.35rem) !important;
+    line-height: 1 !important;
+    letter-spacing: -0.03em !important;
+    margin-top: 1.1rem !important;
   }
   .hero-sub--hidden{
     margin-top: 2rem !important;

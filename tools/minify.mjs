@@ -16,7 +16,7 @@ import { dirname, resolve } from 'node:path';
 const A = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'assets');
 const CHECK = process.argv.includes('--check');
 const CSS = ['core', 'site', 'manifest'];
-const JS = ['i18n', 'site', 'manifest', 'smooth-scroll'];
+const JS = ['i18n', 'site', 'manifest', 'smooth-scroll', 'fluid'];
 
 async function minifyOne(name, loader) {
   const ext = loader === 'css' ? '.css' : '.js';
