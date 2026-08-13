@@ -254,30 +254,68 @@
   /* Case image hover is intentionally CSS-only now: a simple scale-up on hover
      (.case__media:hover img in site.css). No JS distortion/ripple/loupe. */
 
-  /* ── Text-pressure on the 404 headline (letters thicken near the cursor) ── */
+  /* ── Text-pressure: letters thicken as the pointer approaches ──
+     Works on every [data-pressure] element (the 404 numeral, the About greeting).
+     Same behaviour as the manifest cover: wght rides 300 → 700, which is the range
+     the self-hosted Inter Tight actually carries (@font-face in core.css).
+
+     Glyph spans stay display:inline and each word gets its own nowrap wrapper —
+     a flat per-glyph split makes every gap between letters a legal line break, and
+     inline-block spans quietly widen the line by breaking the space runs. */
+  var pressureChars = [];
   (function(){
-    var el = document.querySelector('[data-pressure]');
-    if(!el) return;
-    var text = (el.textContent || '').trim();
-    el.textContent = '';
-    var spans = [];
-    for(var i=0;i<text.length;i++){
-      var s = document.createElement('span'); s.className = 'tp-ch'; s.textContent = text[i];
-      el.appendChild(s); spans.push(s);
-    }
-    if(prefersReduced || matchMedia('(hover:none)').matches){
-      spans.forEach(function(s){ s.style.fontVariationSettings = '"wght" 320'; });
-      return;
-    }
-    var R = 460;
-    addEventListener('pointermove', function(e){
-      for(var i=0;i<spans.length;i++){
-        var r = spans[i].getBoundingClientRect();
-        var d = Math.hypot(e.clientX - (r.left + r.width/2), e.clientY - (r.top + r.height/2));
+    var targets = document.querySelectorAll('[data-pressure]');
+    if(!targets.length) return;
+    var live = !prefersReduced && matchMedia('(hover:hover)').matches;
+
+    Array.prototype.forEach.call(targets, function(el){
+      var text = (el.textContent || '');
+      if(!text.trim()) return;
+      /* keep whatever other axes the CSS set; the pointer owns wght alone */
+      var prefix = (getComputedStyle(el).fontVariationSettings || '')
+        .split(',').map(function(s){ return s.trim(); })
+        .filter(function(s){ return s && !/^["']wght["']/.test(s); }).join(', ');
+      if(prefix) prefix += ', ';
+      var frag = document.createDocumentFragment();
+      text.split(' ').forEach(function(word, wi){
+        if(wi) frag.appendChild(document.createTextNode(' '));
+        if(!word) return;
+        var w = document.createElement('span');
+        w.className = 'tp-w';
+        for(var i = 0; i < word.length; i++){
+          var s = document.createElement('span');
+          s.className = 'tp-ch';
+          s.textContent = word[i];
+          if(!live) s.style.fontVariationSettings = prefix + '"wght" 320';
+          w.appendChild(s);
+          pressureChars.push({ el: s, prefix: prefix });
+        }
+        frag.appendChild(w);
+      });
+      el.textContent = '';
+      el.appendChild(frag);
+      /* the heading carries the whole line in aria-label — spans would be spelled out */
+      el.setAttribute('aria-hidden', 'true');
+    });
+
+    if(!live || !pressureChars.length) return;
+    var R = 460, px = 0, py = 0, raf = null;
+    function frame(){
+      raf = null;
+      var n = pressureChars.length, rects = new Array(n), i;
+      for(i = 0; i < n; i++) rects[i] = pressureChars[i].el.getBoundingClientRect();
+      for(i = 0; i < n; i++){
+        var r = rects[i];
+        var d = Math.hypot(px - (r.left + r.width / 2), py - (r.top + r.height / 2));
         var t = Math.max(0, 1 - d / R);
-        spans[i].style.fontVariationSettings = '"wght" ' + Math.round(150 + t * 750);
+        pressureChars[i].el.style.fontVariationSettings =
+          pressureChars[i].prefix + '"wght" ' + Math.round(300 + t * 400);
       }
-    }, {passive:true});
+    }
+    addEventListener('pointermove', function(e){
+      px = e.clientX; py = e.clientY;
+      if(raf === null) raf = requestAnimationFrame(frame);
+    }, { passive: true });
   })();
 
   /* ── Hanging prepositions — glue short RU/EN words to the next word ── */
@@ -393,40 +431,4 @@
     track.addEventListener('touchend', function(){ if(!drag) return; drag = false; track.style.transition = ''; if(Math.abs(dx) > 40) go(cur + (dx < 0 ? 1 : -1)); else render(); start(); }, { passive: true });
   })();
 
-  /* ── About greeting: morph the first word through languages (gooey cross-fade, ported from the manifest hero) ── */
-  (function(){
-    var el = document.querySelector('.hi-morph');
-    if(!el) return;
-    var words = (el.getAttribute('data-greetings') || el.textContent || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-    if(words.length < 2) return;
-    if(prefersReduced){ el.textContent = words[0]; return; }
-    ensureGoo();
-    var s1 = document.createElement('span'), s2 = document.createElement('span');
-    s1.className = 'hm'; s2.className = 'hm';
-    el.textContent = ''; el.appendChild(s1); el.appendChild(s2);
-    var morphTime = 0.9, cool = 2.1, i = 0;
-    s1.textContent = words[0]; s2.textContent = words[1];
-    rest();
-    function rest(){ el.style.filter = ''; s1.style.filter = ''; s1.style.opacity = 1; s2.style.filter = ''; s2.style.opacity = 0; }
-    function setM(f){ s2.style.filter = 'blur(' + Math.min(8/f - 8, 100) + 'px)'; s2.style.opacity = Math.pow(f, 0.4); var g = 1 - f; s1.style.filter = 'blur(' + Math.min(8/g - 8, 100) + 'px)'; s1.style.opacity = Math.pow(g, 0.4); }
-    function sched(){ setTimeout(step, cool * 1000); }
-    function step(){
-      el.style.filter = 'url(#about-goo)';
-      var start = null;
-      (function fr(now){
-        if(start === null) start = now;
-        var f = (now - start) / 1000 / morphTime;
-        if(f >= 1){ setM(1); i = (i + 1) % words.length; s1.textContent = words[i]; s2.textContent = words[(i + 1) % words.length]; rest(); sched(); return; }
-        setM(f); requestAnimationFrame(fr);
-      })(performance.now());
-    }
-    sched();
-    function ensureGoo(){
-      if(document.getElementById('about-goo')) return;
-      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('aria-hidden', 'true'); svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
-      svg.innerHTML = '<defs><filter id="about-goo" color-interpolation-filters="sRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 255 -140" result="goo"/><feGaussianBlur in="goo" stdDeviation="0.55"/></filter></defs>';
-      document.body.appendChild(svg);
-    }
-  })();
 })();

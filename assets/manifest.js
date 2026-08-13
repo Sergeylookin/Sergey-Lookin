@@ -269,7 +269,7 @@ function fitHero(){
   const availBottom = bottomEnd - (capBottom + gap);
 
   /* Ceiling so a short line can never turn into a full-screen letter */
-  const hi = H * 0.30;
+  const hi = H * 0.42;
   const px = Math.min(fitBlock(s, availTop, hi), fitBlock(t, availBottom, hi));
   s.style.fontSize = px + 'px';
   t.style.fontSize = px + 'px';

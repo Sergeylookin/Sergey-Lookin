@@ -295,20 +295,8 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 .about__photo img{width:100%;height:100%;object-fit:cover;display:block}
 /* About headline — same scale as the portfolio title ("Доказательство словам.") */
 .about__title{grid-column:1 / 8;grid-row:1;font-family:var(--serif);font-style:italic;font-weight:400;font-size:var(--t-hero);line-height:.86;letter-spacing:-.055em;color:#fff;margin:0 0 clamp(2rem,4vw,3rem);text-wrap:balance;max-width:15ch}
-/* Greeting word that morphs through languages (gooey cross-fade, ported from the manifest hero) */
-.hi-unit{white-space:nowrap}
-.hi-morph{display:inline-grid;position:relative;vertical-align:baseline}
 /* Name sits on its own line so the morphing greeting never reflows the typography */
 .about__name{display:block}
-/* Small mono note that owns the missing comma as a joke. Sits top-right of the content
-   column, right edge aligned to the contacts line. Size like the contact values (@…),
-   colour like the "Связаться" label. */
-.hi-note{grid-column:1 / 8;grid-row:1;justify-self:end;align-self:start;text-align:right;
-  margin-top:clamp(.6rem,2vh,1.6rem);max-width:32ch;
-  font-family:var(--mono);font-style:normal;font-weight:400;font-size:var(--t-mono-sm);
-  line-height:1.5;letter-spacing:.02em;text-transform:none;color:var(--mute);z-index:1}
-.hi-note .arr{color:var(--accent);font-weight:600}
-.hi-morph>.hm{grid-area:1/1;display:block;white-space:nowrap;will-change:filter,opacity}
 /* Photo settles out of a slight zoom as it reveals */
 .about__photo img{transform:scale(1.08);transition:transform 1.5s var(--ease-out)}
 .about__photo.in-view img{transform:scale(1)}
@@ -324,7 +312,7 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 .about__contact:hover .v{color:#fff}
 .about__text{grid-column:2 / 8;display:flex;flex-direction:column;gap:1.1rem;color:var(--mute-2);font-size:clamp(1.0625rem,1.2vw,1.25rem);line-height:1.6;max-width:60ch}
 .about__text p{margin:0;text-wrap:pretty}
-@media (max-width:900px){.about{grid-template-columns:1fr}.about__title,.about__text,.about__contacts,.hi-note{grid-column:1}.hi-note{grid-row:auto;order:2;justify-self:end;align-self:auto;text-align:right;margin:-1.7rem 0 .9rem;max-width:none}.about__title{grid-row:auto;order:3}.about__text{order:4}.about__contacts{order:5}.about__photo{grid-column:1;grid-row:auto;order:1;position:relative;top:0;max-width:520px;margin-bottom:2.5rem}}
+@media (max-width:900px){.about{grid-template-columns:1fr}.about__title,.about__text,.about__contacts{grid-column:1}.about__title{grid-row:auto;order:3}.about__text{order:4}.about__contacts{order:5}.about__photo{grid-column:1;grid-row:auto;order:1;position:relative;top:0;max-width:520px;margin-bottom:2.5rem}}
 
 /* Portfolio headline broken onto two lines (one word per line), all white */
 .page-title .word{display:block}
@@ -338,13 +326,16 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 
 /* ── 404 — giant thin headline with text-pressure + minimal links ── */
 .nf__big{font-family:var(--serif);font-style:italic;font-weight:200;font-size:clamp(7rem,26vw,21rem);line-height:.82;letter-spacing:-.03em;margin:.4rem 0 1.4rem;color:#fff}
-.nf__big .tp-ch{display:inline-block;font-variation-settings:"wght" 200;will-change:font-variation-settings;transition:font-variation-settings .14s var(--ease-out)}
+/* Text-pressure glyphs — общий стиль для всех [data-pressure] (404, «Обо мне»).
+   inline, не inline-block: разбивка не должна менять ширину строки. */
+.tp-ch{transition:font-variation-settings .14s var(--ease-out)}
+.tp-w{white-space:nowrap}
 .nf__actions{display:flex;gap:2.2rem;flex-wrap:wrap;justify-content:center;margin-top:1rem}
 .nf__link{position:relative;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.12em;text-transform:uppercase;color:#fff;padding-bottom:.4rem;text-decoration:none}
 .nf__link::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform .45s var(--ease-out)}
 .nf__link:hover{color:var(--accent)}
 .nf__link:hover::after{transform:scaleX(1);background:var(--accent)}
-@media (prefers-reduced-motion:reduce){.nf__big .tp-ch{transition:none}}
+@media (prefers-reduced-motion:reduce){.tp-ch{transition:none}}
 
 /* ─── Print — the dark pages default to white-on-dark; force a legible light sheet ─── */
 @media print{

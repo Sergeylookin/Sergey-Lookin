@@ -2339,7 +2339,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
      ~0.15em above the box, so the old 8vh let the statement graze the menu. */
   top:clamp(6rem,11vh,8rem);
   left:var(--hero-inset);
-  max-width:min(76vw,1400px);
+  max-width:min(88vw,1700px);
   font-family:var(--serif);
   font-style:italic;
   line-height:0.9;
@@ -2348,14 +2348,14 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   opacity:var(--hero-opacity);
   font-variation-settings:"opsz" var(--hero-opsz),"wght" var(--hero-wght),"SOFT" var(--hero-soft);
   z-index: var(--z-aside);
-  text-wrap:balance;
+  text-wrap:pretty;
 }
 .hero-title--corner{
   position:absolute;
   bottom:clamp(11.5rem,20.5vh,15rem);
   right:var(--hero-inset-r);
   margin:0;
-  max-width:min(76vw,1400px);
+  max-width:min(88vw,1700px);
   font-family:var(--serif);
   font-style:italic;
   line-height:0.9;
@@ -2364,7 +2364,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   z-index: var(--z-aside);
   opacity:var(--hero-opacity);
   font-variation-settings:"opsz" var(--hero-opsz),"wght" var(--hero-wght),"SOFT" var(--hero-soft);
-  text-wrap:balance;
+  text-wrap:pretty;
 }
 .hero-title--corner em{
   font-style:italic;
@@ -2517,6 +2517,17 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   margin:0;
   text-align:left;
 }
+/* Нижние столбцы прижаты вправо и собраны в плотную группу: колонки шириной по
+   содержимому, а не по три равные доли сетки — иначе между ними зияли пустоты.
+   Последний столбец заканчивается ровно на правом поле, там же, где обрывается
+   краска закрывающей фразы. Номер выпуска слева остаётся на левом поле. */
+.hero .hero-bottom-items{
+  display:flex;
+  justify-content:flex-end;
+  gap:clamp(2.5rem,5.2vw,5.5rem);
+  grid-template-columns:none;
+}
+.hero .hero-bottom-items .item{text-align:right}
 
 @media (max-width:1024px){
   .hero-static{font-size:clamp(3rem,13vw,5rem);top:clamp(3.5rem,8vh,5rem);max-width:90%}
