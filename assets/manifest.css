@@ -95,17 +95,10 @@ section.dark h1,section.dark h2{color:#fff}
 .hero-title .dot{color:var(--accent)}
 .hero-sub{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(1.375rem,2vw,1.75rem);color:#BFC3C9;margin-top:clamp(2rem,3.5vw,3rem);max-width:42ch;line-height:1.35;letter-spacing:-0.015em}
 
-/* ─── SCROLL-DRIVEN HERO EXIT — words diverge as user scrolls away ─── */
-.hero{--hp:0}
-.hero-title .word{display:inline-block;}
-.hero-title .word--h0{transform:translate(calc(var(--hp) * -38%),calc(var(--hp) * -10%))}
-.hero-title .word--h1{transform:translate(calc(var(--hp) * -18%),calc(var(--hp) * 6%))}
-.hero-title .word--h2{transform:translate(calc(var(--hp) * 30%),calc(var(--hp) * -8%))}
-.hero-title em{display:inline-block;transform:translate(calc(var(--hp) * 10%),calc(var(--hp) * 28%));transform-origin:left center;}
-.hero-sub{opacity:calc(1 - var(--hp) * 1.8);transform:translateY(calc(var(--hp) * 32px));}
-.hero-bottom{opacity:calc(1 - var(--hp) * 2.2);transform:translateY(calc(var(--hp) * 40px));}
-@media (prefers-reduced-motion:reduce){.hero{--hp:0 !important}}
-@media (max-width:720px){.hero{--hp:0 !important}}
+/* Scroll-driven hero exit removed: nothing has written --hp / --p1 / --p2 since the
+   cover was rebuilt, so every transform below evaluated to identity. Only the em's
+   display survives — the frozen line boxes inside it need a block container. */
+.hero-title em{display:inline-block}
 .hero-bottom{grid-column:1 / -1;margin-top:clamp(3rem,6vw,5rem);padding-top:0;padding-bottom:1.75rem;border-top:none;border-bottom:1px solid var(--hair-dk);display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap)}
 .hero-bottom-items{grid-column:4 / -1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:2rem}
 .hero-bottom .item .label{font-family:var(--mono);font-size:var(--t-eyebrow);color:var(--mute-2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.65rem;font-weight:500}
@@ -1695,8 +1688,6 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
 /* Headings reveal by focus-in only (blur → sharp), no fade/rise. One-shot transition,
    so no permanent will-change — the browser promotes a temp layer for the transition
    and drops it after (cheaper than a persistent will-change layer per heading). */
-.hero-title .word{display:inline-block;filter:blur(6px);transition:filter 1s var(--ease-out);transition-delay:calc(var(--w-i,0) * 0.14s)}
-.hero-title.in-view .word{filter:blur(0)}
 .hero-title .dot{display:inline-block;color:var(--accent)}
 /* BMP dotgrid — wave-style entrance with subtle bounce */
 
@@ -1728,7 +1719,7 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
 .hero-title{transition:filter 0.6s var(--ease-out)}
 .h2-line{display:inline-block;filter:blur(6px);transition:filter 0.9s var(--ease-out);transition-delay:calc(var(--li,0) * 0.12s + 0.05s)}
 .h2-in .h2-line{filter:blur(0)}
-@media (prefers-reduced-motion:reduce){.scroll-progress{display:none}.brand-marquee-row{animation:none}.hero-title .word,.cta-title .word,.h2-line,.sec-head h2 .h2-line,.intro-title .h2-line{filter:none!important}.hero-title .dot{animation:none}.bmp-dotgrid.in-view .d{animation:none;opacity:0.35}.bmp-dotgrid.in-view .d.accent{opacity:1}.tip-num-block::after,.ft-top .arr{transition:none!important}.bicon-spark-core,.bicon-spark-sat,.bicon-compass,.bicon-pos-dot,.bicon-eq,.bicon-aa-letter,.bicon-sys-ray,.bicon-ripple{animation:none}.h2-line{opacity:1;transform:none}.sec-aside{opacity:1;transform:none}.principle,.bstep{animation:none}}
+@media (prefers-reduced-motion:reduce){.scroll-progress{display:none}.brand-marquee-row{animation:none}.cta-title .word,.h2-line,.sec-head h2 .h2-line,.intro-title .h2-line{filter:none!important}.hero-title .dot{animation:none}.bmp-dotgrid.in-view .d{animation:none;opacity:0.35}.bmp-dotgrid.in-view .d.accent{opacity:1}.tip-num-block::after,.ft-top .arr{transition:none!important}.bicon-spark-core,.bicon-spark-sat,.bicon-compass,.bicon-pos-dot,.bicon-eq,.bicon-aa-letter,.bicon-sys-ray,.bicon-ripple{animation:none}.h2-line{opacity:1;transform:none}.sec-aside{opacity:1;transform:none}.principle,.bstep{animation:none}}
 @media (max-width:720px){.brand-marquee-row{animation-duration:35s}}
 
 /* ─── LANGUAGE SWITCHER ───
@@ -2032,47 +2023,12 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 
 /* —— REDUCED MOTION & SLOW DEVICES — disable expensive effects —— */
 @media (max-width:1024px){
-  /* Hero scroll-driven exit completely off */
-  .hero{--hp:0 !important}
   /* BMP scaling off */
   #evaluation{--bp:0 !important}
   /* Section title em scaling off */
   section{--tp:0 !important}
   /* Brand marquee speed limit on small screens */
   .brand-marquee-row{animation-duration:80s}
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   HERO SCROLL REVEAL — pure scroll-driven, no auto animation
-   Section stays 100vh. No body scroll lock.
-   Phase distribution over hero scroll (0..100% = 0..100vh):
-     Phase 1 (0..30%):  title slides up from translateY 32vh to 0
-     Phase 2 (30..50%): subtitle fades in
-     Phase 3 (50..100%): exit (existing --hp behavior)
-   Title stays above the hero-bottom divider line at all times.
-   ═══════════════════════════════════════════════════════════════════ */
-.hero{--p1:1; --p2:1}
-@media (min-width:721px){
-  .hero{--p1:0; --p2:0}
-  .hero .hero-title{
-    transform:translateY(calc((1 - var(--p1,1)) * 44vh));
-    will-change:transform;
-    transition:none;
-  }
-  .hero .hero-sub{
-    opacity:calc(var(--p2,1) * (1 - var(--hp,0) * 1.8));
-    transform:translateY(calc((1 - var(--p2,1)) * 22px + var(--hp,0) * 32px));
-    will-change:opacity,transform;
-  }
-}
-@media (prefers-reduced-motion:reduce){
-  .hero{--p1:1 !important; --p2:1 !important}
-  .hero .hero-title,.hero .hero-sub{transform:none !important; opacity:1 !important}
-}
-@media (max-width:720px){
-  .hero{--p1:1 !important; --p2:1 !important}
-  .hero .hero-title{transform:none !important}
-  .hero .hero-sub{opacity:1 !important; transform:none !important}
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -2286,7 +2242,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 @media (prefers-reduced-motion:reduce){
   .hero-curtain{display:none !important}
 }
-.hero{overflow:hidden;--p1:1 !important;--p2:1 !important;--hp:0 !important;
+.hero{overflow:hidden;
   /* One margin for the whole cover — the site's own alignment rail (--gutter is what
      nav.top, the intro title and the footer all sit on). The two statements are then
      nudged onto it by the INK, not the glyph box (alignHeroToRail in manifest.js). */
@@ -2527,7 +2483,7 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   .hero .hero-bottom-items{
     display:flex;
     justify-content:flex-end;
-    gap:clamp(2.5rem,5.2vw,5.5rem);
+    gap:clamp(3rem,6.8vw,7rem);
     grid-template-columns:none;
   }
   .hero .hero-bottom-items .item{text-align:right}
@@ -3154,8 +3110,7 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   .iw,
   .iw__in,
   .msat,
-  .mentor-core,
-  .hero-title .word{
+  .mentor-core{
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
@@ -3312,7 +3267,6 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
      timing, some elements would otherwise stay at opacity:0 from their initial CSS state. */
   [data-reveal],
   [data-stagger],
-  .hero-title .word,
   .hero-title em,
   .word,
   .msat{
