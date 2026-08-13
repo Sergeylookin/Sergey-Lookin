@@ -2520,14 +2520,22 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
 /* Нижние столбцы прижаты вправо и собраны в плотную группу: колонки шириной по
    содержимому, а не по три равные доли сетки — иначе между ними зияли пустоты.
    Последний столбец заканчивается ровно на правом поле, там же, где обрывается
-   краска закрывающей фразы. Номер выпуска слева остаётся на левом поле. */
-.hero .hero-bottom-items{
-  display:flex;
-  justify-content:flex-end;
-  gap:clamp(2.5rem,5.2vw,5.5rem);
-  grid-template-columns:none;
+   краска закрывающей фразы. Номер выпуска слева остаётся на левом поле.
+   Только для раскладки по углам: в стопке (телефон и планшет-портрет) строка
+   разворачивается в колонку, и правое выравнивание там читалось бы как сбой. */
+@media (min-width:721px){
+  .hero .hero-bottom-items{
+    display:flex;
+    justify-content:flex-end;
+    gap:clamp(2.5rem,5.2vw,5.5rem);
+    grid-template-columns:none;
+  }
+  .hero .hero-bottom-items .item{text-align:right}
 }
-.hero .hero-bottom-items .item{text-align:right}
+@media (max-width:1024px) and (orientation:portrait){
+  .hero .hero-bottom-items{display:flex;flex-direction:column;justify-content:flex-start;gap:1.1rem}
+  .hero .hero-bottom-items .item{text-align:left}
+}
 
 @media (max-width:1024px){
   .hero-static{font-size:clamp(3rem,13vw,5rem);top:clamp(3.5rem,8vh,5rem);max-width:90%}
@@ -2565,12 +2573,12 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
      single-word setting: each corner now carries a whole sentence, and at 12vw the
      pair overflowed the screen — the closing lines ran straight over the meta row. */
   .hero-static{
-    font-size:clamp(1.55rem, 7vw, 2.35rem) !important;
+    font-size:clamp(2rem, 10vw, 3.2rem) !important;
     line-height:1;letter-spacing:-0.025em;
     margin-bottom:0.15rem;
   }
   .hero-title--corner{
-    font-size:clamp(1.55rem, 7vw, 2.35rem) !important;
+    font-size:clamp(2rem, 10vw, 3.2rem) !important;
     line-height:1;letter-spacing:-0.025em;
     margin-top:1.1rem;
   }
@@ -2859,13 +2867,13 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   /* Sized for a whole sentence per corner — the old 15.5vw was set when each line
      was one or two words, and at that scale the two statements collided. */
   .hero-static{
-    font-size: clamp(1.55rem, 7vw, 2.35rem) !important;
+    font-size: clamp(2rem, 10vw, 3.2rem) !important;
     line-height: 1 !important;
     letter-spacing: -0.03em !important;
     margin-bottom: 0 !important;
   }
   .hero-title--corner{
-    font-size: clamp(1.55rem, 7vw, 2.35rem) !important;
+    font-size: clamp(2rem, 10vw, 3.2rem) !important;
     line-height: 1 !important;
     letter-spacing: -0.03em !important;
     margin-top: 1.1rem !important;

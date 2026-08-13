@@ -278,13 +278,14 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
   nav .meta{display:none}
   footer.foot > *:last-child{display:none}
   /* portfolio hero — sequential image slideshow fixed above the title */
-  .hero-slider{display:block;width:clamp(230px,74vw,360px);margin:0 auto clamp(1.5rem,5vw,2.25rem);overflow:hidden;border-radius:6px}
-  .hero-slider__track{display:flex;transition:transform .6s var(--ease-out);will-change:transform}
-  .hero-slide{flex:0 0 100%;aspect-ratio:16/11}
+  /* Стопка кадров с перекрёстным затуханием: съезжающая лента вставала на дробные
+     пиксели и между слайдами проступала светлая щель. Фон под стопкой тёмный —
+     даже при полном затухании подложка не белеет. */
+  .hero-slider{display:block;width:clamp(230px,74vw,360px);margin:0 auto clamp(1.5rem,5vw,2.25rem);overflow:hidden;border-radius:6px;background:var(--bg-dark,#0B0C0F)}
+  .hero-slider__track{position:relative;width:100%;aspect-ratio:16/11}
+  .hero-slide{position:absolute;inset:0;opacity:0;transition:opacity .28s var(--ease-out)}
+  .hero-slide.is-on{opacity:1}
   .hero-slide img{width:100%;height:100%;object-fit:cover;display:block}
-  .hero-slider__dots{display:flex;justify-content:center;gap:.45rem;margin-top:.85rem}
-  .hero-dot{width:6px;height:6px;border-radius:50%;border:none;padding:0;background:var(--hair-dk);transition:background .3s var(--ease-out),transform .3s var(--ease-out);cursor:pointer}
-  .hero-dot.is-active{background:var(--accent);transform:scale(1.3)}
 }
 
 /* ── About page ── */
@@ -295,8 +296,22 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 .about__photo img{width:100%;height:100%;object-fit:cover;display:block}
 /* About headline — same scale as the portfolio title ("Доказательство словам.") */
 .about__title{grid-column:1 / 8;grid-row:1;font-family:var(--serif);font-style:italic;font-weight:400;font-size:var(--t-hero);line-height:.86;letter-spacing:-.055em;color:#fff;margin:0 0 clamp(2rem,4vw,3rem);text-wrap:balance;max-width:15ch}
-/* Name sits on its own line so the morphing greeting never reflows the typography */
-.about__name{display:block}
+/* Greeting on the first line, name on the second — the pair reads as one headline.
+   Neither line breaks: "I’m Sergey Lukin" is a character longer than the Russian
+   line and used to fall apart onto a third line inside the 15ch column. Instead of
+   letting it overflow into the portrait, JS shrinks the size until the longest line
+   fits the column (fitAboutTitle in site.js) — the wrap stays clean in any language
+   at any width. Below 900px the layout stacks and the CSS clamp takes over. */
+.about__name{display:inline}
+@media (min-width:900px){
+  .about__title{max-width:none}
+}
+/* On a phone the column is narrow enough that the greeting fills its line anyway,
+   so the name keeps its own line there — flowing it produced a three-line headline
+   with "Лукин" left hanging alone. */
+@media (max-width:899px){
+  .about__name{display:block}
+}
 /* Photo settles out of a slight zoom as it reveals */
 .about__photo img{transform:scale(1.08);transition:transform 1.5s var(--ease-out)}
 .about__photo.in-view img{transform:scale(1)}

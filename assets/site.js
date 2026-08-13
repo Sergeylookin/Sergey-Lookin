@@ -271,10 +271,15 @@
     Array.prototype.forEach.call(targets, function(el){
       var text = (el.textContent || '');
       if(!text.trim()) return;
-      /* keep whatever other axes the CSS set; the pointer owns wght alone */
+      /* Keep whatever other axes the CSS set; the pointer owns wght alone.
+         Only real «"axis" value» pairs survive the filter — where the CSS sets no
+         variations at all the computed value is the keyword `normal`, and pasting
+         that in front of "wght" produced an invalid declaration that the browser
+         dropped whole. That is why the effect did nothing outside the cover. */
       var prefix = (getComputedStyle(el).fontVariationSettings || '')
         .split(',').map(function(s){ return s.trim(); })
-        .filter(function(s){ return s && !/^["']wght["']/.test(s); }).join(', ');
+        .filter(function(s){ return /^["'][A-Za-z]{4}["']\s+[-\d.]+$/.test(s) && !/^["']wght["']/.test(s); })
+        .join(', ');
       if(prefix) prefix += ', ';
       var frag = document.createDocumentFragment();
       text.split(' ').forEach(function(word, wi){
@@ -316,6 +321,43 @@
       px = e.clientX; py = e.clientY;
       if(raf === null) raf = requestAnimationFrame(frame);
     }, { passive: true });
+  })();
+
+  /* ── About headline: fit the greeting into exactly two full lines ──
+     The greeting used to sit on a forced line of its own, which left most of the
+     first line empty; now the phrase flows, and the size is shrunk until it lands
+     in two lines that both fill the column. Nothing overflows into the portrait,
+     and it holds in either language — the English line is a character longer. */
+  (function(){
+    var t = document.querySelector('.about__title');
+    if(!t) return;
+    function lineCount(){
+      var lh = parseFloat(getComputedStyle(t).lineHeight) || 1;
+      return Math.round(t.scrollHeight / lh);
+    }
+    function fit(){
+      t.style.fontSize = '';
+      /* Runs at every width: on a phone the clamp's floor is still wide enough to push
+         "я Сергей Лукин" onto a third line, and only shrinking fixes that. */
+      var max = parseFloat(getComputedStyle(t).fontSize) || 0;
+      if(!max) return;
+      var lo = 24, hi = max, best = lo;
+      for(var i = 0; i < 16 && hi - lo > 0.5; i++){
+        var mid = (lo + hi) / 2;
+        t.style.fontSize = mid + 'px';
+        if(lineCount() <= 2 && t.scrollWidth <= t.clientWidth + 1){ best = mid; lo = mid; }
+        else hi = mid;
+      }
+      t.style.fontSize = best + 'px';
+    }
+    fit();
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(fit).catch(function(){});
+    addEventListener('load', fit);
+    var rt = null;
+    addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(fit, 120); }, { passive: true });
+    document.addEventListener('click', function(e){
+      if(e.target.closest && e.target.closest('[data-lang]')) setTimeout(fit, 120);
+    }, true);
   })();
 
   /* ── Hanging prepositions — glue short RU/EN words to the next word ── */
@@ -378,7 +420,8 @@
     addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
   })();
 
-  /* ── Portfolio hero — swipeable project-preview slider on mobile (above the title) ── */
+  /* ── Portfolio hero — auto-running project-preview strip on mobile (above the title).
+       No swipe, no dots: it is a showreel, not a control. One image every 0.5s. ── */
   (function(){
     if(!matchMedia('(max-width:720px)').matches) return;
     var head = document.querySelector('.page-head');
@@ -401,34 +444,25 @@
       slide.appendChild(im); track.appendChild(slide);
     });
     slider.appendChild(track);
-    var dots = document.createElement('div'); dots.className = 'hero-slider__dots';
-    srcs.forEach(function(_, i){
-      var d = document.createElement('button'); d.type = 'button'; d.className = 'hero-dot';
-      d.setAttribute('aria-label', 'Слайд ' + (i + 1)); dots.appendChild(d);
-    });
-    /* dots intentionally not shown — slider auto-advances on its own */
     head.insertBefore(slider, head.firstChild);
 
     var n = srcs.length, cur = 0, auto = null;
+    /* Frames are stacked and cross-faded, not slid: a translated flex track lands on
+       fractional pixels and leaves a hairline seam between slides. */
     function render(){
-      track.style.transform = 'translateX(' + (-cur * 100) + '%)';
-      Array.prototype.forEach.call(dots.children, function(d, k){ d.classList.toggle('is-active', k === cur); });
+      Array.prototype.forEach.call(track.children, function(s, k){ s.classList.toggle('is-on', k === cur); });
     }
     function go(i){ cur = (i + n) % n; render(); }
-    function start(){ if(!auto && !prefersReduced) auto = setInterval(function(){ go(cur + 1); }, 1600); }
+    /* 850ms per frame — «почти секунда»; кросс-фейд в site.css вдвое короче шага,
+       иначе кадр не успевал бы устояться до следующего тика */
+    function start(){ if(!auto && !prefersReduced) auto = setInterval(function(){ go(cur + 1); }, 850); }
     function stop(){ if(auto){ clearInterval(auto); auto = null; } }
-    Array.prototype.forEach.call(dots.children, function(d, k){ d.addEventListener('click', function(){ go(k); stop(); start(); }); });
     render(); start();
-    /* pause the auto-advance interval while the slider is scrolled off-screen */
+    /* pause while the strip is scrolled off-screen or the tab is hidden */
     if('IntersectionObserver' in window){
       new IntersectionObserver(function(es){ es[0].isIntersecting ? start() : stop(); }, { threshold: 0.2 }).observe(slider);
     }
-
-    /* swipe */
-    var x0 = 0, dx = 0, drag = false;
-    track.addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; dx = 0; drag = true; stop(); track.style.transition = 'none'; }, { passive: true });
-    track.addEventListener('touchmove', function(e){ if(!drag) return; dx = e.touches[0].clientX - x0; track.style.transform = 'translateX(calc(' + (-cur * 100) + '% + ' + dx + 'px))'; }, { passive: true });
-    track.addEventListener('touchend', function(){ if(!drag) return; drag = false; track.style.transition = ''; if(Math.abs(dx) > 40) go(cur + (dx < 0 ? 1 : -1)); else render(); start(); }, { passive: true });
+    document.addEventListener('visibilitychange', function(){ document.hidden ? stop() : start(); });
   })();
 
 })();
