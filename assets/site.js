@@ -84,7 +84,9 @@
     if(!nav) return;
     var darks = Array.prototype.slice.call(document.querySelectorAll('[data-dark],.dark,.next-proj,footer.foot'));
     function update(){
-      nav.classList.toggle('scrolled', scrollY > 10);
+      /* порог тот же, что на манифесте (manifest.js) — иначе полоса на подстраницах
+         наливалась раньше */
+      nav.classList.toggle('scrolled', scrollY > 20);
       if(document.body.classList.contains('theme-dark')){ nav.classList.add('on-dark'); return; }
       var navMid = nav.getBoundingClientRect().bottom * 0.5;
       var onDark = false;
