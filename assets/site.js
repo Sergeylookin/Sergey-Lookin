@@ -163,9 +163,20 @@
       if(cta && href){
         var cl = document.createElement('a');
         cl.className = 'case__cta-link'; cl.href = href;
-        if(label) cl.setAttribute('aria-label', label);
-        if(ariaKey) cl.setAttribute('data-i18n-aria', ariaKey);
         cta.parentNode.insertBefore(cl, cta); cl.appendChild(cta);
+        /* Раньше здесь стоял aria-label с названием проекта — и доступное имя ссылки
+           («Руна») не содержало её видимый текст («Смотреть →»). Это нарушение
+           WCAG 2.5.3: по голосовой команде «нажми смотреть» такая ссылка не находится.
+           Теперь имя складывается из видимого текста и скрытого названия проекта:
+           и уникально, и содержит написанное на экране. Ключ i18n на скрытой части —
+           название переводится вместе со страницей. */
+        if(label){
+          var srp = document.createElement('span');
+          srp.className = 'vh';
+          srp.textContent = ' ' + label;
+          if(ariaKey) srp.setAttribute('data-i18n', ariaKey);
+          cl.appendChild(srp);
+        }
         /* Bottom row: project number (left) opposite the CTA (right).
            The number is relocated out of the image overlay into this footer. */
         var body = card.querySelector('.case__body');

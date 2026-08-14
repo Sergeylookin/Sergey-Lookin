@@ -49,7 +49,7 @@ function enhancePainList(){
     if(text === null){ text = pt.textContent; pt.setAttribute('data-pt-raw', text); }
     if(isMobile){
       pt.textContent = text;
-      pt.setAttribute('aria-label', text);
+      pt.removeAttribute('aria-label');
       return;
     }
     /* Desktop: ORIGINAL char-wrap behavior — but wrap glyphs by WORD so 
@@ -68,7 +68,15 @@ function enhancePainList(){
       ).join('');
       return `<span class="word" aria-hidden="true">${chars}</span>`;
     }).join('');
-    pt.setAttribute('aria-label', text);
+    /* Раньше здесь стоял aria-label на <p>. Он ЗАПРЕЩЁН на абзаце без роли и молча
+       игнорируется — вместе с ним для скринридера пропадала вся строка, потому что
+       глифы разложены по span-ам с aria-hidden. Теперь доступное имя даёт скрытая
+       копия текста внутри самого абзаца: валидно и читается. */
+    pt.removeAttribute('aria-label');
+    var sr = document.createElement('span');
+    sr.className = 'vh';
+    sr.textContent = text;
+    pt.appendChild(sr);
   });
   bindPainMagnetic();
 }
@@ -1259,7 +1267,12 @@ function buildSideNavigation(){
     tick.style.top=pct+'%';
     tick.dataset.target=sec.id;
     tick.dataset.pct=pct;
-    tick.setAttribute('aria-label',label);
+    /* Точка 26x14 меньше минимальной цели 24x24, а раздвинуть их нельзя — рейка
+       120px на 11 разделов. Поэтому точки перестают быть самостоятельным элементом
+       управления: их роль дублирует меню, которое открывается по наведению и
+       состоит из нормальных кнопок с подписями. Мышью точки по-прежнему работают. */
+    tick.setAttribute('aria-hidden','true');
+    tick.tabIndex = -1;
     sideTrack.appendChild(tick);
     /* menu item */
     const item=document.createElement('button');
@@ -1723,7 +1736,10 @@ document.querySelectorAll('.sec-asides-bar .sec-aside').forEach(k=>kickerIO.obse
   const LERP=0.16;
   const MIN_SCALE=0.55;
   const MAX_SCALE=1.08;
-  const MIN_OPACITY=0.22;
+  /* Дальние панели больше НЕ гасятся: при любой прозрачности их текст не дотягивал
+     до контраста 4.5 (на 0.22 было 1.27, на 0.5 — 2.13). Глубина в этой секции и так
+     задана масштабом (MIN_SCALE), а читаемость теперь полная на всех панелях. */
+  const MIN_OPACITY=1;
 
   let targetX=0;
   let currentX=0;

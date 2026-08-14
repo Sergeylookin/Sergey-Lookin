@@ -1,3 +1,7 @@
+/* Визуально скрытый текст: остаётся для скринридера, но не виден. Нужен там, где
+   видимая надпись разложена по span-ам, или где доступное имя должно содержать
+   больше, чем написано на экране. */
+.vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
 /* ============================================================
    core.css — shared foundation for the whole portfolio.
    Linked FIRST on every page (before manifest.css / site.css),
