@@ -100,6 +100,38 @@ nav.top.on-dark .lang-switch button.active{color:var(--accent)}
 @keyframes caseRise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.case[data-reveal]{opacity:1;transform:none}.case[data-reveal].in-view{animation:none}}
 .case:first-child{border-top:none}
+
+/* ─── НАСЛОЕНИЕ КЕЙСОВ ───
+   Просто кейс на кейс: все карточки липнут в ОДНУ И ТУ ЖЕ точку — никакой лесенки,
+   никаких корешков и добавленных линий. Сделано целиком на CSS, скрипта нет, значит
+   нет и покадровых пересчётов, от которых дрожал текст.
+   Фон карточки обязан совпадать с фоном СТРАНИЦЫ (портфолио в тёмной теме), иначе
+   наслоение даёт светлые прямоугольники. Ни теней, ни затемнения, ни масштаба:
+   transform сдвигает левый край карточки от поля страницы.
+   Точка прилипания в rem — целое число пикселей: дробная при плавном скролле каждый
+   кадр округляется по-разному и даёт дрожание. */
+@media (min-width:721px){
+  .cases .case{
+    position:sticky;top:5.5rem;background:var(--bg);
+    /* Фон должен доходить до краёв экрана, иначе в боковых полях страницы (16px)
+       просвечивает кейс, лежащий под этим. Отрицательные внешние отступы растягивают
+       коробку карточки на поля, а такие же внутренние возвращают содержимое на место —
+       сетка кейса не сдвигается. */
+    margin-inline:calc(-1 * var(--gutter));
+    padding-inline:var(--gutter);
+    /* Свой слой обязателен: у прилипшего блока положение пересчитывается каждый кадр,
+       и на дробной прокрутке (Lenis) текст заново растрируется по субпикселям — буквы
+       дрожат. С отдельным слоем он растрируется один раз и дальше только композитится.
+       Именно will-change, а не transform: у карточки есть анимация появления с
+       forwards, её финальное transform:none перебило бы объявление. */
+    will-change:transform;
+  }
+  body.theme-dark .cases .case{background:var(--bg-dark)}
+}
+/* Блок кейсов идёт по тем же полям, что и меню сверху: правый резерв под боковой
+   индикатор нужен только на главной, здесь его нет и он давал лишний отступ. */
+.cases.wrap{padding-right:var(--gutter)}
+
 .case__media{grid-column:1 / 8;position:relative;overflow:hidden;border-radius:4px;aspect-ratio:16/10;background:var(--hair)}
 .case__media img,.case__media video{width:100%;height:100%;object-fit:cover;transition:transform 1.1s var(--ease-out),filter .6s var(--ease-out);filter:saturate(.92)}
 .case__media:hover img,.case__media:hover video{transform:scale(1.07)}
