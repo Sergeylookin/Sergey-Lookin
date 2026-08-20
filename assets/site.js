@@ -450,6 +450,12 @@
     if(!srcs.length) return;
 
     var slider = document.createElement('div'); slider.className = 'hero-slider';
+    /* Системное «уменьшить движение» больше не глушит показ целиком, только смягчает:
+       на айфоне этот же флаг поднимает обычный режим энергосбережения, и герой портфолио
+       замирал на первом кадре — со стороны это читалось как поломка страницы, а не как
+       уважение к настройке. Теперь в этом режиме кадры меняются встык, без кросс-фейда,
+       и вдвое спокойнее по темпу. */
+    if(prefersReduced) slider.classList.add('is-cut');
     var track = document.createElement('div'); track.className = 'hero-slider__track';
     srcs.forEach(function(s){
       var slide = document.createElement('div'); slide.className = 'hero-slide';
@@ -467,15 +473,110 @@
     }
     function go(i){ cur = (i + n) % n; render(); }
     /* 850ms per frame — «почти секунда»; кросс-фейд в site.css вдвое короче шага,
-       иначе кадр не успевал бы устояться до следующего тика */
-    function start(){ if(!auto && !prefersReduced) auto = setInterval(function(){ go(cur + 1); }, 850); }
+       иначе кадр не успевал бы устояться до следующего тика. При «уменьшить движение» —
+       спокойнее и встык (см. is-cut выше). */
+    var STEP = prefersReduced ? 1800 : 850;
+    function start(){ if(!auto) auto = setInterval(function(){ go(cur + 1); }, STEP); }
     function stop(){ if(auto){ clearInterval(auto); auto = null; } }
     render(); start();
     /* pause while the strip is scrolled off-screen or the tab is hidden */
+    /* Наблюдатель только ПРИОСТАНАВЛИВАЕТ показ, когда полоса уехала с экрана. Раньше
+       первый же вызов мог прийти с isIntersecting:false (мобильный Safari успевает
+       отдать его до укладки) и погасить слайдшоу насовсем — стартуем мы всё равно сами. */
     if('IntersectionObserver' in window){
-      new IntersectionObserver(function(es){ es[0].isIntersecting ? start() : stop(); }, { threshold: 0.2 }).observe(slider);
+      new IntersectionObserver(function(es){ es[0].isIntersecting ? start() : stop(); }, { threshold: 0.01 }).observe(slider);
     }
     document.addEventListener('visibilitychange', function(){ document.hidden ? stop() : start(); });
+  })();
+
+  /* ── Медиа кейса горизонтальной лентой ──
+     Секция .pcase__media превращается в «пин»: липкая сцена высотой с экран, внутри
+     лента кадров, которая едет по X ровно на столько, на сколько страница прокручена
+     внутри секции. Высота секции = экран + длина ленты, поэтому вертикаль сверху и
+     снизу остаётся обычной, а колесо нигде не перехватывается.
+     Разметку десяти страниц кейсов менять не нужно — обёртки строит скрипт, поэтому
+     на узком экране (и при prefers-reduced-motion) он просто их не создаёт. */
+  (function(){
+    var sec = document.querySelector('.pcase__media');
+    if(!sec || prefersReduced) return;
+    var mq = matchMedia('(min-width:861px)');
+
+    /* Темп: во сколько раз вертикальный путь короче горизонтального. 1 = пиксель в
+       пиксель (лента едет ровно на столько, на сколько прокручена страница) — на пяти
+       кадрах это выходило слишком много оборотов колеса. 0.55 = лента идёт почти вдвое
+       бодрее, при этом скролл остаётся нативным: меняется только высота секции. */
+    var PACE = 0.55;
+    /* Торможение в конце. Простая пауза в конце была слишком грубой: лента шла ровно и
+       вставала колом, а следом так же резко начиналась вертикаль. Поэтому последняя треть
+       пути идёт с равномерным замедлением до нуля — на стыке скорость нулевая с обеих
+       сторон, и последний кадр успевает «дойти» и устояться, а не мигнуть.
+       TAIL — доля прокрутки под замедление; M — скорость на ровном участке, подобрана
+       так, чтобы путь сошёлся ровно в конце (площадь под графиком скорости = 1).
+       HOLD — короткая доля экрана уже на нулевой скорости, чтобы кадр постоял. */
+    var TAIL = 0.26, A = 1 - TAIL, M = 1 / (A + TAIL / 2), HOLD = 0.3;
+    var stage = null, rail = null, dist = 0, travel = 0, hold = 0, built = false, ticking = false, primed = false;
+
+    function build(){
+      if(built) return;
+      stage = document.createElement('div'); stage.className = 'pcase__rail-stage';
+      rail  = document.createElement('div'); rail.className  = 'pcase__rail';
+      while(sec.firstChild) rail.appendChild(sec.firstChild);
+      stage.appendChild(rail); sec.appendChild(stage);
+      sec.classList.add('is-rail');
+      built = true;
+    }
+    function teardown(){
+      if(!built) return;
+      while(rail.firstChild) sec.appendChild(rail.firstChild);
+      sec.removeChild(stage);
+      sec.classList.remove('is-rail'); sec.style.height = '';
+      stage = rail = null; built = false;
+    }
+    /* Кадры уезжают за край сцены, а она с overflow:hidden — нативный loading="lazy"
+       считает их невидимыми и тянет картинку только в момент выезда, отчего кадр
+       мигал бы пустотой. Поэтому за два экрана до ленты грузим её целиком. */
+    function prime(){
+      if(primed || !built) return;
+      if(sec.getBoundingClientRect().top > innerHeight * 2) return;
+      primed = true;
+      rail.querySelectorAll('img[loading="lazy"]').forEach(function(im){ im.loading = 'eager'; });
+    }
+    function measure(){
+      if(!built) return;
+      rail.style.transform = 'translate3d(0,0,0)';
+      dist = Math.max(0, rail.scrollWidth - stage.clientWidth);
+      travel = Math.round(dist * PACE * M);
+      hold = travel ? Math.round(stage.offsetHeight * HOLD) : 0;
+      sec.style.height = travel ? (stage.offsetHeight + travel + hold) + 'px' : '';
+      frame();
+    }
+    function frame(){
+      ticking = false;
+      if(!built) return;
+      prime();
+      if(travel <= 0) return;
+      /* Пока секция прилипшая, её top уходит в минус — это и есть пройденный путь. */
+      var u = Math.min(1, Math.max(0, -sec.getBoundingClientRect().top / travel));
+      /* Ровный участок — постоянная скорость M; хвост — та же скорость, линейно гаснущая
+         до нуля. Дальше идёт HOLD: лента уже стоит, пин ещё держит. */
+      var t, p;
+      if(u <= A) p = M * u;
+      else { t = (u - A) / TAIL; p = M * A + M * TAIL * (t - t * t / 2); }
+      p = Math.min(1, p);
+      rail.style.transform = 'translate3d(' + (-p * dist).toFixed(2) + 'px,0,0)';
+    }
+    function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }
+
+    function sync(){
+      if(mq.matches){ build(); measure(); } else teardown();
+    }
+    sync();
+    addEventListener('scroll', onScroll, { passive: true });
+    addEventListener('load', measure);
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(measure).catch(function(){});
+    var rt = null;
+    addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(sync, 120); }, { passive: true });
+    (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(sync);
   })();
 
 })();

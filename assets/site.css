@@ -269,6 +269,43 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 .pcase__media .row{display:grid;grid-template-columns:1fr 1fr;gap:clamp(.6rem,1.2vw,1rem)}
 @media (max-width:680px){.pcase__media .row{grid-template-columns:1fr}}
 
+/* ─── МЕДИА КЕЙСА ГОРИЗОНТАЛЬНОЙ ЛЕНТОЙ ───
+   Внутри кейса скролл идёт вниз, пока первый кадр не встанет целиком; дальше
+   секция прилипает и колесо гонит ленту вбок; на последнем кадре пин отпускается
+   и страница снова листается вниз, к «Следующему проекту».
+   Всё на НАТИВНОМ скролле: sticky держит сцену, скрипт лишь переводит прогресс
+   страницы в translateX ленты. Колесо НЕ перехватывается — тачпад, клавиши, полоса
+   прокрутки и Lenis работают как обычно.
+   Класс is-rail ставит site.js: без JS, при prefers-reduced-motion и на узких экранах
+   остаётся прежний вертикальный столбец. */
+@media (min-width:861px){
+  .pcase__media.is-rail{--rail-gap:clamp(.6rem,1.2vw,1rem);display:block;position:relative;padding:0;gap:0}
+  .pcase__media.is-rail .pcase__rail-stage{position:sticky;top:0;height:100svh;display:flex;align-items:center;overflow:hidden}
+  /* Лента ниже сцены: сверху остаётся просвет под фиксированную шапку, снизу — такой же.
+     will-change обязателен: у ленты transform меняется каждый кадр, без своего слоя
+     картинки заново растрируются по субпикселям и края дрожат. */
+  .pcase__media.is-rail .pcase__rail{display:flex;align-items:center;gap:var(--rail-gap);height:74svh;padding-inline:var(--gutter);will-change:transform}
+  .pcase__media.is-rail .pcase__rail > *{flex:0 0 auto;height:100%;width:auto;margin:0}
+  /* Селектор нарочно длинный: ниже по файлу лежит «.pcase__media img{height:auto}»,
+     и при равной специфичности кадр в ленте схлопывался в нулевую высоту.
+     object-fit:contain — кадры показываются целиком, без кропа (как и было). */
+  .pcase__media.is-rail .pcase__rail img,.pcase__media.is-rail .pcase__rail video{height:100%;width:auto;max-width:none;object-fit:contain}
+  /* Пара квадратов из .row в ленте становится двумя соседними кадрами той же высоты. */
+  .pcase__media.is-rail .pcase__rail .row{display:flex;gap:var(--rail-gap);height:100%}
+  .pcase__media.is-rail .pcase__rail .row img,.pcase__media.is-rail .pcase__rail .row video{height:100%;width:auto}
+}
+/* На печать лента разворачивается обратно в столбец: прилипшая сцена с overflow:hidden
+   вырезала бы из PDF всё, кроме первого кадра. Высоту секции задаёт скрипт инлайном —
+   отсюда !important. */
+@media print{
+  .pcase__media.is-rail{height:auto!important}
+  .pcase__media.is-rail .pcase__rail-stage{position:static;height:auto;display:block;overflow:visible}
+  .pcase__media.is-rail .pcase__rail{display:block;height:auto;padding:0;transform:none!important}
+  .pcase__media.is-rail .pcase__rail > *{height:auto;width:100%}
+  .pcase__media.is-rail .pcase__rail img,.pcase__media.is-rail .pcase__rail video{height:auto;width:100%}
+  .pcase__media.is-rail .pcase__rail .row{display:grid;grid-template-columns:1fr 1fr;height:auto}
+}
+
 /* ============================================================
    WOW LAYER — portfolio hero title, image trail, scroll-clip, back
    ============================================================ */
@@ -319,6 +356,9 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
   .hero-slider__track{position:relative;width:100%;aspect-ratio:16/11}
   .hero-slide{position:absolute;inset:0;opacity:0;transition:opacity .28s var(--ease-out)}
   .hero-slide.is-on{opacity:1}
+  /* При системном «уменьшить движение» кадры меняются встык: сам показ остаётся
+     (иначе в энергосбережении герой замирал на первом кадре), а анимация уходит. */
+  .hero-slider.is-cut .hero-slide{transition:none}
   .hero-slide img{width:100%;height:100%;object-fit:cover;display:block}
 }
 
