@@ -22,10 +22,9 @@ const ALT = {
   'rocketwork-3': 'Rocket Work — мобильное приложение: экраны вакансий и откликов',
   'rocketwork-4': 'Rocket Work — постер «rethinking HR processes» и экраны платформы найма',
   // Fingular — финтех-бренд + дизайн-система + менторство
-  'fingular-1': 'Fingular — постеры бренда с 3D-объектами: Design Function, Team Structure, Quality',
-  'fingular-2': 'Fingular — сетка тёмных экранов интерфейса финтех-продукта',
-  'fingular-3': 'Fingular — крупные бизнес-метрики: рост конверсии, скорости и консистентности',
-  'fingular-4': 'Fingular — mindmap процесса: инструменты, Figma, Jira и эффекты для рынка',
+  'fingular-1': 'Fingular — гайдбук бренда AhaPay: логотип, иконки, цвет, типографика, фотостиль, 3D-графика и полиграфия',
+  'fingular-2': 'Fingular — брендинг Ringgo: логотип, карты, мерч и рекламные макеты в синем',
+  'fingular-3': 'Fingular — сайт TrustPaisa: главная, страницы продукта, оплаты и карьеры',
   // Chobies — Web3 NFT-персонажи, формат NTO
   'chobies-1': 'Chobies — лендинг NFT-коллекции: персонаж в короне и блок Passive income',
   'chobies-2': 'Chobies — приветственный экран NTO с NFT-персонажами',

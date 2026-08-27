@@ -175,6 +175,9 @@ nav.top.on-dark .lang-switch button.active{color:var(--accent)}
 .next-proj .eyebrow{color:var(--mute-2);display:block;margin-bottom:1.4rem}
 .next-proj .nt{font-family:var(--serif);font-weight:500;font-size:clamp(2.75rem,8vw,7rem);line-height:0.98;letter-spacing:-.045em;transition:color .35s var(--ease-out);text-wrap:balance;max-width:18ch;margin:0 auto}
 .next-proj:hover .nt{color:var(--accent)}
+/* Блок центрованный, а под ним уже нет фиксированной шапки — правый запас под её
+   правый кластер (--nav-safe-right) уводил заголовок влево на половину этого запаса. */
+.next-proj .pcase__full{padding-right:var(--gutter)}
 
 /* ============================================================
    404
@@ -191,6 +194,10 @@ footer.foot{background:var(--bg-dark);color:var(--mute-2);padding:1.25rem var(--
 footer.foot a:hover,.ft-top:hover{color:#fff}
 .ft-top{background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;transition:color .3s var(--ease-out)}
 .ft-top .arr{color:var(--accent)}
+/* Крайние блоки делят остаток поровну — тогда «Наверх» стоит ровно по центру страницы.
+   При space-between середина уезжала на разницу длин надписей слева и справа. */
+footer.foot>:first-child,footer.foot>:last-child{flex:1 1 0;min-width:0}
+footer.foot>:last-child{text-align:right}
 
 /* ============================================================
    DARK PAGE THEME — applied via <body class="theme-dark">

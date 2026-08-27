@@ -1621,6 +1621,9 @@ html[lang="en"] .look-badge__ring .lb-en{display:inline}
 footer.foot{background:var(--bg-dark);color:var(--mute-2);padding:1.25rem var(--gutter);display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.08em;text-transform:uppercase;border-top:1px solid var(--hair-dk);gap:1rem}
 .ft-top{background:none;border:none;padding:0;margin:0;font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;transition:color 0.3s var(--ease-out);display:inline-flex;align-items:center;gap:0.5rem}
 .ft-top:hover{color:var(--accent)}
+/* Тот же приём, что на страницах кейсов: «Наверх» — ровно по центру страницы. */
+footer.foot>:first-child,footer.foot>:last-child{flex:1 1 0;min-width:0}
+footer.foot>:last-child{text-align:right}
 .ft-top .arr{display:inline-block;transition:transform 0.3s var(--ease-out)}
 .ft-top:hover .arr{transform:translateY(-3px)}
 /* ─────────────── tooltips (whispers, TL;DRs, em-definitions) ─────────────── */
