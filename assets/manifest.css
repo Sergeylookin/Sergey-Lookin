@@ -764,15 +764,17 @@ section.dark h1,section.dark h2{color:#fff}
   margin:0;
   padding:0;
 }
-/* Раскладка — ручная, Сергей выставил её в лаборатории сетки 29.08.2026.
-   База ниже — страховка: добавится строка сверх четырёх и всё равно ляжет
-   по сетке, а не свалится в одну колонку автопотоком. */
-.credo-line{grid-column:2 / -1}
-.credo-list > :nth-child(1){grid-column:4 / 11}
-.credo-list > :nth-child(2){grid-column:7 / 12}
-.credo-list > :nth-child(3){grid-column:5 / 11}
-.credo-list > :nth-child(4){grid-column:2 / 9}
+/* Строка занимает всю сетку и делится внутри: крупное утверждение стоит в
+   колонках, которые Сергей выставил руками в лаборатории 29.08.2026, а мелкая
+   реплика — в свободном месте рядом. Лесенка от этого перестаёт быть украшением:
+   смещение и есть то место, где живёт мелкий текст. */
 .credo-line{
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  column-gap:var(--col-gap);
+  row-gap:0.75rem;
+  align-items:start;
   --p:1;                       /* 1 — строка в фокусе, 0 — на периферии экрана */
   margin:0;
   max-width:none;
@@ -782,12 +784,81 @@ section.dark h1,section.dark h2{color:#fff}
   transition:opacity .5s var(--ease-out),transform .5s var(--ease-out),filter .5s var(--ease-out),color .35s var(--ease-out);
   will-change:opacity,transform;
 }
+/* Ширина блоков подобрана замером так, чтобы каждое утверждение легло в ДВЕ
+   строки — как в макете Сергея. На 1600 это 9 / 7 / 8 / 8 колонок: меньше даёт
+   три строки, больше рвёт лесенку. Нижние два выключены вправо. */
+/* Потолок ширины. Кегль утверждений упирается в 40px и дальше не растёт, поэтому
+   на широком экране колонка становится шире строки и фраза схлопывается в одну —
+   замерено: без потолка на 2560 в одну строку уходили три утверждения из четырёх.
+   1100px держат две строки на всех ширинах от 1600 и выше, в обоих языках. */
+.credo-say{grid-column:2 / -1;max-width:1100px}
+.credo-list > :nth-child(1) .credo-say{grid-column:4 / -1}
+.credo-list > :nth-child(2) .credo-say{grid-column:6 / -1}
+/* margin-left:auto обязателен вместе с потолком ширины: иначе коробка с max-width
+   прижимается к ЛЕВОМУ краю своей области, текст внутри уходит вправо, и между ним
+   и подписью открывается дыра — замерено 553px на 2560. Auto прижимает саму коробку
+   вправо, и зазор остаётся равен жёлобу сетки на любой ширине. */
+.credo-list > :nth-child(3) .credo-say{grid-column:3 / 11; text-align:right; margin-left:auto}
+.credo-list > :nth-child(4) .credo-say{grid-column:1 / 9;  text-align:right; margin-left:auto}
+
+/* Реплика противника — привычка индустрии, против которой сказано утверждение.
+   Гарнитура и кегль взяты у меню в шапке (IBM Plex Mono 14/500, ls 0.1em, капитель):
+   служебный слой сайта говорит служебным голосом. Контраст с 40-пиксельным серифом
+   держится не мелкостью, а разницей природы шрифта и выключки.
+   Ширина задана в ch, а не колонками: колонка растягивается с экраном, а нам нужны
+   стабильные три строки узкой колонкой — как у «мыслей» на полях. */
+.credo-note{
+  grid-row:1;
+  font-family:var(--mono);
+  font-style:normal;
+  font-weight:500;
+  font-size:0.875rem;
+  line-height:1.55;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--mute);
+  /* Подписи держим в три строки — так в макете Сергея. Замер на 1600: 202px давали
+     4–5 строк, 230–290 дают ровно три, дальше начинается две. Берём середину.
+     У третьей подписи всего две колонки (225px), она упирается в них и без ограничения. */
+  max-width:31ch;
+  text-wrap:pretty;
+  padding-top:0.55em;
+}
+/* Подпись всегда прижата к своему утверждению: слева от него — выключка вправо,
+   справа от него — влево. Так пара читается как одно целое, а не как две колонки. */
+/* Первая подпись уже остальных: при общей ширине её средняя строка уходила
+   в 26 знаков против 22 в макете. 26ch держат перенос там же, где у Сергея. */
+.credo-list > :nth-child(1) .credo-note{grid-column:1 / 4;   text-align:right; margin-left:auto; max-width:26ch}
+.credo-list > :nth-child(2) .credo-note{grid-column:3 / 6;   text-align:right; margin-left:auto}
+/* Только у третьей — обычный перенос вместо text-wrap:pretty. Pretty балансирует
+   строки и не терпит коротких хвостов, из-за чего утаскивал «РЕШЕНИЙ» на строку
+   выше. У остальных pretty оставляем: у четвёртой он, наоборот, убирает висячее
+   «МАКЕТОВ». */
+.credo-list > :nth-child(3) .credo-note{grid-column:11 / -1; text-align:left;  margin-right:auto; text-wrap:auto}
+.credo-list > :nth-child(4) .credo-note{grid-column:9 / -1;  text-align:left;  margin-right:auto}
+
 @media (max-width:1024px){
+  /* Узкий экран — простая вёрстка: одна колонка, всё по левому краю, никаких
+     смещений, потолков ширины и разной выключки. Лесенка и парные выключки
+     существуют только там, где под них есть горизонтальное место. */
+  #credo{min-height:auto}
   #credo .sec-full{row-gap:clamp(1.5rem,5vw,2.25rem)}
   .credo-list{row-gap:clamp(1.75rem,6vw,2.75rem)}
-  /* :nth-child(n) — та же специфичность, что у лесенки выше, но правило идёт позже,
-     поэтому перекрывает её при любом количестве строк, а не только у первых четырёх */
-  .credo-list > :nth-child(n){grid-column:1 / -1}
+  .credo-line{row-gap:0.55rem}
+  .credo-list > :nth-child(n) .credo-say{
+    grid-column:1 / -1;
+    text-align:left;
+    margin-left:0;
+    max-width:none;
+  }
+  .credo-list > :nth-child(n) .credo-note{
+    grid-column:1 / -1;
+    grid-row:auto;
+    text-align:left;
+    margin:0;
+    max-width:none;
+    padding-top:0;
+  }
 }
 @media (prefers-reduced-motion:reduce){
   .credo-line{--p:1 !important;opacity:1;transform:none;filter:none;transition:none}
