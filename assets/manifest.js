@@ -33,105 +33,7 @@ function splitH2(h2){
    Desktop: wrap each char in a span (original behavior, untouched).
    Mobile: keep clean text — no spans, no inline-block, so words can never
    break mid-glyph and no risk of unintended layout side-effects. */
-function enhancePainList(){
-  const isMobile = window.innerWidth <= 720 || window.matchMedia('(hover:none)').matches;
-  const items = document.querySelectorAll('.pain-list li');
-  items.forEach((li, idx) => {
-    li.setAttribute('data-num', String(idx + 1).padStart(2, '0'));
-    li.dataset.magBound = '';
-    const pt = li.querySelector('.pt');
-    if(!pt) return;
-    /* Cache pristine text once. Re-runs (resize across 720px, language switch)
-       must NOT read it back from the DOM: the desktop char-wrap turns every
-       space into a non-breaking &nbsp; (is-space spans), and reading that back
-       gave an all-&nbsp; string that could never wrap on mobile → overflow. */
-    let text = pt.getAttribute('data-pt-raw');
-    if(text === null){ text = pt.textContent; pt.setAttribute('data-pt-raw', text); }
-    if(isMobile){
-      pt.textContent = text;
-      pt.removeAttribute('aria-label');
-      return;
-    }
-    /* Desktop: ORIGINAL char-wrap behavior — but wrap glyphs by WORD so 
-       inline-block chars can't break mid-word. Each word is a nowrap span. */
-    let ci = 0;
-    const tokens = text.split(/(\s+)/); /* preserve spaces as separate tokens */
-    pt.innerHTML = tokens.map(tok => {
-      if(tok === '') return '';
-      if(/^\s+$/.test(tok)){
-        /* whitespace token — one is-space char per space char */
-        return Array.from(tok).map(()=>`<span class="char is-space" aria-hidden="true">&nbsp;</span>`).join('');
-      }
-      /* word token — wrap in nowrap container */
-      const chars = Array.from(tok).map(ch =>
-        `<span class="char" style="--ci:${ci++}" aria-hidden="true">${ch}</span>`
-      ).join('');
-      return `<span class="word" aria-hidden="true">${chars}</span>`;
-    }).join('');
-    /* Раньше здесь стоял aria-label на <p>. Он ЗАПРЕЩЁН на абзаце без роли и молча
-       игнорируется — вместе с ним для скринридера пропадала вся строка, потому что
-       глифы разложены по span-ам с aria-hidden. Теперь доступное имя даёт скрытая
-       копия текста внутри самого абзаца: валидно и читается. */
-    pt.removeAttribute('aria-label');
-    var sr = document.createElement('span');
-    sr.className = 'vh';
-    sr.textContent = text;
-    pt.appendChild(sr);
-  });
-  bindPainMagnetic();
-}
-
 /* Magnetic char pull — real-time interactive physics per row */
-function bindPainMagnetic(){
-  if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
-  if(window.matchMedia('(hover:none)').matches)return;
-  if(window.innerWidth<=720)return;
-  const items = document.querySelectorAll('.pain-list li');
-  items.forEach(li => {
-    const pt = li.querySelector('.pt');
-    if(!pt)return;
-    /* remove previous listeners if any */
-    if(li._magMove){
-      li.removeEventListener('pointermove', li._magMove);
-      li.removeEventListener('pointerleave', li._magLeave);
-    }
-    let raf=null;
-    let lastX=0, lastY=0;
-    function compute(){
-      raf=null;
-      const chars = pt.querySelectorAll('.char:not(.is-space)');
-      const cx=lastX;
-      const cy=lastY;
-      const R=140;
-      const MAX_LIFT=14;
-      chars.forEach(ch => {
-        const r = ch.getBoundingClientRect();
-        const chCx = r.left + r.width/2;
-        const chCy = r.top + r.height/2;
-        const dx = cx - chCx;
-        const dy = cy - chCy;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        let influence = Math.max(0, 1 - dist/R);
-        influence = influence * influence * (3 - 2*influence);
-        ch.style.setProperty('--lift', `-${(influence*MAX_LIFT).toFixed(1)}px`);
-      });
-    }
-    li._magMove = function(e){
-      lastX = e.clientX;
-      lastY = e.clientY;
-      if(raf)return;
-      raf = requestAnimationFrame(compute);
-    };
-    li._magLeave = function(){
-      const chars = pt.querySelectorAll('.char');
-      chars.forEach(ch => {
-        ch.style.setProperty('--lift', '0px');
-      });
-    };
-    li.addEventListener('pointermove', li._magMove, {passive:true});
-    li.addEventListener('pointerleave', li._magLeave, {passive:true});
-  });
-}
 function inViewport(el){
   const r = el.getBoundingClientRect();
   return r.top < window.innerHeight && r.bottom > 0;
@@ -185,11 +87,6 @@ function applyLang(lang, announce){
     }
   });
 
-  /* pain-list — re-enhance after language switch (text was replaced).
-     Drop the cached pristine text first so it re-captures the NEW language
-     (otherwise the cache would replay the previous language's text). */
-  document.querySelectorAll('.pain-list .pt[data-pt-raw]').forEach(function(pt){ pt.removeAttribute('data-pt-raw'); });
-  enhancePainList();
 
   /* Re-observe reveal elements that may have lost state during innerHTML replacement.
      Ensures fade-in continues to work after language toggle.
@@ -993,22 +890,16 @@ if(footTop) footTop.addEventListener('click',scrollToTop);
 /* ─────────────── hover whispers (big numbers) & TL;DRs (kickers) ─────────────── */
 const SECTION_TIPS={
   ru:{
-    'pain':{w:'«Просто нарисуйте» — начало слабого проекта.',t:'Пять симптомов того, что дизайн не работает на бизнес.'},
-    'partner':{w:'Самый длинный спор, который я выиграл за карьеру.',t:'Дизайн как партнёр, а не как сервис.'},
-    'principles':{w:'Каждый принцип появился после того, как я его нарушил.',t:'Четыре утверждения, на которых стоит остальное.'},
+    'credo':{w:'Самый длинный спор, который я выиграл за карьеру.',t:'Дизайн как партнёр, а не как сервис.'},
     'audience':{w:'Не картинки создают впечатление. А дизайн.',t:'Пользователь — это человек, а не сегмент в дашборде.'},
-    'brand':{w:'Раньше я думал, что бренд — это логотип.',t:'Шесть этапов того, как складывается бренд.'},
     'evaluation':{w:'Работа считается законченной только тогда, когда начинает работать в реальности.',t:'Четыре уровня, через которые проходит решение.'},
     'ds':{w:'Без системы качество зависит от настроения команды.',t:'Способ держать качество без ручного контроля.'},
     'results':{w:'Сильный дизайн выдерживает не только ревью, но и реальность.',t:'Пять конкретных эффектов для бизнеса.'},
     'companies':{w:'Двенадцать лет в трёх главах.',t:'Три места работы за 12+ лет.'}
   },
   en:{
-    'pain':{w:"The weakest projects all started with 'just design it'.",t:"Five signs design has stopped working for the business."},
-    'partner':{w:"The longest argument I've won in my career.",t:"Design as partner, not service."},
-    'principles':{w:"Each principle appeared after I broke it.",t:"Four statements the rest stands on."},
+    'credo':{w:"The longest argument I've won in my career.",t:"Design as partner, not service."},
     'audience':{w:"Pictures don't make the impression. Design does.",t:"A user is a person, not a dashboard segment."},
-    'brand':{w:"I used to think a brand was the logo.",t:"Six stages of how a brand comes together."},
     'evaluation':{w:"Work counts as finished only when it starts working in reality.",t:"Four levels every solution passes through."},
     'ds':{w:"Without a system, quality depends on the team's mood.",t:"A way to hold quality without manual control."},
     'results':{w:"Strong design holds up under review — and under reality.",t:"Five concrete effects for the business."},
@@ -1075,9 +966,8 @@ const NBSP = '\u00A0';
 /* Elements where authored <br>s look bad on narrow mobile and should
    become plain whitespace so the text flows naturally with our wrap rules. */
 const BR_TO_SPACE_SEL = [
-  '.sec-sub','.pain-quote','.partner-final','.aud-quote','.ds-quote',
-  '.pain-list .pnote',
-  '#brand .sec-sub',
+  '.sec-sub','.aud-quote','.ds-quote','.credo-line',
+  
   /* Team manifesto — flatten <br>s so the words don't merge / orphan */
   '.team-manifesto .tm-text'
 ].join(',');
@@ -1103,12 +993,13 @@ function fixTypographyOrphans(root){
   const preps = (lang==='en' ? EN_PREPS : RU_PREPS);
   const selectors = [
     '.sec-sub','.sec-title',
-    '.pain-list .pt','.pain-list .pnote',
+    '.credo-title','.credo-line',
+    
     '.intro-p','.intro-title',
-    '.partner-final','.pain-foot','.pain-quote','.aud-quote','.ds-quote',
-    '.bdesc','.bname',
-    '.pdesc','.ptitle',
-    '.bmp-split .label','.bmp-col li',
+    '.aud-quote','.ds-quote',
+    
+    
+    '.bmp-split .label',
     '.hero-sub','.hero-static','.hero-title',
     '.hero-bottom .item .value',
     '.team-manifesto .tm-text',
@@ -1196,9 +1087,7 @@ const SIDE_LABELS={
   ru:{
     'hero':'Начало',
     'intro':'Введение',
-    'pain':'Боль',
-    'partner':'Подход',
-    'principles':'Принципы',
+    'credo':'Принципы',
     'audience':'Люди',
     'brand':'Бренд',
     'evaluation':'Оценка',
@@ -1212,9 +1101,7 @@ const SIDE_LABELS={
   en:{
     'hero':'Start',
     'intro':'Intro',
-    'pain':'Pain',
-    'partner':'Approach',
-    'principles':'Principles',
+    'credo':'Principles',
     'audience':'People',
     'brand':'Brand',
     'evaluation':'Evaluation',
@@ -1391,7 +1278,7 @@ window.addEventListener('resize', ()=>{
   _typoResizeRaf = requestAnimationFrame(()=>{
     clearTypographyFlags();
     fixTypographyOrphans();
-    if(typeof enhancePainList==='function') enhancePainList();
+    if(typeof enhancePainList==='function')
     initScrollHover();
   });
 }, {passive:true});
@@ -1700,11 +1587,8 @@ document.querySelectorAll('.sec-asides-bar .sec-aside').forEach(k=>kickerIO.obse
 /* ─────────────── PAUSE HEAVY ANIMATIONS WHEN OFFSCREEN ─────────────── */
 (function pauseHeavyAnimsOffscreen(){
   if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
-  /* Targets: bicons in #brand, marquee in #companies */
+  /* Targets: marquee in #companies */
   const map=new Map();
-  document.querySelectorAll('#brand').forEach(sec=>{
-    map.set(sec,sec.querySelectorAll('[class*="bicon-"]'));
-  });
   document.querySelectorAll('#companies').forEach(sec=>{
     map.set(sec,sec.querySelectorAll('.brand-marquee-row'));
   });
@@ -1855,48 +1739,109 @@ function splitWordsForMonument(node){
     }
   });
 }
-function measureMonumentOffsets(container, factor){
-  if(!container) return;
+/* p at which a word has faded to nothing. CSS owns the rate (--iw-fade-rate on
+   .intro-spread); read it back so the travel budget below can never disagree with
+   the fade. Past this point the word is invisible, so its position stops mattering. */
+function monumentFadeEnd(){
+  const spread = document.querySelector('.intro-spread');
+  const raw = spread ? parseFloat(getComputedStyle(spread).getPropertyValue('--iw-fade-rate')) : NaN;
+  const rate = (isFinite(raw) && raw > 0) ? raw : 1.75;
+  return Math.min(1, 1 / rate);
+}
+function measureMonumentOffsets(container, factor, sharedFactor){
+  if(!container) return factor;
   const rect = container.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
-  container.querySelectorAll('.iw').forEach(word => {
+  const words = Array.from(container.querySelectorAll('.iw'));
+  if(!words.length) return factor;
+  const measured = words.map(word => {
     const r = word.getBoundingClientRect();
-    const wx = r.left + r.width / 2;
-    const distance = wx - cx;
-    // Words on left of center get negative offset (pulled further left)
-    // Words on right of center get positive offset (pulled further right)
-    // Proportional → no overlap, words slide along their natural axis
-    const offset = distance * factor;
-    word.style.setProperty('--offset', `${offset.toFixed(0)}px`);
+    return { word, r, distance: (r.left + r.width / 2) - cx };
   });
+  /* Travel budget. Unbounded, distance*1.2 threw the outer words 500-700px past the
+     window (at 1600px the word "Design" landed at x=1766) and they were cropped
+     mid-glyph — that reads as broken layout, not as an effect.
+     Clamping each word on its own is WORSE: an outer word hits the wall while its
+     inner neighbour keeps travelling and rams into it ("Head ofDesign."). The travel
+     order must stay monotonic, so the whole paragraph shares ONE factor — the largest
+     that still keeps every word inside the frame for as long as it is visible.
+     Self-scaling: a wider window has more room and gets more travel, up to the
+     authored `factor`. Nothing is guessed, everything is measured. */
+  const gutter = 12;
+  const minX = gutter, maxX = window.innerWidth - gutter;
+  const visibleUntil = monumentFadeEnd();
+  let f = factor;
+  for(const { r, distance } of measured){
+    if(distance > 0){
+      const cap = Math.max(0, maxX - r.right) / (distance * visibleUntil);
+      if(cap < f) f = cap;
+    } else if(distance < 0){
+      const cap = Math.max(0, r.left - minX) / (-distance * visibleUntil);
+      if(cap < f) f = cap;
+    }
+  }
+  // Pass 1 (no sharedFactor): just report this paragraph's cap so the caller can take
+  // the tightest one — both bio paragraphs must disperse at the SAME rate, otherwise
+  // the shorter one visibly flies apart faster than the one above it.
+  if(sharedFactor === undefined) return f;
+  // Pass 2: words left of center get a negative offset, right of center positive. One
+  // shared factor keeps the spacing monotonic, so words spread apart and never collide.
+  measured.forEach(({ word, distance }) => {
+    word.style.setProperty('--offset', `${(distance * sharedFactor).toFixed(0)}px`);
+  });
+  return sharedFactor;
+}
+/* Always measure from the RESTING layout: getBoundingClientRect() includes the live
+   translateX, so re-measuring mid-dispersion (resize while scrolled into the section)
+   would compound offsets — and the new clamp would be computed against displaced
+   boxes. Zero --scroll-p for the read, restore after; both writes land in the same
+   task, so nothing paints in between. */
+function remeasureMonument(){
+  const spread = document.querySelector('.intro-spread');
+  const paragraphs = document.querySelectorAll('.intro-spread .intro-p');
+  if(!paragraphs.length) return;
+  const held = spread ? spread.style.getPropertyValue('--scroll-p') : '';
+  if(spread) spread.style.setProperty('--scroll-p', '0');
+  let shared = 1.2;
+  paragraphs.forEach(p => { shared = Math.min(shared, measureMonumentOffsets(p, 1.2)); });
+  paragraphs.forEach(p => measureMonumentOffsets(p, 1.2, shared));
+  if(spread){
+    if(held) spread.style.setProperty('--scroll-p', held);
+    else spread.style.removeProperty('--scroll-p');
+  }
 }
 function setupIntroMonument(){
   // Word-level animation applies ONLY to bio paragraphs (intro-p), NOT to hero/title
   const paragraphs = document.querySelectorAll('.intro-spread .intro-p');
   paragraphs.forEach(p => splitWordsForMonument(p));
-  requestAnimationFrame(() => {
-    paragraphs.forEach(p => measureMonumentOffsets(p, 1.2));
-  });
+  requestAnimationFrame(remeasureMonument);
 }
 setupIntroMonument();
 
 (function(){
   const spread = document.querySelector('.intro-spread');
   if(!spread) return;
+  const paragraphs = document.querySelectorAll('.intro-spread .intro-p');
   let raf = null, lastP = -1;
   function update(){
-    // Anchor mapping on CONTENT element (not section) so animation is tied to where the bio actually sits in viewport
-    const rect = spread.getBoundingClientRect();
+    /* Anchor on the BIO PARAGRAPHS, not on .intro-spread. The spread includes the
+       display title, so `spread.top` reached the old trigger (vh*0.08) while the bio
+       was still sitting mid-screen, fully readable — the text came apart under the
+       reader's eyes. Anchoring on the paragraphs makes the trigger self-scaling
+       (their offset inside the block changes with width: 286px @1440 → 367px @1920)
+       and keeps the bio intact for roughly a full screen of scroll before it exits. */
     const vh = window.innerHeight;
-    // EXIT-ONLY: dispersion starts slightly BEFORE content top reaches viewport top
-    // (about half a scroll-wheel earlier) — feels more natural
-    const startExit = vh * 0.08;
-    const endExit = -vh * 0.5;
+    const first = paragraphs.length ? paragraphs[0].getBoundingClientRect() : spread.getBoundingClientRect();
+    const last  = paragraphs.length ? paragraphs[paragraphs.length - 1].getBoundingClientRect() : first;
+    // EXIT-ONLY: hold at rest until the FIRST bio line is leaving the top of the
+    // viewport, then finish exactly as the LAST line clears it.
+    const startExit = vh * 0.10;
+    const span = Math.max(1, (last.bottom - first.top) + startExit);
     let p;
-    if(rect.top >= startExit){
+    if(first.top >= startExit){
       p = 0;
     } else {
-      p = (startExit - rect.top) / (startExit - endExit);
+      p = (startExit - first.top) / span;
     }
     p = Math.max(0, Math.min(1, p));
     /* dead-band: ignore sub-pixel scroll jitter (Lenis) — the large per-word offsets
@@ -1913,8 +1858,8 @@ setupIntroMonument();
   }
   window.__scroll.add(update);
   window.addEventListener('resize', () => {
-    const paragraphs = document.querySelectorAll('.intro-spread .intro-p');
-    paragraphs.forEach(p => measureMonumentOffsets(p, 1.2));
+    // Offsets are viewport-clamped, so a width change must re-measure them.
+    remeasureMonument();
     onScroll();
   }, {passive:true});
   update();
@@ -1992,4 +1937,39 @@ setupIntroMonument();
       setTimeout(() => { sats.forEach((s) => { const d = s.parentNode.querySelector('.msat-desc'); if(d) d.textContent = descFor(s); }); }, 60);
     });
   });
+})();
+
+/* ─── Кредо: фокус следует за скроллом ───
+   Фразы сильные поодиночке, но вместе слипаются в список. Подсвечиваем ту, что
+   сейчас в центре экрана, остальные приглушаем — читатель получает их по одной.
+   Значение пишем в --p, вся отрисовка живёт в CSS. */
+(function credoFocus(){
+  const lines = Array.from(document.querySelectorAll('.credo-line'));
+  if(!lines.length) return;
+  if(window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  const last = new WeakMap();
+  function update(){
+    const vh = window.innerHeight;
+    const focusY  = vh * 0.46;     /* точка чтения чуть выше геометрического центра */
+    const plateau = vh * 0.15;     /* пока строка примерно в центре — полный цвет */
+    const reach   = vh * 0.75;     /* на этом удалении строка гаснет полностью */
+    for(const el of lines){
+      const r = el.getBoundingClientRect();
+      /* Раньше пик был иглой: полный цвет только при |Δ|≈35px, и строка,
+         занимающая полэкрана, всё ещё читалась приглушённой. Плато держит её
+         зажжённой, пока она реально в центре, а гаснет она уже на уходе. */
+      const d = Math.abs((r.top + r.height / 2) - focusY);
+      let p = d <= plateau ? 1 : 1 - (d - plateau) / (reach - plateau);
+      p = p < 0 ? 0 : (p > 1 ? 1 : p);
+      p = p * p * (3 - 2 * p);     /* smoothstep — без рывка на границе */
+      const prev = last.get(el);
+      if(prev === undefined || Math.abs(p - prev) >= 0.01){
+        el.style.setProperty('--p', p.toFixed(3));
+        last.set(el, p);
+      }
+    }
+  }
+  window.__scroll.add(update);
+  window.addEventListener('resize', update, {passive:true});
+  update();
 })();

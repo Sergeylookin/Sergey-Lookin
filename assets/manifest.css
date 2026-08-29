@@ -56,11 +56,8 @@ section{position:relative;min-height:clamp(70vh,85vh,100vh);display:flex;align-i
    #hero stays always-rendered so curtain/tilt/fit work. */
 section:not(#hero){content-visibility:auto;contain-intrinsic-size:1px 90vh}
 section.dark{background:var(--bg-dark);color:#EAEAEA;position:relative}
-section.dark::before{content:'';position:absolute;top:0;left:var(--gutter);right:calc(var(--gutter) + var(--nav-safe-right));height:1px;background:var(--hair-dk);opacity:0.6;z-index: var(--z-behind)}
-section.dark::after{content:'';position:absolute;bottom:0;left:var(--gutter);right:calc(var(--gutter) + var(--nav-safe-right));height:1px;background:var(--hair-dk);opacity:0.6;z-index: var(--z-behind)}
 section.dark>*{position:relative;z-index: var(--z-base)}
 section.dark+section.dark{padding-top:7vh}
-section.dark+section.dark::before{display:none}
 section.dark:has(+ section.dark)::after{display:none}
 /* #ds inherits the body background (--bg === --bg-dark === #0B0C0F), so a dark
    section directly before it would draw a hairline between two identical surfaces —
@@ -449,7 +446,6 @@ section.dark h1,section.dark h2{color:#fff}
     white-space: normal !important;
     cursor: default !important;
   }
-  .mentor-satellites .msat:first-child{ border-top: 1px solid var(--hair-dk) !important; }
   /* Description shown directly under each tag.
      Switches language by reading the right data-attribute via html[lang=…] selector —
      so EN/RU language toggle automatically swaps the description text. */
@@ -473,7 +469,6 @@ section.dark h1,section.dark h2{color:#fff}
   /* Each item is wrapped (by JS) in .msat-row so the description lives OUTSIDE the <button>
      (buttons clip block children, so an inside-the-button collapse won't expand). */
   #mentor .msat-row{ border-bottom: 1px solid var(--hair-dk); }
-  #mentor .mentor-satellites .msat-row:first-child{ border-top: 1px solid var(--hair-dk); }
   #mentor .msat{ position: relative !important; cursor: pointer !important; padding: 1rem 2.25rem 1rem 0 !important; border: none !important; width: 100% !important; text-align: left !important; }
   #mentor .msat::after{ display: none !important; }
   #mentor .msat-desc{ max-height: 0; opacity: 0; overflow: hidden; padding-bottom: 0; font-family: var(--serif); font-size: clamp(0.875rem,3.2vw,0.9375rem); line-height: 1.45; letter-spacing: -0.005em; color: var(--mute-2); text-wrap: balance; transition: max-height .55s var(--ease-out), opacity .35s ease, padding-bottom .4s ease; }
@@ -506,6 +501,9 @@ section.dark h1,section.dark h2{color:#fff}
   width:100%;
   position:relative;
   --scroll-p:0;
+  /* How fast a dispersing word fades: opacity hits 0 at p = 1/rate. manifest.js reads
+     this value to work out how far a word may travel while it is still visible. */
+  --iw-fade-rate:1.75;
   /* Multi-stop soft fade — gradient mimics brand-marquee softness (14% fade zone).
      In static state (scroll-p=0), all alphas = 1 → no visual mask. During dispersion,
      edges progressively soften so dispersed words fade out gracefully rather than getting clipped sharply. */
@@ -596,8 +594,13 @@ section.dark h1,section.dark h2{color:#fff}
 .intro-spread .intro-p .iw{
   display:inline-block;
   transform:translateX(calc(var(--offset, 0px) * var(--scroll-p)));
-  opacity:calc(1 - var(--scroll-p) * 0.9);
-  filter:blur(calc(var(--scroll-p) * 2.5px));
+  /* The fade has to OUTRUN the travel. At the old rate (1 - p*0.9) a word was still
+     at ~55% opacity when it had already flown half the screen, so the eye read a
+     displaced word rather than a dissolving one — and it never fully left (0.1 floor).
+     Now it is gone by p = 1/--iw-fade-rate ≈ 0.57, while still well inside the frame.
+     manifest.js reads --iw-fade-rate back to size the travel budget — keep them paired. */
+  opacity:clamp(0, calc(1 - var(--scroll-p) * var(--iw-fade-rate)), 1);
+  filter:blur(calc(var(--scroll-p) * 3px));
   transition:transform 0.25s linear, opacity 0.2s linear, filter 0.25s linear;
   will-change:transform,opacity,filter;
 }
@@ -722,13 +725,82 @@ section.dark h1,section.dark h2{color:#fff}
   .pain-list .pnote{grid-column:2 / -1;text-align:left;margin-top:0.85rem;align-self:start;padding-bottom:0;justify-self:start;max-width:none}
 }
 /* Unified section-conclusion style — applied to all final quotes */
-.pain-quote,.partner-final,.aud-quote{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(1.625rem,3vw,2.5rem);line-height:1.22;color:var(--ink);letter-spacing:-0.025em;text-wrap:balance;margin-top:clamp(2.75rem,5vw,4rem);max-width:62ch}
+.pain-quote,.partner-final,.aud-quote,.credo-line{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(1.625rem,3vw,2.5rem);line-height:1.22;color:var(--ink);letter-spacing:-0.025em;text-wrap:balance;margin-top:clamp(2.75rem,5vw,4rem);max-width:62ch}
 .pain-quote em,.partner-final em,.aud-quote em em{color:var(--accent);font-style:italic;font-weight:400}
+/* В кредо акцент не нужен: строки набраны в один голос, цветное пятно на «слабую мысль»
+   выдёргивало одну фразу из пяти равных. Оставляем em как есть — цвет строки. */
+.credo-line em{color:inherit;font-style:italic;font-weight:inherit}
+
+/* ─── Кредо ───
+   Четыре фразы, разведённые по колонкам сетки лесенкой, и фокус, который идёт
+   за скроллом: в центре экрана строка живая, к краям гаснет и уходит вглубь.
+   Ручных переносов внутри строк нет — ширина колонки сама решает, где ломать.
+   Типографика — та же, что у крупных реплик секций выше: нового языка не вводим. */
+#credo .sec-full{
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  column-gap:var(--col-gap);
+  row-gap:clamp(2.5rem,5vw,4rem);
+}
+.credo-title{
+  grid-column:2 / -1;
+  font-family:var(--serif);
+  font-weight:400;
+  font-size:var(--t-h1);
+  line-height:1.05;
+  letter-spacing:-0.035em;
+  color:var(--ink);
+  text-wrap:balance;
+  margin:0;
+  padding:0;
+}
+.credo-list{
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  column-gap:var(--col-gap);
+  row-gap:clamp(2.75rem,5vw,5rem);
+  list-style:none;
+  margin:0;
+  padding:0;
+}
+/* Раскладка — ручная, Сергей выставил её в лаборатории сетки 29.08.2026.
+   База ниже — страховка: добавится строка сверх четырёх и всё равно ляжет
+   по сетке, а не свалится в одну колонку автопотоком. */
+.credo-line{grid-column:2 / -1}
+.credo-list > :nth-child(1){grid-column:4 / 11}
+.credo-list > :nth-child(2){grid-column:7 / 12}
+.credo-list > :nth-child(3){grid-column:5 / 11}
+.credo-list > :nth-child(4){grid-column:2 / 9}
+.credo-line{
+  --p:1;                       /* 1 — строка в фокусе, 0 — на периферии экрана */
+  margin:0;
+  max-width:none;
+  opacity:calc(0.14 + 0.86 * var(--p));
+  transform:translateY(calc((1 - var(--p)) * 16px));
+  filter:blur(calc((1 - var(--p)) * 1.6px));
+  transition:opacity .5s var(--ease-out),transform .5s var(--ease-out),filter .5s var(--ease-out),color .35s var(--ease-out);
+  will-change:opacity,transform;
+}
+@media (max-width:1024px){
+  #credo .sec-full{row-gap:clamp(1.5rem,5vw,2.25rem)}
+  .credo-list{row-gap:clamp(1.75rem,6vw,2.75rem)}
+  /* :nth-child(n) — та же специфичность, что у лесенки выше, но правило идёт позже,
+     поэтому перекрывает её при любом количестве строк, а не только у первых четырёх */
+  .credo-list > :nth-child(n){grid-column:1 / -1}
+}
+@media (prefers-reduced-motion:reduce){
+  .credo-line{--p:1 !important;opacity:1;transform:none;filter:none;transition:none}
+}
 .pain-quote{grid-column:4 / -1}
 /* conclusion statements: ink at rest → orange on hover (unified) — keep reveal transition intact */
 .pain-quote,.aud-quote,.ev-bmp-foot,.ds-quote{transition:opacity 1.6s var(--ease-out),transform 1.5s var(--ease-out-strong),filter 1s var(--ease-out),color .35s var(--ease-out)}
 .partner-final{transition:color .35s var(--ease-out)}
 .pain-quote:hover,.partner-final:hover,.aud-quote:hover,.ev-bmp-foot:hover,.ds-quote:hover{color:var(--accent);cursor:default}
+/* Кредо: наведение красит строку в акцент и выводит её из тени.
+   Прозрачность задаём напрямую, а не через --p: драйвер фокуса пишет --p
+   инлайн-стилем, а инлайн бьёт любое правило :hover. */
+.credo-line:hover{opacity:1;filter:none;color:var(--accent);cursor:default}
 /* shrink hover hit-area to the text itself (box was full column width → hover fired far from text) */
 @media (hover:hover) and (pointer:fine){
   .pain-quote,.partner-final,.aud-quote,.ev-bmp-foot,.ds-quote{width:fit-content}
@@ -746,58 +818,16 @@ section.dark h1,section.dark h2{color:#fff}
   .pain-foot{grid-column:1 / -1;margin-top:1.15rem;font-size:1.1rem;line-height:1.45}
 }
 .partner{width:100%}
-.partner-compare{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2rem,4vw,3rem);margin-bottom:clamp(2rem,4vw,3rem);margin-top:clamp(1rem,3vw,2rem)}
-.partner-compare .col{padding:0;background:transparent;min-height:0;display:flex;flex-direction:column;border:none}
-.partner-compare .col.service{grid-column:4 / 8}
-.partner-compare .col.partner-col{grid-column:8 / -1}
-@media (max-width:1024px){
-  .partner-compare .col.service,.partner-compare .col.partner-col{grid-column:1 / -1}
-}
-.partner-compare .col.service .col-title,.partner-compare .col.service ul li{color:var(--mute)}
-.partner-compare .col.service .col-title{font-weight:300;opacity:0.78}
-.partner-compare .col.partner-col .col-title{font-weight:400;color:var(--ink)}
-.partner-compare .col .col-tag{font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:0.12em;text-transform:uppercase;color:var(--mute);margin-bottom:1.25rem;font-weight:500}
-.partner-compare .col.partner-col .col-tag{color:var(--accent)}
-.partner-compare .col .col-title{font-family:var(--serif);font-weight:400;font-size:clamp(1.75rem,2.6vw,2.25rem);margin-bottom:1.75rem;letter-spacing:-0.03em;line-height:1.1;min-height:0;text-wrap:balance}
-.partner-compare .col ul li{padding:0.85rem 0;border-top:1px solid var(--hair);font-size:1.0625rem;line-height:1.45;color:var(--ink-2)}
-.partner-compare .col ul li:first-child{border-top:none}
-.partner-compare .col.partner-col ul li{color:var(--ink)}
 .partner-final em{color:var(--accent);font-style:italic}
 /* Row that aligns the partner-final text and its bottom-right shape mark
    so the mark sits flush with the last text line. */
-.partner-final-row{
-  display:flex;
-  align-items:flex-end;
-  justify-content:space-between;
-  gap:clamp(1.5rem,3vw,3rem);
-  margin-top:clamp(2.75rem,5vw,4rem);
-}
-.partner-final-row .partner-final{margin-top:0}
-.partner-mark{
-  flex-shrink:0;
-  width:clamp(0.625rem,0.9vw,0.875rem);
-  aspect-ratio:1;
-  background:var(--accent);
-  margin-bottom:0.15em;
-}
-@media (max-width:720px){
-  .partner-final-row{gap:1.25rem}
-  .partner-mark{margin-bottom:0.1em}
-}
 /* Bmp-cols when used inside Partner section (after merge) */
-#partner .bmp-cols{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2rem,3.5vw,3rem);margin-top:0}
-#partner .bmp-col{grid-column:span 4}
-@media (max-width:1024px){#partner .bmp-col{grid-column:1 / -1}}
 /* ─── Team section: unified rhythm — manifesto rows + practice blocks share grid ─── */
 #team{padding-top:clamp(12rem,20vh,20rem);padding-bottom:clamp(12rem,20vh,20rem)}
-.principles-grid{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2.5rem,5vw,5rem);margin-top:clamp(1rem,3vw,2rem)}
-.principles-grid > .principle:nth-child(odd){grid-column:4 / 8}
-.principles-grid > .principle:nth-child(even){grid-column:8 / -1}
 .principle{padding:0 0 1.5rem 0;background:transparent;min-height:0;display:flex;flex-direction:column;position:relative;border-bottom:1px solid var(--hair)}
 .principle::after{content:'';position:absolute;left:0;bottom:-1px;width:0;height:1px;background:var(--accent);transition:width 0.6s var(--ease-out)}
 .principle:hover::after{width:100%}
 .principle:hover{background:transparent}
-.principle .pnum{font-family:var(--serif);font-style:italic;font-weight:300;font-size:1.75rem;color:var(--mute-2);letter-spacing:-0.04em;margin-bottom:1.5rem}
 .principle .ptitle{font-family:var(--serif);font-weight:400;font-size:clamp(1.875rem,2.8vw,2.375rem);line-height:1.05;letter-spacing:-0.035em;margin-bottom:1.25rem;color:var(--ink);transition:color 0.35s var(--ease-out)}
 .principle:hover .ptitle{color:var(--accent)}
 .principle .ptitle em{font-style:italic;color:var(--accent);font-weight:400}
@@ -1068,35 +1098,12 @@ section.dark h1,section.dark h2{color:#fff}
   .aud-row:hover .ar-tag{transform:none}
   .aud-row:hover .ar-num{opacity:1}
 }
-.brand-steps{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(2.5rem,4vw,4rem);margin-bottom:clamp(2rem,4vw,3rem);margin-top:clamp(1rem,3vw,2rem)}
-.brand-steps > .bstep:nth-child(3n+1){grid-column:4 / 7}
-.brand-steps > .bstep:nth-child(3n+2){grid-column:7 / 10}
-.brand-steps > .bstep:nth-child(3n){grid-column:10 / -1}
 @media (max-width:1100px){
-  .principles-grid > .principle:nth-child(odd){grid-column:1 / 7}
-  .principles-grid > .principle:nth-child(even){grid-column:7 / -1}
   /* Clean 2-up rhythm — drop the 3n full-width orphan that breaks typography */
-  .brand-steps > .bstep:nth-child(3n+1),
-  .brand-steps > .bstep:nth-child(3n+2),
-  .brand-steps > .bstep:nth-child(3n){grid-column:auto}
-  .brand-steps > .bstep:nth-child(2n+1){grid-column:1 / 7}
-  .brand-steps > .bstep:nth-child(2n){grid-column:7 / -1}
 }
 @media (max-width:1024px){
   /* ─── Simplified intermediate layout (tablet portrait, narrow tablet) ─── */
   /* All multi-column section grids → single column, all children full-width */
-  
-  .brand-steps{grid-template-columns:1fr !important;column-gap:0 !important}
-  .brand-steps > .bstep,
-  .brand-steps > .bstep:nth-child(3n+1),
-  .brand-steps > .bstep:nth-child(3n+2),
-  .brand-steps > .bstep:nth-child(3n){grid-column:1 / -1 !important;width:100% !important}
-  
-  .principles-grid{grid-template-columns:1fr !important;column-gap:0 !important}
-  .principles-grid > .principle,
-  .principles-grid > .principle:nth-child(odd),
-  .principles-grid > .principle:nth-child(even){grid-column:1 / -1 !important;width:100% !important}
-  .partner-compare{grid-template-columns:1fr !important}
   
   /* Pain list — stack number, text, note vertically */
   .pain-list li{grid-template-columns:1fr !important;row-gap:0.5rem !important}
@@ -1150,61 +1157,6 @@ section.dark h1,section.dark h2{color:#fff}
   /* Section asides — above section, not floating */
   .sec-asides-bar{position:static !important;flex-direction:row !important;flex-wrap:wrap !important;margin-bottom:2rem;gap:1rem}
 }
-@media (max-width:720px){
-  .principles-grid > .principle:nth-child(odd),.principles-grid > .principle:nth-child(even){grid-column:1 / -1}
-  .brand-steps > .bstep:nth-child(3n+1),.brand-steps > .bstep:nth-child(3n+2),.brand-steps > .bstep:nth-child(3n){grid-column:1 / -1}
-}
-.bstep{padding:0 0 1.5rem 0;background:transparent;min-height:0;display:flex;flex-direction:column;position:relative;border-bottom:1px solid var(--hair)}
-.bstep::after{content:'';position:absolute;left:0;bottom:-1px;width:0;height:1px;background:var(--accent);transition:width 0.6s var(--ease-out)}
-.bstep:hover::after{width:100%}
-.bstep:hover{background:transparent}
-.bstep .bnum{width:48px;height:48px;color:var(--accent);margin-bottom:1.5rem;display:flex;align-items:center;justify-content:center;line-height:0}
-.bstep .bnum svg{width:100%;height:100%;overflow:visible;display:block}
-/* ─── brand icon animations ─── */
-/* 01 · Контекст — AI sparkle (central + 3 satellites with filled/outline crossfade, always at least one visible) */
-.bicon-spark-core,.bicon-spark-sat{transform-origin:center;transform-box:fill-box}
-@keyframes bicon-spark-breathe{0%,100%{transform:scale(0.82);opacity:0.7}50%{transform:scale(1.15);opacity:1}}
-.bicon-spark-core{animation:bicon-spark-breathe 4.5s ease-in-out infinite}
-@keyframes bicon-spark-sat-fill{0%{opacity:0;transform:scale(0.5)}8%,30%{opacity:1;transform:scale(1)}42%,100%{opacity:0;transform:scale(0.5)}}
-@keyframes bicon-spark-sat-line{0%,50%{opacity:0;transform:scale(0.5)}58%,80%{opacity:1;transform:scale(1)}92%,100%{opacity:0;transform:scale(0.5)}}
-.bicon-spark-a-fill,.bicon-spark-b-fill,.bicon-spark-c-fill{animation:bicon-spark-sat-fill 5s ease-in-out infinite}
-.bicon-spark-a-line,.bicon-spark-b-line,.bicon-spark-c-line{animation:bicon-spark-sat-line 5s ease-in-out infinite}
-.bicon-spark-b-fill,.bicon-spark-b-line{animation-delay:-1.67s}
-.bicon-spark-c-fill,.bicon-spark-c-line{animation-delay:-3.33s}
-/* 02 · Позиция — compass needle (centered, gentle rocking) + 12-dot loader */
-.bicon-compass{transform-origin:center;transform-box:fill-box;animation:bicon-compass 5s cubic-bezier(0.4,0,0.2,1) infinite}
-@keyframes bicon-compass{0%,100%{transform:rotate(-22deg)}50%{transform:rotate(22deg)}}
-.bicon-pos-dot{transform-origin:center;transform-box:fill-box;opacity:0.18;animation:bicon-pos-pulse 2.4s linear infinite}
-@keyframes bicon-pos-pulse{0%{opacity:1;transform:scale(1.25)}25%,100%{opacity:0.18;transform:scale(1)}}
-.bicon-pos-d1{animation-delay:0s}.bicon-pos-d2{animation-delay:-0.2s}.bicon-pos-d3{animation-delay:-0.4s}.bicon-pos-d4{animation-delay:-0.6s}.bicon-pos-d5{animation-delay:-0.8s}.bicon-pos-d6{animation-delay:-1.0s}.bicon-pos-d7{animation-delay:-1.2s}.bicon-pos-d8{animation-delay:-1.4s}.bicon-pos-d9{animation-delay:-1.6s}.bicon-pos-d10{animation-delay:-1.8s}.bicon-pos-d11{animation-delay:-2.0s}.bicon-pos-d12{animation-delay:-2.2s}
-@keyframes bicon-eq-s{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1.05)}}
-@keyframes bicon-eq-m{0%,100%{transform:scaleY(0.4)}50%{transform:scaleY(1.25)}}
-@keyframes bicon-eq-l{0%,100%{transform:scaleY(0.35)}50%{transform:scaleY(1.45)}}
-.bicon-eq{transform-origin:center;transform-box:fill-box}
-.bicon-eq-1{animation:bicon-eq-s 1.4s ease-in-out infinite}
-.bicon-eq-2{animation:bicon-eq-m 1.6s ease-in-out infinite;animation-delay:-0.2s}
-.bicon-eq-3{animation:bicon-eq-l 1.8s ease-in-out infinite;animation-delay:-0.5s}
-.bicon-eq-4{animation:bicon-eq-m 1.4s ease-in-out infinite;animation-delay:-0.8s}
-.bicon-eq-5{animation:bicon-eq-l 1.6s ease-in-out infinite;animation-delay:-0.3s}
-.bicon-eq-6{animation:bicon-eq-s 1.8s ease-in-out infinite;animation-delay:-0.7s}
-.bicon-eq-7{animation:bicon-eq-m 1.5s ease-in-out infinite;animation-delay:-1s}
-.bicon-eq-8{animation:bicon-eq-s 1.7s ease-in-out infinite;animation-delay:-0.4s}
-@keyframes bicon-aa-weight{0%,100%{font-weight:300;font-variation-settings:"wght" 300,"SOFT" 0,"opsz" 144}50%{font-weight:700;font-variation-settings:"wght" 700,"SOFT" 100,"opsz" 144}}
-.bicon-aa-letter{animation:bicon-aa-weight 3.2s ease-in-out infinite}
-@keyframes bicon-sys-grow{0%{stroke-dashoffset:14;opacity:0}10%{opacity:1}40%{stroke-dashoffset:0;opacity:1}85%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:0}}
-.bicon-sys-ray{stroke-dasharray:14;stroke-dashoffset:14;animation:bicon-sys-grow 3s ease-in-out infinite}
-.bicon-sys-r1{animation-delay:0s}
-.bicon-sys-r2{animation-delay:-0.5s}
-.bicon-sys-r3{animation-delay:-1s}
-.bicon-sys-r4{animation-delay:-1.5s}
-.bicon-sys-r5{animation-delay:-2s}
-.bicon-sys-r6{animation-delay:-2.5s}
-@keyframes bicon-ripple{0%{transform:scale(0.15);opacity:0.9}80%{opacity:0.1}100%{transform:scale(1);opacity:0}}
-.bicon-ripple{transform-origin:center;transform-box:fill-box;animation:bicon-ripple 2.8s cubic-bezier(0.3,0.7,0.4,1) infinite}
-.bicon-ripple-2{animation-delay:-1.4s}
-.bstep .bname{font-family:var(--serif);font-weight:400;font-size:clamp(1.5rem,2vw,1.75rem);color:var(--ink);margin-bottom:0.85rem;letter-spacing:-0.022em;transition:color 0.35s var(--ease-out)}
-.bstep:hover .bname{color:var(--accent)}
-.bstep .bdesc{color:var(--mute);font-size:1.0625rem;line-height:1.55;max-width:28em;text-wrap:balance}
 .bmp-top{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:0;width:100%;margin-bottom:clamp(2rem,4vw,3rem)}
 .bmp-top > *{grid-column:4 / -1}
 .bmp-split{display:grid;grid-template-columns:1fr auto 1fr;gap:clamp(2rem,4vw,3.5rem);margin-bottom:clamp(1.5rem,3vw,2rem);align-items:center}
@@ -1310,7 +1262,6 @@ section{--tp:0}
   grid-column:6 / -1;
   display:flex;
   flex-direction:column;
-  border-top:1px solid var(--hair-dk);
 }
 .team-manifesto .tm-row{
   display:grid;
@@ -1320,6 +1271,8 @@ section{--tp:0}
   padding:clamp(1.75rem,3vw,2.5rem) 0;
   border-bottom:1px solid var(--hair-dk);
 }
+/* Линии в начале и в конце главы убраны — разделители остаются только МЕЖДУ строками. */
+.team-manifesto .tm-row:last-child{border-bottom:none}
 .team-manifesto .tm-tag{
   font-family:var(--mono);
   font-size:var(--t-mono-sm);
@@ -1445,7 +1398,9 @@ section{--tp:0}
 .craft-body{
   display:flex;
   flex-direction:column;
-  gap:clamp(1.25rem,2.5vw,2.25rem);
+  /* Двойная пауза между «со стороны» и «на самом деле»: теперь обе строки одного
+     кегля, и разделить их обязан воздух, а не разница в размере. */
+  gap:clamp(2rem,4vw,3.5rem);
   flex:1;
   margin-top:clamp(1.5rem,2.5vw,2.5rem);
   opacity:0;
@@ -1455,22 +1410,44 @@ section{--tp:0}
 }
 .craft-card.is-open .craft-body{opacity:1;transition-delay:0.3s;pointer-events:auto}
 
-/* Eyebrow */
-.craft-eye{
+/* Парные подписи «СО СТОРОНЫ» / «ИЗНУТРИ» — общая типографика, разные родители */
+.craft-kicker{
   font-family:var(--mono);
   font-size:0.8125rem;
   letter-spacing:0.13em;
   text-transform:uppercase;
-  margin:0;
-  display:flex;
-  gap:0.6rem 1rem;
-  align-items:baseline;
-  flex-wrap:wrap;
   font-weight:500;
+  color:var(--mute);
 }
-.craft-eye-label{color:var(--mute)}
-.craft-eye-label::after{content:'·';margin-left:0.6rem;color:var(--hair)}
-.craft-eye-obs{color:var(--accent)}
+/* Eyebrow */
+.craft-eye,
+.craft-real{
+  margin:0;
+  /* Ставим в столбец: подпись остаётся служебной строкой, а само высказывание
+     уходит на свою строку и получает полный кегль. */
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:clamp(0.7rem,1.1vw,1rem);
+  min-width:0;
+}
+/* Разделительная точка имела смысл, только пока подпись и наблюдение стояли в строку */
+.craft-eye-obs{
+  color:var(--accent);
+  /* Наблюдение — это первая половина мысли, и читаться оно обязано первым. На 13px
+     мониспейса оно проигрывало гонку 34-пиксельной строке ниже, и глаз начинал
+     с ответа. Тот же кегль и та же гарнитура, что у .craft-reality: две строки одной
+     реплики, разведённые цветом и воздухом, а не размером. */
+  font-family:var(--serif);
+  font-style:italic;
+  font-weight:300;
+  font-size:clamp(1.5rem,2.4vw,2.125rem);
+  line-height:1.2;
+  letter-spacing:-0.02em;
+  text-transform:none;
+  max-width:32em;
+  text-wrap:balance;
+}
 
 .craft-reality{
   font-family:var(--serif);
@@ -1514,6 +1491,9 @@ section{--tp:0}
     transition:none;
   }
   .craft-reality{font-size:clamp(1.25rem,4vw,1.625rem);max-width:none}
+  /* Пара обязана держать один кегль и на мобильном тоже */
+  .craft-eye-obs{font-size:clamp(1.25rem,4vw,1.625rem);max-width:none}
+  .craft-body{gap:clamp(1.25rem,4vw,2rem)}
 }
 @media (max-width:720px){
   .ds-quote{margin-top:2.25rem}
@@ -1633,8 +1613,8 @@ section.dark /* position variants */
 .tip-num-block.is-active::after{opacity:1;transform:translateY(0)}
 .tip-num-block.is-active{z-index: var(--z-overlay)}
 section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,transparent);border-color:var(--hair-dk);color:#d0d3d8}
-@media (max-width:1100px){.brand-steps{grid-template-columns:repeat(2,1fr)}.partner-compare{grid-template-columns:1fr}section{min-height:clamp(60vh,75vh,90vh);padding-top:clamp(7rem,11vh,10rem);padding-bottom:clamp(4.5rem,8vh,7rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(8rem,14vh,12rem)}section.dark+section:not(.dark){padding-top:clamp(8rem,14vh,12rem)}}
-@media (max-width:720px){section{min-height:auto;padding-top:clamp(5.5rem,9vh,8rem);padding-bottom:clamp(3.5rem,7vh,6rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(6rem,11vh,9rem)}section.dark+section:not(.dark){padding-top:clamp(6rem,11vh,9rem)}.principle,.bstep,[data-reveal],[data-reveal-num]{transform:translateY(36px);transition-duration:1.4s,1.3s}.stagger>[data-stagger]{transform:translateY(28px);transition-duration:1.2s,1.15s}.principles-grid{grid-template-columns:1fr}.brand-steps{grid-template-columns:1fr}.level{grid-template-columns:1fr auto;gap:0.5rem 1.25rem;padding:1.5rem 0}.level .ltitle{grid-column:1;grid-row:1}.level .ln{grid-column:2;grid-row:1;text-align:right;padding-top:0.65rem;align-self:start;white-space:nowrap}.level .ldesc{grid-column:1 / -1;grid-row:2;margin-top:0.5rem}.level .lq{grid-column:1 / -1;grid-row:3;text-align:left;padding-top:0.5rem}.co{grid-template-columns:1fr;gap:0.85rem}.co .award{text-align:left}.hero-bottom{grid-template-columns:1fr;gap:1.5rem}.sec-head{grid-template-columns:1fr}.bmp-split{grid-template-columns:1fr}.bmp-split .vs{display:none}.bmp-dotgrid{grid-template-columns:repeat(20,1fr)}.bmp-top > *{grid-column:1 / -1}}
+@media (max-width:1100px){section{min-height:clamp(60vh,75vh,90vh);padding-top:clamp(7rem,11vh,10rem);padding-bottom:clamp(4.5rem,8vh,7rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(8rem,14vh,12rem)}section.dark+section:not(.dark){padding-top:clamp(8rem,14vh,12rem)}}
+@media (max-width:720px){section{min-height:auto;padding-top:clamp(5.5rem,9vh,8rem);padding-bottom:clamp(3.5rem,7vh,6rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(6rem,11vh,9rem)}section.dark+section:not(.dark){padding-top:clamp(6rem,11vh,9rem)}.principle,.bstep,[data-reveal],[data-reveal-num]{transform:translateY(36px);transition-duration:1.4s,1.3s}.stagger>[data-stagger]{transform:translateY(28px);transition-duration:1.2s,1.15s}.level{grid-template-columns:1fr auto;gap:0.5rem 1.25rem;padding:1.5rem 0}.level .ltitle{grid-column:1;grid-row:1}.level .ln{grid-column:2;grid-row:1;text-align:right;padding-top:0.65rem;align-self:start;white-space:nowrap}.level .ldesc{grid-column:1 / -1;grid-row:2;margin-top:0.5rem}.level .lq{grid-column:1 / -1;grid-row:3;text-align:left;padding-top:0.5rem}.co{grid-template-columns:1fr;gap:0.85rem}.co .award{text-align:left}.hero-bottom{grid-template-columns:1fr;gap:1.5rem}.sec-head{grid-template-columns:1fr}.bmp-split{grid-template-columns:1fr}.bmp-split .vs{display:none}.bmp-dotgrid{grid-template-columns:repeat(20,1fr)}.bmp-top > *{grid-column:1 / -1}}
 
 /* ─── WOW EFFECTS ─── */
 .scroll-progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;z-index: var(--z-overlay);pointer-events:none;transition:width 0.1s linear;opacity:0.7}
@@ -1722,7 +1702,7 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
 .hero-title{transition:filter 0.6s var(--ease-out)}
 .h2-line{display:inline-block;filter:blur(6px);transition:filter 0.9s var(--ease-out);transition-delay:calc(var(--li,0) * 0.12s + 0.05s)}
 .h2-in .h2-line{filter:blur(0)}
-@media (prefers-reduced-motion:reduce){.scroll-progress{display:none}.brand-marquee-row{animation:none}.cta-title .word,.h2-line,.sec-head h2 .h2-line,.intro-title .h2-line{filter:none!important}.hero-title .dot{animation:none}.bmp-dotgrid.in-view .d{animation:none;opacity:0.35}.bmp-dotgrid.in-view .d.accent{opacity:1}.tip-num-block::after,.ft-top .arr{transition:none!important}.bicon-spark-core,.bicon-spark-sat,.bicon-compass,.bicon-pos-dot,.bicon-eq,.bicon-aa-letter,.bicon-sys-ray,.bicon-ripple{animation:none}.h2-line{opacity:1;transform:none}.sec-aside{opacity:1;transform:none}.principle,.bstep{animation:none}}
+@media (prefers-reduced-motion:reduce){.scroll-progress{display:none}.brand-marquee-row{animation:none}.cta-title .word,.h2-line,.sec-head h2 .h2-line,.intro-title .h2-line{filter:none!important}.hero-title .dot{animation:none}.bmp-dotgrid.in-view .d{animation:none;opacity:0.35}.bmp-dotgrid.in-view .d.accent{opacity:1}.tip-num-block::after,.ft-top .arr{transition:none!important}.h2-line{opacity:1;transform:none}.sec-aside{opacity:1;transform:none}.principle,.bstep{animation:none}}
 @media (max-width:720px){.brand-marquee-row{animation-duration:35s}}
 
 /* ─── LANGUAGE SWITCHER ───
@@ -1916,9 +1896,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   /* Audience cells — better padding */
 
   /* Brand steps — vertical stack with proper spacing */
-  .brand-steps{gap:1.5rem !important}
   .bstep{padding:1rem 0}
-  .bnum{width:48px;height:48px;margin-bottom:0.75rem}
   .bname{font-size:1.0625rem !important;margin-bottom:0.4rem}
   .bdesc{font-size:0.9375rem;line-height:1.5}
 
@@ -1926,7 +1904,6 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   .bmp-split .pct{font-size:clamp(2.5rem,16vw,4.5rem) !important;text-align:center}
   .bmp-split .side{text-align:center}
   .bmp-split .label{margin-left:auto;margin-right:auto;text-align:center;max-width:30ch}
-  .bmp-cols{gap:1.5rem !important}
   .bmp-col{padding:1rem 0}
   .bmp-dotgrid{grid-template-columns:repeat(20,1fr) !important;gap:7px !important;width:100% !important;max-width:none !important;margin-left:0 !important;margin-right:0 !important}
   .bmp-dotgrid .d{aspect-ratio:1;width:100%;height:auto;max-width:none}
@@ -1989,7 +1966,6 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
     font-size:0.8125rem !important;line-height:1.5;padding:0.65rem 0.85rem;letter-spacing:0;text-transform:none}
 
   /* Partner compare — clean stacked cards */
-  .partner-compare{gap:1.5rem !important}
   .partner-final{font-size:clamp(1.25rem,6vw,1.625rem) !important;line-height:1.35;text-align:left}
 
   /* Principles — clean stack */
@@ -2361,7 +2337,6 @@ html[lang="ru"] .stat-counter,
 html[lang="ru"] .pct,
 html[lang="ru"] .co .desc .num,
 html[lang="ru"] .rs-card__num,
-html[lang="ru"] .principle .pnum,
 html[lang="ru"] .aud-row .ar-num,
 html[lang="ru"] .pain-list .pn{
   font-family:var(--serif);
@@ -2377,8 +2352,7 @@ html[lang="ru"] .label em,
 html[lang="ru"] .item em,
 html[lang="ru"] .copy em,
 html[lang="ru"] .lab em,
-html[lang="ru"] .pain-list .pn,
-html[lang="ru"] .principle .pnum{
+html[lang="ru"] .pain-list .pn{
   letter-spacing:0.015em;
 }
 /* Hero tracking — denser main screen per request. Inter Tight stays legible
@@ -2690,7 +2664,6 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
     color: var(--ink) !important;
   }
   /* ── 4. Brand subtitle — kill its <br> on mobile (also handled by JS) ── */
-  #brand .sec-sub br{display:none}
 
   /* ── 5. 69 / 31 infographic — keep ORIGINAL dot-grid (per request),
         just make sure the size is comfortable on mobile (12 cols, 5px gap) ── */
@@ -2760,8 +2733,6 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   }
 
   /* ── 6. Brand-steps tightening on mobile ── */
-  #brand .bstep{ padding-bottom: 1.5rem }
-  #brand .bdesc{ text-wrap: pretty }
 
   /* ── 7. Pain-quote refinement — single readable paragraph ── */
   .pain-quote, .partner-final{
@@ -2869,45 +2840,6 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   .cta-head .cta-author{ text-align: right }
 
   /* ── C. Brand-steps — icon LEFT, title + description on the RIGHT ── */
-  #brand .brand-steps{
-    gap: 0 !important;
-  }
-  #brand .bstep{
-    display: grid !important;
-    grid-template-columns: 56px 1fr !important;
-    grid-template-rows: auto auto !important;
-    column-gap: 1.25rem !important;
-    row-gap: 0.35rem !important;
-    align-items: start !important;
-    padding: 1.4rem 0 !important;
-    border-top: 1px solid var(--hair);
-  }
-  #brand .bstep:first-child{ border-top: none; padding-top: 0.5rem }
-  #brand .bnum{
-    grid-column: 1 !important;
-    grid-row: 1 / span 2 !important;
-    width: 48px !important;
-    height: 48px !important;
-    margin: 0 !important;
-    align-self: start;
-  }
-  #brand .bname{
-    grid-column: 2 !important;
-    grid-row: 1 !important;
-    margin: 0 !important;
-    padding-top: 0.1rem;
-    font-size: 1.0625rem !important;
-    line-height: 1.25 !important;
-  }
-  #brand .bdesc{
-    grid-column: 2 !important;
-    grid-row: 2 !important;
-    margin: 0.4rem 0 0 !important;
-    font-size: 0.9375rem !important;
-    line-height: 1.5 !important;
-    color: var(--mute);
-    text-wrap: pretty;
-  }
 
   /* ── D. Section vertical rhythm — handled above in §9 (unified padding).
         Only #team-system overshoot bottom override is kept here. ── */
@@ -2931,16 +2863,6 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
     z-index: var(--z-header);
   }
   /* keep partner-mark inline (it follows the closing line of its section) */
-  .partner-mark{
-    position: relative !important;
-    inset: auto !important;
-    left: auto !important; right: auto !important;
-    top: auto !important; bottom: auto !important;
-    margin: clamp(2rem, 5vh, 3.25rem) auto 0 !important;
-    width: 10px !important;
-    height: 10px !important;
-    aspect-ratio: 1;
-  }
   /* override the default absolute style for ts-mark too (it was section.dark > .ts-mark) */
   section.dark > .ts-mark{
     position: absolute !important;
@@ -3213,7 +3135,7 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
     break-after: avoid-page;
   }
   /* Cards and list items — keep together */
-  article, .principle, .level, .co, .pain-list li, .aud-row, .partner-svc, .partner-prt, .br-step, .bstep{
+  article, .principle, .level, .co, .pain-list li, .aud-row, .bstep{
     page-break-inside: avoid;
     break-inside: avoid;
   }
@@ -3295,4 +3217,31 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   #intro .intro-rule{margin-top:clamp(1.6rem,6vw,2.4rem)}
   /* mobile: speed up the brand marquee so motion is clearly visible (80s reads as static) */
   .brand-marquee-row{animation-duration:32s!important}
+}
+
+/* ─── Мобильные цели касания ───
+   Замерено на 390×844: логотип в шапке был 284×22, кнопки языка в выпадающем
+   меню 39×41, «Наверх» 54×13. Ориентир Apple/Google — 44×44. Бургер уже 44×44.
+   У логотипа область попадания растёт псевдоэлементом, а не отступом: отступ
+   поднимал высоту всей шапки с 63 до 85px. */
+@media (hover:none), (max-width:720px){
+  nav.top .brand{position:relative}
+  nav.top .brand::after{
+    content:'';
+    position:absolute;
+    left:0; right:0; top:50%;
+    height:44px;
+    transform:translateY(-50%);
+  }
+  .nav-drop__lang button{
+    min-width:44px;
+    min-height:44px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .ft-top{
+    padding-block:0.95rem;
+    margin-block:-0.95rem;
+  }
 }

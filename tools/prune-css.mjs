@@ -23,8 +23,42 @@ const FILE = resolve(ROOT, 'assets', 'manifest.css');
 const DRY = process.argv.includes('--dry');
 
 // Dead anchors — verified absent from index.html and not created by manifest.js.
-const DEAD_CLASSES = new Set(['svc-row', 'numbers-grid', 'numbers-lead', 'numbers-title', 'aud-list', 'ds-layer', 'ds-layers', 'ctitle', 'has-tip']);
-const DEAD_IDS = new Set(['services', 'team-system']);
+// Прежние вырезанные секции + главы, снесённые 29.08.2026 (pain, partner, principles, brand).
+// Каждое имя проверено: отсутствует в index.html и не создаётся ни одним скриптом.
+const DEAD_CLASSES = new Set([
+  'svc-row',
+  'numbers-grid',
+  'numbers-lead',
+  'numbers-title',
+  'aud-list',
+  'ds-layer',
+  'ds-layers',
+  'ctitle',
+  'has-tip',
+  'bicon-aa-letter',
+  'bicon-compass',
+  'bicon-eq',
+  'bicon-pos-dot',
+  'bicon-ripple',
+  'bicon-spark-core',
+  'bicon-spark-sat',
+  'bicon-sys-ray',
+  'bmp-cols',
+  'bnum',
+  'br-step',
+  'brand-steps',
+  'col-tag',
+  'col-title',
+  'partner-col',
+  'partner-compare',
+  'partner-final-row',
+  'partner-mark',
+  'partner-prt',
+  'partner-svc',
+  'pnum',
+  'principles-grid',
+]);
+const DEAD_IDS = new Set(['services', 'team-system', 'pain', 'partner', 'principles', 'brand']);
 
 const selectorIsDead = (sel) => {
   let dead = false;
