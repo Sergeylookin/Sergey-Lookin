@@ -59,7 +59,7 @@ nav.top.on-dark.scrolled{background:var(--bg-dark);border-bottom-color:var(--hai
 nav.top.on-dark .lang-switch button{color:var(--mute-2)}
 nav.top.on-dark .lang-switch button:hover{color:#fff}
 nav.top.on-dark .lang-switch button.active{color:var(--accent)}
-@media (max-width:720px){.nav-right{gap:.85rem}.lang-switch{font-size:.8125rem}nav .brand{font-size:.75rem;letter-spacing:.08em}}
+@media (max-width:720px){.nav-right{gap:.85rem}}
 
 /* ─── Layout helpers ─── */
 .wrap,.container{max-width:var(--container);margin:0 auto;width:100%;padding:0 var(--gutter);padding-right:calc(var(--gutter) + var(--nav-safe-right))}

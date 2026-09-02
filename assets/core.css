@@ -87,6 +87,9 @@ img,video{-webkit-user-drag:none;-khtml-user-drag:none;user-select:none;-webkit-
    / --mute-2 resolve to the active theme's palette at use time. */
 .nav-burger{display:none}
 .nav-drop{display:none}
+/* Кегль и трекинг выпадающего меню объявлены БЕЗУСЛОВНО, а не внутри медиазапроса:
+   вся типографика полосы обязана быть одной размерности на любой ширине. */
+.nav-drop a,.nav-drop__lang button{font-size:var(--t-nav);letter-spacing:.1em}
 /* Burger nav kicks in at <=1024 — unified "tablet mode": below this the section
    layouts also collapse to single column (manifest.css), so nav + content switch
    to tablet together. Above 1024 the inline nav + multi-column desktop grid apply. */
@@ -100,10 +103,10 @@ img,video{-webkit-user-drag:none;-khtml-user-drag:none;user-select:none;-webkit-
      left 5 invisible focus stops); the 0s .3s delay hides it only after the fade-out ends */
   .nav-drop{position:fixed;top:clamp(3.4rem,9vh,4.25rem);right:var(--gutter);min-width:210px;display:flex;flex-direction:column;background:color-mix(in srgb,var(--bg-dark) 90%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--hair-dk);border-radius:12px;padding:.9rem 1.25rem 1.1rem;opacity:0;transform:translateY(-8px);pointer-events:none;visibility:hidden;transition:opacity .3s var(--ease-out),transform .3s var(--ease-out),visibility 0s .3s;z-index: var(--z-nav)}
   nav.top.menu-open .nav-drop{opacity:1;transform:none;pointer-events:auto;visibility:visible;transition:opacity .3s var(--ease-out),transform .3s var(--ease-out),visibility 0s 0s}
-  .nav-drop a{font-family:var(--mono);font-size:.95rem;letter-spacing:.08em;text-transform:uppercase;color:#fff;padding:.62rem 0;text-decoration:none;transition:color .25s var(--ease-out)}
+  .nav-drop a{font-family:var(--mono);font-size:var(--t-nav);letter-spacing:.1em;text-transform:uppercase;color:#fff;padding:.62rem 0;text-decoration:none;transition:color .25s var(--ease-out)}
   .nav-drop a.is-active,.nav-drop a:hover{color:var(--accent)}
   .nav-drop__lang{display:flex;gap:1.25rem;margin-top:.7rem;padding-top:.85rem;border-top:1px solid var(--hair-dk)}
-  .nav-drop__lang button{background:none;border:0;color:var(--mute-2);font-family:var(--mono);font-size:.95rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:.65rem .55rem;margin:-.4rem -.2rem}
+  .nav-drop__lang button{background:none;border:0;color:var(--mute-2);font-family:var(--mono);font-size:var(--t-nav);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:.65rem .55rem;margin:-.4rem -.2rem}
   .nav-drop__lang button.active{color:var(--accent)}
 }
 
@@ -126,6 +129,9 @@ nav.top.on-dark{color:#fff}
 nav.top.on-dark .brand{color:var(--mute-2)}
 nav .brand{background:none;border:none;padding:0;margin:0;color:var(--mute);font-family:var(--mono);font-size:var(--t-nav);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:color .3s var(--ease-out);font-weight:500;line-height:inherit}
 nav .brand b{font-weight:inherit;color:var(--accent)}
+/* Узкий экран: кегль полосы НЕ трогаем (он один на всех ширинах) — вместо этого
+   вордмарк сокращается до имени, иначе строка в 29 знаков переносится на две. */
+@media (max-width:420px){nav .brand b,nav .brand span{display:none}}
 nav .brand:hover{color:var(--accent)}
 .nav-right{display:flex;align-items:center;gap:clamp(1.1rem,2.4vw,2rem)}
 .nav-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:.85rem;font-family:var(--mono);font-size:var(--t-nav);letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--mute);pointer-events:auto}

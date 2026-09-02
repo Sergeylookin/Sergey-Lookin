@@ -1783,13 +1783,12 @@ nav.top.on-dark .lang-switch .sep{color:var(--mute-2);opacity:0.35}
 @media (max-width:640px){
   nav.top{padding-left:clamp(1.1rem,4vw,1.5rem);padding-right:clamp(1.1rem,4vw,1.5rem)}
   .nav-right{gap:0.85rem}
-  .lang-switch{font-size:0.8125rem;gap:0.45rem}
+  .lang-switch{gap:0.45rem}
 }
 @media (max-width:720px){
   .side-progress{display:none}
 }
 @media (max-width:380px){
-  nav .brand{font-size:0.75rem;letter-spacing:0.08em}
   nav .brand b{margin:0 0.15rem}
 }
 
