@@ -352,10 +352,82 @@ function scheduleFit(){
   _fitTimeout = setTimeout(() => {
     _fitTimeout = null;
     if (_fitRaf) return;
-    _fitRaf = requestAnimationFrame(()=>{ _fitRaf = null; layoutHero(); });
+    _fitRaf = requestAnimationFrame(()=>{ _fitRaf = null; layoutHero(); alignTeamToInk(); indentIntroTitle(); });
   }, 90);
 }
 window.addEventListener('resize', scheduleFit, {passive:true});
+
+/* ─── «Как работаю с командой»: шапка и знак садятся на ИНК, а не на коробку ───
+   Сетка выравнивает КОРОБКИ, но у дисплейного заголовка между верхом коробки и
+   верхом буквы больше шестидесяти пикселей воздуха, а у строки текста справа —
+   единицы. Глазом это читается так, будто заголовок висит ниже первой строки,
+   а круглый знак уехал ниже последней. Считаем у каждого блока СВОЮ разницу
+   «коробка → чернила» и компенсируем её отступом; величина не зависит от
+   анимаций появления, потому что оба слагаемых берутся внутри одного элемента. */
+function inkEdge(el, bottom){
+  const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  let first = null, last = null, n;
+  while ((n = w.nextNode())) if (n.nodeValue.trim()) { if (!first) first = n; last = n; }
+  if (!first) return null;
+  const r = document.createRange();
+  if (bottom) { r.setStart(last, Math.max(0, last.length - 2)); r.setEnd(last, last.length); }
+  else { r.setStart(first, 0); r.setEnd(first, Math.min(2, first.length)); }
+  const ink = r.getBoundingClientRect(), box = el.getBoundingClientRect();
+  return bottom ? box.bottom - ink.bottom : ink.top - box.top;
+}
+/* ─── «Двенадцать лет дизайна…»: перенос садится на красную строку абзаца ───
+   Заголовок тянется на все 12 колонок, а текст под ним начинается с четвёртой.
+   Первая строка остаётся у поля страницы, вторая и дальше уходят на ту же
+   вертикаль, что и абзац. Смещение меряем по факту — это ровно левый край
+   .intro-cols, поэтому оно верно на любой ширине и при любом column-gap. */
+function indentIntroTitle(){
+  const t = document.querySelector('.intro-spread .intro-title');
+  const c = document.querySelector('.intro-spread .intro-cols');
+  if (!t || !c) return;
+  t.style.removeProperty('--intro-indent');
+  /* Ниже 900 разворот складывается в одну колонку — красной строки нет */
+  if (window.matchMedia('(max-width:900px)').matches) return;
+  const d = Math.round(c.getBoundingClientRect().left - t.getBoundingClientRect().left);
+  if (d > 1) t.style.setProperty('--intro-indent', d + 'px');
+}
+
+function alignTeamToInk(){
+  const tm = document.querySelector('.team-manifesto');
+  if (!tm) return;
+  const head = tm.querySelector('.tm-head');
+  const title = head && head.querySelector('.sec-title, h2');
+  const texts = tm.querySelectorAll('.tm-text');
+  const badge = tm.querySelector('.look-badge');
+  if (head) head.style.marginTop = '';
+  if (badge) badge.style.bottom = '';
+  if (!title || !texts.length) return;
+  /* Ниже 900 макет складывается в одну колонку — выравнивать не с чем */
+  if (window.matchMedia('(max-width:900px)').matches) return;
+  /* Считаем в layout-координатах (offsetTop), а не по getBoundingClientRect:
+     строки приезжают с анимацией появления (translateY), а шапка липкая —
+     экранные координаты в любой момент могут врать на десятки пикселей.
+     offsetTop не знает ни о трансформах, ни о залипании. */
+  const offTop = (el) => { let y = 0, n = el; while (n && n !== tm) { y += n.offsetTop; n = n.offsetParent; } return y; };
+  const first = texts[0], last = texts[texts.length - 1];
+  /* Шапка липкая, а offsetTop у прилипшего блока УЖЕ включает сдвиг залипания —
+     поправка гуляла бы вместе с прокруткой. На время замера снимаем липкость и
+     читаем честную позицию в потоке. */
+  const stickyWas = head.style.position;
+  head.style.position = 'static';
+
+  /* Верх заголовка ← верх первой строки справа. Разница набегает из внутреннего
+     отступа строки (40px) и из воздуха над буквой у дисплейного кегля. */
+  const dTop = (offTop(title) + inkEdge(title, false)) - (offTop(first) + inkEdge(first, false));
+  head.style.position = stickyWas;
+  if (Math.abs(dTop) > 1) head.style.marginTop = (-dTop).toFixed(1) + 'px';
+
+  /* Низ знака ← низ последней строки справа (знак прижат к низу блока). */
+  if (badge) {
+    const inkBottomFromTop = offTop(last) + last.offsetHeight - inkEdge(last, true);
+    const d = tm.offsetHeight - inkBottomFromTop;
+    if (Math.abs(d) > 1) badge.style.bottom = d.toFixed(1) + 'px';
+  }
+}
 
 function fitWhenReady(){
   if (document.fonts && document.fonts.load) {
@@ -363,15 +435,15 @@ function fitWhenReady(){
        list of fonts the site no longer loads (Fraunces/Playfair were never fetched,
        so the old Promise resolved instantly and fitHero measured a fallback font). */
     document.fonts.load('italic 500px "Inter Tight"').then(()=>{
-      layoutHero();
-      requestAnimationFrame(layoutHero);
-    }).catch(()=>layoutHero());
+      layoutHero(); alignTeamToInk(); indentIntroTitle();
+      requestAnimationFrame(()=>{ layoutHero(); alignTeamToInk(); indentIntroTitle(); });
+    }).catch(()=>{ layoutHero(); alignTeamToInk(); indentIntroTitle(); });
   } else {
-    layoutHero();
+    layoutHero(); alignTeamToInk(); indentIntroTitle();
   }
 }
 fitWhenReady();
-window.addEventListener('load', layoutHero);
+window.addEventListener('load', ()=>{ layoutHero(); alignTeamToInk(); indentIntroTitle(); });
 
 /* ─── Hero text-pressure — the 404 headline effect on the two display lines ───
    Every glyph becomes its own <span>; the pointer's distance to a glyph rides

@@ -530,6 +530,12 @@ section.dark h1,section.dark h2{color:#fff}
 /* Hero — full width, fluid scale */
 .intro-spread .intro-title{
   grid-column:1 / -1;
+  /* Висячая строка: первая строка идёт от поля страницы, а перенос садится на
+     красную строку абзаца ниже (колонка 4 сетки). Величину меряет JS
+     (indentIntroTitle) — процентами не выразить: text-indent считает процент от
+     УЖЕ суженного отступом content-box, и математика разъезжается. */
+  padding-left:var(--intro-indent,0px);
+  text-indent:calc(-1 * var(--intro-indent,0px));
   font-family:var(--serif);
   font-weight:400;
   font-size: 5vw;
