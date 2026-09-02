@@ -92,11 +92,9 @@ nav.top.on-dark .lang-switch button.active{color:#fff}
    ============================================================ */
 .cases{padding-top:clamp(2.5rem,6vw,5rem);padding-bottom:clamp(4rem,8vw,7rem)}
 .case{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);row-gap:clamp(1rem,2vw,1.75rem);align-items:center;padding:clamp(2.5rem,6vw,5rem) 0;border-top:1px solid var(--hair)}
-/* Soft reveal as a case scrolls in. It's an ENTRANCE animation, not a hide: the card is
-   visible by default, so if the observer never fires the card still shows (no empty blocks). */
-/* Hidden by default so caseRise (which starts at opacity:0) doesn't re-hide a visible
-   card on .in-view — that was the scroll-in flicker. site.js adds .in-view via observer
-   + safety-net + scroll fallback, and reduced-motion below keeps cards visible. */
+/* Карточка скрыта до появления, .in-view ставит site.js: наблюдатель + страховка по
+   таймеру + запасной проход по скроллу, поэтому пустых блоков остаться не может.
+   Ниже reduced-motion всё это выключает и показывает карточки сразу. */
 /* Карточка целиком больше не всплывает: на липком стеке подъём дрался с
    прилипанием. Вместо этого играют её части — раскрывается кадр, за ним по
    очереди выходят теги, заголовок, описание, мета и подвал с номером. */
