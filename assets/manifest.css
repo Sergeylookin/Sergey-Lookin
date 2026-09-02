@@ -834,7 +834,10 @@ section.dark h1,section.dark h2{color:#fff}
    выше. У остальных pretty оставляем: у четвёртой он, наоборот, убирает висячее
    «МАКЕТОВ». */
 .credo-list > :nth-child(3) .credo-note{grid-column:11 / -1; text-align:left;  margin-right:auto; text-wrap:auto}
-.credo-list > :nth-child(4) .credo-note{grid-column:9 / -1;  text-align:left;  margin-right:auto}
+/* Четвёртая подпись стала длиннее («Сломанные процессы…») и на общих 31ch
+   вставала в две строки по 18 и 24 знака — заметно шире соседних подписей.
+   23ch держат её в трёх строках той же длины, что у первой и третьей. */
+.credo-list > :nth-child(4) .credo-note{grid-column:9 / -1;  text-align:left;  margin-right:auto; max-width:23ch}
 
 @media (max-width:1024px){
   /* Узкий экран — простая вёрстка: одна колонка, всё по левому краю, никаких
@@ -1772,13 +1775,13 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
    its richer .lang-switch button (position + :focus-visible outline) and .sep weight. */
 .lang-switch button{background:none;border:0;padding:0.15rem 0;margin:0;color:var(--mute);cursor:pointer;font:inherit;letter-spacing:inherit;text-transform:inherit;font-weight:inherit;line-height:inherit;transition:color 0.4s var(--ease-out),opacity 0.4s var(--ease-out);position:relative;opacity:0.78}
 .lang-switch button:hover{color:var(--ink);opacity:1}
-.lang-switch button.active{color:var(--accent);opacity:1}
+.lang-switch button.active{color:var(--ink);opacity:1}
 .lang-switch button:focus-visible{outline:1px solid var(--accent);outline-offset:4px;border-radius:2px}
 section.dark .cta-btn:focus-visible,section.dark a:focus-visible,section.dark button:focus-visible{outline-color:var(--accent)}
 .lang-switch .sep{color:var(--mute);opacity:0.4;pointer-events:none;font-weight:400}
 nav.top.on-dark .lang-switch button{color:var(--mute-2)}
 nav.top.on-dark .lang-switch button:hover{color:#fff}
-nav.top.on-dark .lang-switch button.active{color:var(--accent)}
+nav.top.on-dark .lang-switch button.active{color:#fff}
 nav.top.on-dark .lang-switch .sep{color:var(--mute-2);opacity:0.35}
 @media (max-width:640px){
   nav.top{padding-left:clamp(1.1rem,4vw,1.5rem);padding-right:clamp(1.1rem,4vw,1.5rem)}
@@ -2149,7 +2152,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   font-family:var(--serif);
   font-weight:300;
   /* Base font-size, scaled by --p-prox via transform for fluid GPU animation */
-  font-size:clamp(5rem,11vw,10rem);
+  font-size:clamp(2.95rem,5.9vw,5.5rem);
   line-height:0.85;
   color:var(--accent);
   letter-spacing:-0.075em;
@@ -2240,7 +2243,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   .rs-pin-header{margin-bottom:clamp(2rem,4vh,3rem)}
   .rs-track{flex-direction:column;height:auto;padding:0 var(--gutter);gap:2.5rem;transform:none !important}
   .rs-panel{flex:auto;width:100%;padding:0;transform:none !important;opacity:1 !important}
-  .rs-card__num{font-size:clamp(3.5rem,9vw,5rem)}
+  .rs-card__num{font-size:clamp(2.95rem,4.8vw,4.25rem)}
   .rs-card__title{font-size:clamp(1.5rem,5vw,2rem)}
   .rs-steps{display:none}
 }
@@ -2262,6 +2265,12 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 /* Five equal columns tile the viewport; thin translucent dividers between them */
 .hero-curtain > i{
   flex:1 1 20%;
+  /* Пять колонок делят вьюпорт нацело только на кратной ширине. На 1367px
+     каждая получает 270.39px, и на стыке двух отдельно отрисованных боксов
+     сквозь сглаживание просвечивает страница — те самые пиксели между
+     полосками. Кладём колонки внахлёст на пиксель: щели закрыть нечем,
+     а разделитель рисуется по ЛЕВОМУ краю и остаётся на месте. */
+  margin-right:-1px;
   background:var(--accent);
   border-left:1px solid rgba(255,255,255,.2);
   transform:scaleY(1);
@@ -2269,6 +2278,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   will-change:transform;
 }
 .hero-curtain > i:first-child{ border-left:0 }
+.hero-curtain > i:last-child{ margin-right:0 }
 /* Reveal: each column retracts to the top, staggered left→right */
 .hero-curtain.lift > i{
   transform:scaleY(0);
@@ -2343,7 +2353,10 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   opacity:var(--hero-opacity);
   font-variation-settings:"opsz" var(--hero-opsz),"wght" var(--hero-wght),"SOFT" var(--hero-soft);
   z-index: var(--z-aside);
-  text-wrap:pretty;
+  /* balance, а не pretty: колонка обрезана до двух строк (capHeroToTwoLines),
+     а внутри двух строк нужен ровный раздел «Визуальный партнёр / с позицией.».
+     pretty тянет слова вниз, лишь бы последняя строка не осталась короткой. */
+  text-wrap:balance;
 }
 .hero-title--corner{
   position:absolute;
@@ -2359,7 +2372,7 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   z-index: var(--z-aside);
   opacity:var(--hero-opacity);
   font-variation-settings:"opsz" var(--hero-opsz),"wght" var(--hero-wght),"SOFT" var(--hero-soft);
-  text-wrap:pretty;
+  text-wrap:balance;
 }
 .hero-title--corner em{
   font-style:italic;

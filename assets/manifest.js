@@ -143,6 +143,37 @@ function fitBlock(el, maxH, hi){
   return best;
 }
 
+/* Сколько строк занимает блок при текущем кегле */
+function heroLineCount(el){
+  const lh = parseFloat(getComputedStyle(el).lineHeight) || 1;
+  return Math.round(el.scrollHeight / lh);
+}
+
+/* ─── Обе фразы обложки стоят В ДВЕ СТРОКИ на любом размере окна ───
+   Перенос раньше решала ширина колонки, а кегль подбирается от СВОБОДНОЙ ВЫСОТЫ:
+   на невысоком окне кегль выходил мелким, фраза влезала в одну строку, на высоком —
+   в две. Отсюда и парадокс «на экране больше две строки, на меньшем одна».
+   Считаем ширину фразы в одну строку В EM (значит, от кегля не зависит) и режем
+   колонку долей от неё. Перенос перестаёт зависеть от окна: он всегда один. */
+function capHeroToTwoLines(el){
+  el.style.maxWidth = '';
+  const prevWS = el.style.whiteSpace, prevFS = el.style.fontSize;
+  el.style.fontSize = '100px';
+  el.style.whiteSpace = 'nowrap';
+  const oneLineEm = el.scrollWidth / 100;
+  el.style.whiteSpace = prevWS;
+  el.style.fontSize = prevFS;
+  if (!(oneLineEm > 0)) return;
+  /* 0.62 — доля, на которой Сергей утвердил раскладку («Визуальный /
+     партнёр с позицией.»). Если у фразы есть кусок длиннее колонки и выходит
+     три строки — отпускаем ширину вверх, пока строк не станет две. */
+  for (let f = 0.62; f <= 0.96; f += 0.04) {
+    el.style.maxWidth = (oneLineEm * f).toFixed(3) + 'em';
+    if (heroLineCount(el) === 2) return;
+  }
+  el.style.maxWidth = (oneLineEm * 0.62).toFixed(3) + 'em';
+}
+
 function fitHero(){
   const hero = document.querySelector('.hero');
   if (!hero) return;
@@ -150,8 +181,14 @@ function fitHero(){
   const t = hero.querySelector('.hero-title--corner');
   if (!s || !t) return;
   /* Stacked layout sizes itself with CSS clamp() in normal flow — JS would oversize */
-  if (heroIsStacked()) { s.style.fontSize = ''; t.style.fontSize = ''; return; }
+  if (heroIsStacked()) {
+    s.style.fontSize = ''; t.style.fontSize = '';
+    s.style.maxWidth = ''; t.style.maxWidth = '';
+    return;
+  }
   if (!s.textContent.trim()) return;
+  capHeroToTwoLines(s);
+  capHeroToTwoLines(t);
 
   const H = hero.clientHeight;
   const heroTop = hero.getBoundingClientRect().top;
@@ -988,7 +1025,9 @@ function fixTypographyOrphans(root){
   if(window.innerWidth > 720) return;
   /* Step 1 — flatten <br>s in target elements first */
   convertBrToSpace(root);
-  /* Step 2 — glue prepositions */
+  /* Step 2 — glue prepositions. ТОЛЬКО русский: в английской типографике
+     неразрывного пробела после артикля и предлога нет, а склейка «the assembly»
+     в одну нерушимую пару рвёт строку при полупустом правом поле. */
   const lang = (document.documentElement.lang||'ru').slice(0,2);
   const preps = (lang==='en' ? EN_PREPS : RU_PREPS);
   const selectors = [

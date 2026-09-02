@@ -24,19 +24,19 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = process.argv.includes('--check');
 
 // ── Single source of truth ────────────────────────────────────────────────
-export const VERSION = 179;
+export const VERSION = 180;
 
 // Shared i18n keys that MUST be identical on every site page. The build validates
 // each page's dict against these (values only) and reports drift — it does not rewrite
 // the dicts, so page-specific keys stay untouched.
 const SHARED_I18N = {
   ru: {
-    'nav.brand': 'Сергей Лукин <b>—</b> <span>Head of Design</span>',
+    'nav.brand': 'Сергей Лукин <b>·</b> <span>Head of Design</span>',
     'nav.manifesto': 'Манифест', 'nav.about': 'Обо мне', 'nav.pf': 'Портфолио',
     'ft.copy': '© 2026 Сергей Лукин', 'ft.top': 'Наверх <span class="arr">↑</span>',
   },
   en: {
-    'nav.brand': 'Sergey Lukin <b>—</b> <span>Head of Design</span>',
+    'nav.brand': 'Sergey Lukin <b>·</b> <span>Head of Design</span>',
     'nav.manifesto': 'Manifesto', 'nav.about': 'About', 'nav.pf': 'Portfolio',
     'ft.copy': '© 2026 Sergey Lukin', 'ft.top': 'Top <span class="arr">↑</span>',
   },
@@ -78,7 +78,7 @@ const navLink = (href, key, label, on) =>
 const nav = (c) => {
   const p = c.prefix;
   return `<nav class="top on-dark" id="nav">` +
-    `<a class="brand" href="${p}index.html" id="navHome" data-i18n="nav.brand">Сергей Лукин <b>—</b> <span>Head of Design</span></a>` +
+    `<a class="brand" href="${p}index.html" id="navHome" data-i18n="nav.brand">Сергей Лукин <b>·</b> <span>Head of Design</span></a>` +
     `<div class="nav-center">` +
       navLink(`${p}index.html`, 'nav.manifesto', 'Манифест', c.active === 'manifesto') +
       `<span class="nav-sep" aria-hidden="true">·</span>` +

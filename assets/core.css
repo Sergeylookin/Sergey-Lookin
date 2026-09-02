@@ -77,6 +77,31 @@ html.lenis,html.lenis body{height:auto}
 
 ::selection{background:var(--accent);color:var(--accent-ink)}
 
+/* ═══════════ ПЕРЕХОДЫ МЕЖДУ СТРАНИЦАМИ (View Transitions API) ═══════════
+   Кросс-документные переходы на статике: браузер сам снимает кадр уходящей
+   страницы, склеивает его с приходящей — клик по меню перестаёт быть разрывом
+   с перезагрузкой. Где API нет (Firefox) — обычная навигация: ни разметка, ни
+   скрипты не меняются, ничего не ломается. */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:vtOut .26s var(--ease-out) both}
+::view-transition-new(root){animation:vtIn .44s var(--ease-out) both}
+@keyframes vtOut{to{opacity:0}}
+@keyframes vtIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* Общий элемент: заголовок кейса физически перелетает из списка в шапку
+   страницы кейса и обратно. object-fit:none обязателен — иначе браузер
+   растягивает снимок старого кегля на габарит нового и текст плющит. */
+::view-transition-group(case-title){animation-duration:.62s;animation-timing-function:var(--ease-out-strong)}
+::view-transition-old(case-title),::view-transition-new(case-title){
+  height:100%;width:100%;object-fit:none;object-position:left top;overflow:clip}
+::view-transition-old(case-title){animation:vtOut .34s var(--ease-out) both}
+::view-transition-new(case-title){animation:vtSoft .5s var(--ease-out) .06s both}
+@keyframes vtSoft{from{opacity:0}to{opacity:1}}
+
+@media (prefers-reduced-motion:reduce){
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+}
+
 /* ─── Image deterrents — friction only (the client always has the file; this just
        stops casual drag-to-save / select. Right-click is blocked via JS in site.js). ─── */
 img,video{-webkit-user-drag:none;-khtml-user-drag:none;user-select:none;-webkit-user-select:none}
@@ -127,17 +152,31 @@ img,video{-webkit-user-drag:none;-khtml-user-drag:none;user-select:none;-webkit-
 nav.top{position:fixed;top:0;left:0;right:0;padding:1.25rem var(--gutter);display:flex;align-items:center;justify-content:space-between;z-index:var(--z-nav);background:transparent;border-bottom:1px solid transparent;transition:background .4s var(--ease-out),border-color .4s var(--ease-out),color .4s var(--ease-out)}
 nav.top.on-dark{color:#fff}
 nav.top.on-dark .brand{color:var(--mute-2)}
+/* Ховер обязан быть НЕ слабее правила выше, иначе на тёмной полосе (а она
+   тёмная на всех страницах) он просто не срабатывает. */
+nav.top.on-dark .brand:hover{color:#fff}
 nav .brand{background:none;border:none;padding:0;margin:0;color:var(--mute);font-family:var(--mono);font-size:var(--t-nav);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:color .3s var(--ease-out);font-weight:500;line-height:inherit}
-nav .brand b{font-weight:inherit;color:var(--accent)}
+nav .brand b{font-weight:inherit;color:inherit;opacity:.5}   /* тот же разделитель, что в меню и у языков */
 /* Узкий экран: кегль полосы НЕ трогаем (он один на всех ширинах) — вместо этого
    вордмарк сокращается до имени, иначе строка в 29 знаков переносится на две. */
 @media (max-width:420px){nav .brand b,nav .brand span{display:none}}
-nav .brand:hover{color:var(--accent)}
-.nav-right{display:flex;align-items:center;gap:clamp(1.1rem,2.4vw,2rem)}
-.nav-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:.85rem;font-family:var(--mono);font-size:var(--t-nav);letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--mute);pointer-events:auto}
+nav .brand:hover{color:#fff}   /* вордмарк подсвечивается белым, как активный язык */
+.nav-right{display:flex;align-items:center;gap:clamp(1.1rem,2.4vw,2rem);margin-left:clamp(1.75rem,4.5vw,3.5rem)}
+/* На десктопе центр полосы занимает переключатель языка, а пункты меню уходят
+   вправо. Центрируем абсолютом только выше 1024: ниже в .nav-right лежит бургер,
+   и он обязан остаться у правого края. */
+@media (min-width:1025px){
+  .nav-right{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin-left:0}
+}
+/* Меню не центрируется по ОКНУ, а стоит группой справа, перед RU/EN.
+   Центровка по окну ставила пункты в зависимость от длины вордмарка:
+   «Сергей Лукин — Head of Design» на средних ширинах подходил к ним
+   вплотную, и полоса читалась как слипшийся кусок. Теперь между именем
+   и меню всегда одно живое поле, а группа справа держит свой ритм. */
+.nav-center{margin-left:auto;display:flex;align-items:center;gap:.85rem;font-family:var(--mono);font-size:var(--t-nav);letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--mute);pointer-events:auto}
 nav.top.on-dark .nav-center{color:var(--mute-2)}
 .nav-center a{color:inherit;transition:color .3s var(--ease-out);position:relative;display:inline-block;padding:.25rem 0}
-.nav-center a:hover{color:var(--accent)}
+.nav-center a:hover{color:#fff}
 .nav-center a.is-active{color:var(--accent)}
 nav.top.on-dark .nav-center a.is-active{color:var(--accent)}
 .nav-center .nav-sep{opacity:.5}

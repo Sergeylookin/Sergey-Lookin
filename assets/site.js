@@ -349,6 +349,7 @@
       return Math.round(t.scrollHeight / lh);
     }
     function fit(){
+      t.classList.add('is-fitting');   // мерим при максимальном весе букв
       t.style.fontSize = '';
       /* Runs at every width: on a phone the clamp's floor is still wide enough to push
          "я Сергей Лукин" onto a third line, and only shrinking fixes that. */
@@ -361,7 +362,10 @@
         if(lineCount() <= 2 && t.scrollWidth <= t.clientWidth + 1){ best = mid; lo = mid; }
         else hi = mid;
       }
-      t.style.fontSize = best + 'px';
+      /* Ещё процент запаса: замер идёт в дробных пикселях, а межбуквенный
+         интервал и кернинг округляются при отрисовке. */
+      t.style.fontSize = (best * 0.99) + 'px';
+      t.classList.remove('is-fitting');
     }
     fit();
     if(document.fonts && document.fonts.ready) document.fonts.ready.then(fit).catch(function(){});
@@ -378,7 +382,13 @@
     var SHORT = /(^|[\s(«])([A-Za-zА-Яа-яЁё]{1,3}|для|что|как|или|при|над|под|без|про|это|уже)\s+/g;
     function glue(s){ var p; do { p=s; s=s.replace(SHORT,'$1$2 '); } while(s!==p); return s; }
     function run(){
+      /* Английский текст «Обо мне» — без склейки: неразрывный пробел после
+         «the / and / to / by» это правило РУССКОЙ типографики, в английском он
+         делает пару нерушимой и рвёт строку при полупустом правом поле.
+         Остальные блоки и весь русский — как было. */
+      var ru = (document.documentElement.lang || 'ru').slice(0,2) === 'ru';
       document.querySelectorAll('.pcase__lead, .pcase__cols p, .page-lead, .about__text p').forEach(function(el){
+        if(!ru && el.closest('.about__text')) return;
         if(el.children.length) return;            // plain-text only, never touch markup
         var t=el.textContent; var g=glue(t);
         if(g!==t) el.textContent=g;
@@ -577,6 +587,68 @@
     var rt = null;
     addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(sync, 120); }, { passive: true });
     (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(sync);
+  })();
+
+  /* ── Переходы между страницами: общий элемент — заголовок кейса ──
+     На странице кейса имя перехода стоит статикой в CSS (.pcase__title — он там
+     один). На списке кейсов имён десять, а имя обязано быть уникальным, поэтому
+     здесь оно выдаётся ровно одной карточке — той, которую открывают, — и только
+     на время перехода. Без View Transitions (Firefox) блок молча выключен. */
+  (function(){
+    if(!('startViewTransition' in document)) return;
+    var NAME = 'case-title', KEY = 'vt:case', lastSlug = '';
+    function slugOf(u){ var m = String(u || '').match(/projects\/(\d{2})\.html/); return m ? m[1] : ''; }
+    function cardTitle(slug){
+      if(!slug) return null;
+      var a = document.querySelector('.cases .case a[href*="projects/' + slug + '.html"]');
+      return a ? a.closest('.case').querySelector('.case__title') : null;
+    }
+    /* Запоминаем кейс на клике: PageSwapEvent.activation есть не во всех
+       браузерах с View Transitions, а href клика — везде. */
+    document.addEventListener('click', function(e){
+      var a = e.target.closest && e.target.closest('a[href]');
+      if(!a) return;
+      var s = slugOf(a.getAttribute('href'));
+      if(s) lastSlug = s;
+    }, true);
+
+    /* Обещания перехода надо гасить: если браузер его пропустит (быстрая
+       навигация, второй клик), finished реджектится AbortError и падает
+       в консоль неперехваченным. */
+    function hush(vt){ if(!vt) return; if(vt.ready) vt.ready.catch(function(){});
+      if(vt.finished) vt.finished.catch(function(){});
+      if(vt.finished) vt.finished.catch(function(){});
+      if(vt.updateCallbackDone) vt.updateCallbackDone.catch(function(){}); }
+
+    addEventListener('pageswap', function(e){
+      hush(e.viewTransition);
+      if(!e.viewTransition) return;
+      var here = slugOf(location.pathname);
+      if(here){ try{ sessionStorage.setItem(KEY, here); }catch(_){}  return; }  // кейс → имя уже в CSS
+      var to = (e.activation && e.activation.entry && e.activation.entry.url) || '';
+      var slug = slugOf(to) || lastSlug;
+      if(!slug) return;
+      try{ sessionStorage.setItem(KEY, slug); }catch(_){}
+      var el = cardTitle(slug);
+      if(el) el.style.viewTransitionName = NAME;
+    });
+
+    addEventListener('pagereveal', function(e){
+      hush(e.viewTransition);
+      if(!e.viewTransition) return;
+      if(slugOf(location.pathname)) return;          // на кейсе имя статичное
+      var slug = ''; try{ slug = sessionStorage.getItem(KEY) || ''; }catch(_){}
+      var el = cardTitle(slug);
+      if(!el) return;
+      /* Карточка приходит скрытой (data-reveal ждёт наблюдателя) — заголовку
+         было бы не во что прилететь. Показываем её карточку сразу. */
+      var card = el.closest('.case');
+      if(card) card.classList.add('in-view');
+      el.style.viewTransitionName = NAME;
+      var done = e.viewTransition.finished || Promise.resolve();
+      done.then(reset, reset);
+      function reset(){ el.style.viewTransitionName = ''; }
+    });
   })();
 
 })();
