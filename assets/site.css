@@ -59,7 +59,7 @@ nav.top.on-dark.scrolled{background:var(--bg-dark);border-bottom-color:var(--hai
 nav.top.on-dark .lang-switch button{color:var(--mute-2)}
 nav.top.on-dark .lang-switch button:hover{color:#fff}
 nav.top.on-dark .lang-switch button.active{color:var(--accent)}
-@media (max-width:720px){nav .meta{display:none}.nav-right{gap:.85rem}.lang-switch{font-size:.8125rem}nav .brand{font-size:.75rem;letter-spacing:.08em}}
+@media (max-width:720px){.nav-right{gap:.85rem}.lang-switch{font-size:.8125rem}nav .brand{font-size:.75rem;letter-spacing:.08em}}
 
 /* ─── Layout helpers ─── */
 .wrap,.container{max-width:var(--container);margin:0 auto;width:100%;padding:0 var(--gutter);padding-right:calc(var(--gutter) + var(--nav-safe-right))}
@@ -353,7 +353,6 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
    ============================================================ */
 .hero-slider{display:none}
 @media (max-width:720px){
-  nav .meta{display:none}
   footer.foot > *:last-child{display:none}
   /* portfolio hero — sequential image slideshow fixed above the title */
   /* Стопка кадров с перекрёстным затуханием: съезжающая лента вставала на дробные

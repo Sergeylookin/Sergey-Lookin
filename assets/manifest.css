@@ -46,11 +46,10 @@ section.hero > .container, #hero > .container{padding-right:var(--gutter)}
 /* 12-column grid primitive — used inside .container where needed */
 /* Top-nav base (nav.top / .brand / .meta) is in core.css. Index keeps only its
    divergent bits: fully-opaque scrolled bar (vs sub-pages' translucent color-mix)
-   and the accent dash inside the wordmark. No backdrop-filter — the live blur was
+   No backdrop-filter — the live blur was
    the 2nd-heaviest constant GPU cost. */
 nav.top.scrolled{background:var(--bg);border-bottom-color:var(--hair)}
 nav.top.on-dark.scrolled{background:var(--bg-dark);border-bottom-color:var(--hair-dk)}
-nav .brand b{font-weight:500;color:var(--accent)}
 section{position:relative;min-height:clamp(70vh,85vh,100vh);display:flex;align-items:center;padding:clamp(8rem,13vh,11rem) 0 clamp(5rem,8vh,7.5rem);overflow:hidden}
 /* Performance: let the browser skip rendering sections that are far off-screen.
    #hero stays always-rendered so curtain/tilt/fit work. */
@@ -1731,14 +1730,6 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
 @media (prefers-reduced-motion:reduce){.side-progress__label-inner,.side-progress,.side-progress__menu,.side-progress__menu-item{transition:none}}
 .hero{background:var(--bg-dark);position:relative;overflow:hidden}
 .hero>*{position:relative;z-index: var(--z-base)}
-/* ─── Курсорная дымка (fluid.js) — слой ПОД содержимым первого экрана ───
-   Селектор под #hero, чтобы перебить `.hero>*` выше: иначе холст попадает в поток
-   как position:relative и сдвигает типографику. */
-#hero > canvas.hero-fluid{position:absolute !important;inset:0;width:100%;height:100%;display:block;
-  z-index: var(--z-behind) !important;pointer-events:none;opacity:0;transition:opacity 1.2s var(--ease-out)}
-#hero > canvas.hero-fluid.is-ready{opacity:1}
-@media (max-width:1024px),(hover:none){#hero > canvas.hero-fluid{display:none !important}}
-@media (prefers-reduced-motion:reduce){#hero > canvas.hero-fluid{display:none !important}}
 /* Headings reveal by focus-in only (blur → sharp), no fade/rise. One-shot transition,
    so no permanent will-change — the browser promotes a temp layer for the transition
    and drops it after (cheaper than a persistent will-change layer per heading). */
@@ -1791,7 +1782,6 @@ nav.top.on-dark .lang-switch button.active{color:var(--accent)}
 nav.top.on-dark .lang-switch .sep{color:var(--mute-2);opacity:0.35}
 @media (max-width:640px){
   nav.top{padding-left:clamp(1.1rem,4vw,1.5rem);padding-right:clamp(1.1rem,4vw,1.5rem)}
-  nav .meta{display:none}
   .nav-right{gap:0.85rem}
   .lang-switch{font-size:0.8125rem;gap:0.45rem}
 }

@@ -24,7 +24,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = process.argv.includes('--check');
 
 // ── Single source of truth ────────────────────────────────────────────────
-export const VERSION = 177;
+export const VERSION = 178;
 
 // Shared i18n keys that MUST be identical on every site page. The build validates
 // each page's dict against these (values only) and reports drift — it does not rewrite
@@ -42,22 +42,22 @@ const SHARED_I18N = {
   },
 };
 
-// active: which top-nav link is current. metaKey/metaRu: the small label at nav's right.
+// active: which top-nav link is current.
 // ftRu: the footer's right-hand tag (RU default text; JS swaps it via data-i18n).
-const P = (title) => ({ prefix: '../', active: 'portfolio', metaKey: 'p.title', metaRu: title, ftRu: 'Портфолио', dataHome: true });
+const P = () => ({ prefix: '../', active: 'portfolio', ftRu: 'Портфолио', dataHome: true });
 const PAGES = {
-  'about.html':      { prefix: '', active: 'about',     metaKey: 'nav.about', metaRu: 'Обо мне',   ftRu: 'Обо мне',   dataHome: false },
-  'portfolio.html':  { prefix: '', active: 'portfolio', metaKey: 'pf.meta',   metaRu: 'Портфолио', ftRu: 'Портфолио', dataHome: false },
-  'projects/01.html': P('Руна'),
-  'projects/02.html': P('Rocket Work'),
-  'projects/03.html': P('Fingular'),
-  'projects/04.html': P('Chobies NTO'),
-  'projects/05.html': P('Duft: Hookah Flames'),
-  'projects/06.html': P('Squad Gaming'),
-  'projects/07.html': P('Маркетинг-кит'),
-  'projects/08.html': P('POS Credit'),
-  'projects/09.html': P('Heatbit'),
-  'projects/10.html': P('Choise.com'),
+  'about.html':      { prefix: '', active: 'about',     ftRu: 'Обо мне',   dataHome: false },
+  'portfolio.html':  { prefix: '', active: 'portfolio', ftRu: 'Портфолио', dataHome: false },
+  'projects/01.html': P(),
+  'projects/02.html': P(),
+  'projects/03.html': P(),
+  'projects/04.html': P(),
+  'projects/05.html': P(),
+  'projects/06.html': P(),
+  'projects/07.html': P(),
+  'projects/08.html': P(),
+  'projects/09.html': P(),
+  'projects/10.html': P(),
 };
 
 // ── Templates for the four shared regions ──────────────────────────────────
@@ -92,7 +92,6 @@ const nav = (c) => {
         `<span class="sep" aria-hidden="true">·</span>` +
         `<button type="button" data-lang="en" aria-pressed="false">EN</button>` +
       `</div>` +
-      `<div class="meta" data-i18n="${c.metaKey}">${c.metaRu}</div>` +
     `</div></nav>`;
 };
 
