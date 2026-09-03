@@ -2127,19 +2127,30 @@ setupIntroMonument();
   function kick(){ if(raf === null) raf = requestAnimationFrame(frame); }
 
   /* ── плейлист ────────────────────────────────────────────────────────── */
+  /* База ассетов берётся из уже стоящей в странице ссылки на стили. Адреса
+     кадров собираются из слага, а английские страницы лежат в /en/ — при
+     относительном 'assets/...' они били в /en/assets/ и отдавали 404: кадр
+     показывался пустым прямоугольником. У ссылки на CSS путь правильный для
+     любой страницы, потому что его переписывает сборщик. */
+  const cssHref = (function(){
+    const l = document.querySelector('link[rel="stylesheet"][href*="assets/"]');
+    return l ? l.getAttribute('href') : 'assets/core.min.css';
+  })();
+  const BASE = cssHref.replace(/assets\/[\s\S]*$/, 'assets/');
+
   function playlist(row){
     if(row._pl) return row._pl;
     const slug = row.dataset.slug, pos = row.dataset.pos || '';
     const items = [];
-    if(row.dataset.cover === 'vid') items.push({t:'vid', src:'assets/vid/' + slug + '.mp4', pos:pos});
-    else items.push({t:'cover', src:'assets/img/' + slug + '-preview-960.webp', pos:pos});
+    if(row.dataset.cover === 'vid') items.push({t:'vid', src:BASE + 'vid/' + slug + '.mp4', pos:pos});
+    else items.push({t:'cover', src:BASE + 'img/' + slug + '-preview-960.webp', pos:pos});
     (row.dataset.shots || '').split(',').forEach(function(sh){
       sh = sh.trim();
       if(!sh) return;
       if(sh.indexOf('+') > 0){
-        items.push({t:'pair', src: sh.split('+').map(function(n){ return 'assets/img/' + slug + '-' + n + '-480.webp'; })});
+        items.push({t:'pair', src: sh.split('+').map(function(n){ return BASE + 'img/' + slug + '-' + n + '-480.webp'; })});
       } else {
-        items.push({t:'shot', src:'assets/img/' + slug + '-' + sh + '-960.webp'});
+        items.push({t:'shot', src:BASE + 'img/' + slug + '-' + sh + '-960.webp'});
       }
     });
     row._pl = items;
@@ -2230,7 +2241,7 @@ setupIntroMonument();
     rows.forEach(function(r){
       if(r.dataset.cover === 'img'){
         const i = new Image();
-        i.src = 'assets/img/' + r.dataset.slug + '-preview-960.webp';
+        i.src = BASE + 'img/' + r.dataset.slug + '-preview-960.webp';
       }
     });
   }
