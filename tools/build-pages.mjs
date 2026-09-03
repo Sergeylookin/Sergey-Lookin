@@ -24,7 +24,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = process.argv.includes('--check');
 
 // ── Single source of truth ────────────────────────────────────────────────
-export const VERSION = 181;
+export const VERSION = 182;
 
 // Shared i18n keys that MUST be identical on every site page. The build validates
 // each page's dict against these (values only) and reports drift — it does not rewrite

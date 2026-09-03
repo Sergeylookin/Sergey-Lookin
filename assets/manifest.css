@@ -3343,13 +3343,15 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
 .wk-cols{
   font-family:var(--mono);font-size:var(--t-mono-sm);font-weight:500;
   letter-spacing:0.1em;text-transform:uppercase;color:var(--mute);
-  padding-bottom:0.6rem;border-bottom:1px solid var(--hair-dk);
-  /* Отбивка от первой строки: без неё шапка читалась как ещё один проект. */
+  /* Отбивка от первой строки: вплотную шапка читалась как ещё один проект.
+     Линии у шапки НЕТ — черта принадлежит списку и стоит над первой строкой,
+     иначе она поднималась вместе с подписями и отрывалась от строк. */
+  padding-bottom:0.6rem;
   margin-bottom:clamp(0.9rem,1.6vw,1.4rem);
 }
 .wk-cols > :last-child,
 .wk-c{text-align:right}
-.wk-list{list-style:none;margin:0;padding:0}
+.wk-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--hair-dk)}
 /* Линию под последней строкой не рисуем: список заканчивается текстом, а не
    чертой в пустоту. */
 .wk-row{border-bottom:1px solid var(--hair-dk)}
