@@ -2087,11 +2087,11 @@ setupIntroMonument();
   update();
 })();
 
-/* ─────────────── «Что за этим стоит» — кадр проекта под курсором ───────────────
-   Наведение на строку показывает превью кейса и приглушает остальные строки.
-   Кадр летит за указателем с задержкой (lerp), поэтому движение читается как
-   инерция, а не как приклеенная к мыши картинка. Выключено на тач-экранах,
-   при prefers-reduced-motion и на узких окнах — там строка просто ссылка. */
+/* ─────────────── «Что за этим стоит» — кадр проекта при наведении ───────────────
+   Кадр стоит в ОДНОЙ точке рядом со списком и только меняет картинку: так глаз
+   сравнивает проекты в одном и том же месте, а не гоняется за мышкой. Точка
+   считается от блока списка, поэтому держится на любой ширине и высоте окна.
+   Выключено на тач-экранах, при prefers-reduced-motion и на узких окнах. */
 (function(){
   const wk = document.querySelector('.wk');
   if(!wk) return;
@@ -2104,73 +2104,47 @@ setupIntroMonument();
 
   /* Кадр обязан висеть в body. У .wk стоит data-reveal, то есть transform, а
      трансформированный предок делает position:fixed относительным СЕБЕ, а не
-     вьюпорту: координаты курсора переставали совпадать с экраном, и чем ниже
-     строка, тем дальше кадр уплывал вниз, пока не уходил за край. */
+     вьюпорту — кадр уезжал тем дальше, чем ниже строка. */
   document.body.appendChild(prev);
 
-  const OFF_X = 34, OFF_Y = 26;      /* кадр идёт справа-снизу от курсора */
-  let tx = 0, ty = 0, x = 0, y = 0, scale = 0.96, on = false, raf = null, warmed = false;
+  let warmed = false;
 
-  function frame(){
-    raf = null;
-    /* Первый кадр после появления ставим без догона, иначе картинка прилетает
-       через полэкрана от прошлой позиции. */
-    x += (tx - x) * 0.16;
-    y += (ty - y) * 0.16;
-    scale += ((on ? 1 : 0.96) - scale) * 0.16;
-    prev.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0) scale(' + scale.toFixed(3) + ')';
-    if(on || Math.abs(tx - x) > 0.4 || Math.abs(ty - y) > 0.4) raf = requestAnimationFrame(frame);
-  }
-  function kick(){ if(raf === null) raf = requestAnimationFrame(frame); }
-
-  function place(e, jump){
+  function anchor(){
+    const r = wk.getBoundingClientRect();
     const w = prev.offsetWidth, h = prev.offsetHeight;
-    tx = Math.min(e.clientX + OFF_X, window.innerWidth - w - 16);
-    /* На нижних строках кадр переворачивается НАД курсором. Иначе он упирается
-       в нижний край окна, прижимается к нему и половина строк показывает кадр
-       не рядом с собой, а у самого низа экрана. */
-    const fitsBelow = e.clientY + OFF_Y + h + 16 <= window.innerHeight;
-    ty = fitsBelow ? e.clientY + OFF_Y : e.clientY - OFF_Y - h;
-    ty = Math.max(16, Math.min(ty, window.innerHeight - h - 16));
-    if(jump){ x = tx; y = ty; }
-    kick();
+    /* По горизонтали прижимаем к правому краю списка: там колонка направления,
+       одно слово — кадр перекрывает наименее содержательную часть строк.
+       По вертикали — по центру блока строк. */
+    const x = Math.max(16, Math.min(r.right - w, window.innerWidth - w - 16));
+    const y = Math.max(16, Math.min(r.top + r.height / 2 - h / 2, window.innerHeight - h - 16));
+    prev.style.transform = 'translate3d(' + Math.round(x) + 'px,' + Math.round(y) + 'px,0)';
   }
 
-  /* Прогреваем кадры один раз на входе в список: без этого первая строка
-     показывает пустой прямоугольник, пока грузится webp. */
+  /* Прогреваем кадры один раз на входе в список: иначе первая строка показывает
+     пустой прямоугольник, пока грузится webp. */
   function warm(){
     if(warmed) return; warmed = true;
     rows.forEach(function(r){ const u = r.dataset.img; if(u){ const i = new Image(); i.src = u; } });
   }
 
-  wk.addEventListener('pointerenter', warm);
-  wk.addEventListener('pointermove', function(e){ if(on) place(e, false); });
-  wk.addEventListener('pointerleave', function(){
-    on = false; wk.classList.remove('is-hover'); prev.classList.remove('is-on'); kick();
-  });
+  function show(row){
+    const src = row.dataset.img;
+    if(src && img.getAttribute('src') !== src) img.setAttribute('src', src);
+    anchor();
+    wk.classList.add('is-hover');
+    prev.classList.add('is-on');
+  }
+  function hide(){
+    wk.classList.remove('is-hover');
+    prev.classList.remove('is-on');
+  }
 
+  wk.addEventListener('pointerenter', warm);
+  wk.addEventListener('pointerleave', hide);
   rows.forEach(function(row){
-    row.addEventListener('pointerenter', function(e){
-      const src = row.dataset.img;
-      if(src && img.getAttribute('src') !== src) img.setAttribute('src', src);
-      const wasOff = !on;
-      on = true;
-      wk.classList.add('is-hover');
-      prev.classList.add('is-on');
-      place(e, wasOff);
-    });
-    /* Клавиатура: фокус тоже показывает кадр, но без слежения за курсором */
-    row.addEventListener('focus', function(){
-      const src = row.dataset.img;
-      if(src && img.getAttribute('src') !== src) img.setAttribute('src', src);
-      const r = row.getBoundingClientRect();
-      on = true; wk.classList.add('is-hover'); prev.classList.add('is-on');
-      tx = x = Math.min(r.right + OFF_X, window.innerWidth - prev.offsetWidth - 16);
-      ty = y = Math.min(r.top, window.innerHeight - prev.offsetHeight - 16);
-      kick();
-    });
-    row.addEventListener('blur', function(){
-      on = false; wk.classList.remove('is-hover'); prev.classList.remove('is-on'); kick();
-    });
+    row.addEventListener('pointerenter', function(){ show(row); });
+    row.addEventListener('focus', function(){ warm(); show(row); });
+    row.addEventListener('blur', hide);
   });
+  window.addEventListener('resize', function(){ if(prev.classList.contains('is-on')) anchor(); }, {passive:true});
 })();
