@@ -687,51 +687,18 @@ section.dark h1,section.dark h2{color:#fff}
 @media (prefers-reduced-motion:reduce){
   .shape-cycle{animation:none}
 }
-.pain-list{margin-top:clamp(1rem,3vw,2rem)}
-.pain-list ol{list-style:none;padding:0;margin:0;border-top:1px solid var(--hair)}
-.pain-list li{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);padding:clamp(0.95rem,1.5vw,1.25rem) 0;border-bottom:1px solid var(--hair);align-items:center;position:relative;transition:padding-left 0.55s var(--ease-out);cursor:default;isolation:isolate}
-.pain-list li:hover{padding-left:clamp(0.65rem,1.2vw,1rem)}
 
 /* ─── PAIN HOVER WOW v6 — Magnetic chars only (waveline removed for perf) ─── */
 /* Baseline accent underline — simple scaleX on hover */
-.pain-list li::after{content:'';position:absolute;left:0;bottom:-1px;width:100%;height:1px;background:rgba(255,255,255,0.22);transform:scaleX(0);transform-origin:left center;transition:transform 0.7s var(--ease-out);pointer-events:none}
-.pain-list li:hover::after{transform:scaleX(1)}
 
 /* Number — subtle shrink */
-.pain-list .pn{display:inline-block;transition:transform 0.5s var(--ease-out),opacity 0.5s var(--ease-out),color 0.35s var(--ease-out);transform-origin:left center}
-.pain-list li:hover .pn{transform:scale(0.92);opacity:0.6}
 
 /* Char-by-char magnetic pull — controlled via --lift and --mag (set by JS in real-time) */
-.pain-list .pt{position:relative}
-.pain-list .pt .word{display:inline-block;white-space:nowrap}
-.pain-list .pt .char{display:inline-block;transform:translateY(var(--lift,0));color:var(--ink);transition:transform 0.28s var(--ease-out-strong)}
-.pain-list .pt .char.is-space{display:inline}
 
 /* Mono-note magnetic + arrow indicator */
-.pain-list .pnote{transition:transform 0.6s var(--ease-out),color 0.35s var(--ease-out);transform-origin:right center;position:relative}
-.pain-list .pnote::before{content:'→';display:inline-block;margin-right:0.4em;opacity:0;transform:translateX(8px);transition:opacity 0.5s var(--ease-out) 0.15s,transform 0.55s var(--ease-out) 0.15s;color:var(--mute-2);font-family:var(--serif);font-style:normal;font-weight:300}
-.pain-list li:hover .pnote{transform:translateX(-6px) scale(1.08)}
-.pain-list li:hover .pnote::before{opacity:1;transform:translateX(0)}
-
-@media (prefers-reduced-motion:reduce){
-  .pain-list li::after,.pain-list .pt .char,.pain-list .pnote,.pain-list .pnote::before,.pain-list .pn{transition:none !important}
-  .pain-list li:hover::after{transform:none !important}
-  .pain-list .pt .char{transform:none !important;color:var(--ink) !important}
-}
-@media (max-width:720px){
-  .pain-list .pt .char{transform:none !important;color:var(--ink) !important;transition:color 0.3s var(--ease-out)}
-  .pain-list li:hover .pt .char{color:var(--ink) !important}
-}
-.pain-list .pn{grid-column:1 / 2;font-family:var(--serif);font-style:italic;font-weight:300;color:var(--mute-2);font-size:clamp(1.875rem,3vw,2.75rem);line-height:1;letter-spacing:-0.04em;transition:color 0.35s var(--ease-out)}
-.pain-list .pt{grid-column:4 / 10;font-family:var(--serif);font-weight:400;font-size:clamp(1.375rem,1.9vw,1.75rem);line-height:1.25;color:var(--ink);letter-spacing:-0.022em;transition:color 0.4s var(--ease-out);margin:0}
-.pain-list .pnote{grid-column:10 / -1;font-family:var(--mono);font-size:var(--t-mono-sm);color:var(--mute);text-align:right;max-width:30ch;line-height:1.55;letter-spacing:0.02em;justify-self:end}
-@media (max-width:1024px){
-  .pain-list .pt{grid-column:2 / -1}
-  .pain-list .pnote{grid-column:2 / -1;text-align:left;margin-top:0.85rem;align-self:start;padding-bottom:0;justify-self:start;max-width:none}
-}
 /* Unified section-conclusion style — applied to all final quotes */
-.pain-quote,.partner-final,.aud-quote,.credo-line{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(1.625rem,3vw,2.5rem);line-height:1.22;color:var(--ink);letter-spacing:-0.025em;text-wrap:balance;margin-top:clamp(2.75rem,5vw,4rem);max-width:62ch}
-.pain-quote em,.partner-final em,.aud-quote em em{color:var(--accent);font-style:italic;font-weight:400}
+.aud-quote,.credo-line{font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(1.625rem,3vw,2.5rem);line-height:1.22;color:var(--ink);letter-spacing:-0.025em;text-wrap:balance;margin-top:clamp(2.75rem,5vw,4rem);max-width:62ch}
+.aud-quote em em{color:var(--accent);font-style:italic;font-weight:400}
 /* В кредо акцент не нужен: строки набраны в один голос, цветное пятно на «слабую мысль»
    выдёргивало одну фразу из пяти равных. Оставляем em как есть — цвет строки. */
 .credo-line em{color:inherit;font-style:italic;font-weight:inherit}
@@ -874,46 +841,26 @@ section.dark h1,section.dark h2{color:#fff}
 @media (prefers-reduced-motion:reduce){
   .credo-line{--p:1 !important;opacity:1;transform:none;filter:none;transition:none}
 }
-.pain-quote{grid-column:4 / -1}
 /* conclusion statements: ink at rest → orange on hover (unified) — keep reveal transition intact */
-.pain-quote,.aud-quote,.ev-bmp-foot,.ds-quote{transition:opacity 1.6s var(--ease-out),transform 1.5s var(--ease-out-strong),filter 1s var(--ease-out),color .35s var(--ease-out)}
-.partner-final{transition:color .35s var(--ease-out)}
-.pain-quote:hover,.partner-final:hover,.aud-quote:hover,.ev-bmp-foot:hover,.ds-quote:hover{color:var(--accent);cursor:default}
+.aud-quote,.ev-bmp-foot,.ds-quote{transition:opacity 1.6s var(--ease-out),transform 1.5s var(--ease-out-strong),filter 1s var(--ease-out),color .35s var(--ease-out)}
+.aud-quote:hover,.ev-bmp-foot:hover,.ds-quote:hover{color:var(--accent);cursor:default}
 /* Кредо: наведение красит строку в акцент и выводит её из тени.
    Прозрачность задаём напрямую, а не через --p: драйвер фокуса пишет --p
    инлайн-стилем, а инлайн бьёт любое правило :hover. */
 .credo-line:hover{opacity:1;filter:none;color:var(--accent);cursor:default}
 /* shrink hover hit-area to the text itself (box was full column width → hover fired far from text) */
 @media (hover:hover) and (pointer:fine){
-  .pain-quote,.partner-final,.aud-quote,.ev-bmp-foot,.ds-quote{width:fit-content}
+  .aud-quote,.ev-bmp-foot,.ds-quote{width:fit-content}
 }
 @media (max-width:1024px){
-  .pain-quote,.partner-final,.aud-quote{max-width:none}
-  .pain-quote{grid-column:1 / -1}
-}
-.pain-foot{grid-column:4 / -1;margin-top:clamp(1.25rem,2.2vw,2rem);font-family:var(--serif);font-style:italic;font-weight:300;font-size:clamp(1.125rem,1.5vw,1.4rem);color:var(--mute);line-height:1.4;max-width:none}
-@media (max-width:720px){
-  .pain-list li{grid-template-columns:1fr;row-gap:0.4rem}
-  .pain-list .pn{grid-column:1 / -1;font-size:1.125rem}
-  .pain-list .pt{grid-column:1 / -1;font-size:clamp(1.25rem,4vw,1.5rem);line-height:1.2}
-  .pain-quote{grid-column:1 / -1;margin-top:2.25rem;line-height:1.32;max-width:34ch}
-  .pain-foot{grid-column:1 / -1;margin-top:1.15rem;font-size:1.1rem;line-height:1.45}
+  .aud-quote{max-width:none}
 }
 .partner{width:100%}
-.partner-final em{color:var(--accent);font-style:italic}
 /* Row that aligns the partner-final text and its bottom-right shape mark
    so the mark sits flush with the last text line. */
 /* Bmp-cols when used inside Partner section (after merge) */
 /* ─── Team section: unified rhythm — manifesto rows + practice blocks share grid ─── */
 #team{padding-top:clamp(12rem,20vh,20rem);padding-bottom:clamp(12rem,20vh,20rem)}
-.principle{padding:0 0 1.5rem 0;background:transparent;min-height:0;display:flex;flex-direction:column;position:relative;border-bottom:1px solid var(--hair)}
-.principle::after{content:'';position:absolute;left:0;bottom:-1px;width:0;height:1px;background:var(--accent);transition:width 0.6s var(--ease-out)}
-.principle:hover::after{width:100%}
-.principle:hover{background:transparent}
-.principle .ptitle{font-family:var(--serif);font-weight:400;font-size:clamp(1.875rem,2.8vw,2.375rem);line-height:1.05;letter-spacing:-0.035em;margin-bottom:1.25rem;color:var(--ink);transition:color 0.35s var(--ease-out)}
-.principle:hover .ptitle{color:var(--accent)}
-.principle .ptitle em{font-style:italic;color:var(--accent);font-weight:400}
-.principle .pdesc{color:var(--mute);max-width:42ch;line-height:1.6;font-size:1.0625rem}
 /* ─── Audience: data stays visible; on hover, content lifts slightly and red strip slides up from below flush with row's bottom edge ─── */
 .aud-stack{
   margin-top:clamp(2rem,4vw,3rem);
@@ -1188,7 +1135,6 @@ section.dark h1,section.dark h2{color:#fff}
   /* All multi-column section grids → single column, all children full-width */
   
   /* Pain list — stack number, text, note vertically */
-  .pain-list li{grid-template-columns:1fr !important;row-gap:0.5rem !important}
   
   /* Companies — stack vertically */
   .co{grid-template-columns:1fr !important;gap:0.85rem !important}
@@ -1696,7 +1642,7 @@ section.dark /* position variants */
 .tip-num-block.is-active{z-index: var(--z-overlay)}
 section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,transparent);border-color:var(--hair-dk);color:#d0d3d8}
 @media (max-width:1100px){section{min-height:clamp(60vh,75vh,90vh);padding-top:clamp(7rem,11vh,10rem);padding-bottom:clamp(4.5rem,8vh,7rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(8rem,14vh,12rem)}section.dark+section:not(.dark){padding-top:clamp(8rem,14vh,12rem)}}
-@media (max-width:720px){section{min-height:auto;padding-top:clamp(5.5rem,9vh,8rem);padding-bottom:clamp(3.5rem,7vh,6rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(6rem,11vh,9rem)}section.dark+section:not(.dark){padding-top:clamp(6rem,11vh,9rem)}.principle,.bstep,[data-reveal],[data-reveal-num]{transform:translateY(36px);transition-duration:1.4s,1.3s}.stagger>[data-stagger]{transform:translateY(28px);transition-duration:1.2s,1.15s}.level{grid-template-columns:1fr auto;gap:0.5rem 1.25rem;padding:1.5rem 0}.level .ltitle{grid-column:1;grid-row:1}.level .ln{grid-column:2;grid-row:1;text-align:right;padding-top:0.65rem;align-self:start;white-space:nowrap}.level .ldesc{grid-column:1 / -1;grid-row:2;margin-top:0.5rem}.level .lq{grid-column:1 / -1;grid-row:3;text-align:left;padding-top:0.5rem}.co{grid-template-columns:1fr;gap:0.85rem}.co .award{text-align:left}.hero-bottom{grid-template-columns:1fr;gap:1.5rem}.sec-head{grid-template-columns:1fr}.bmp-split{grid-template-columns:1fr}.bmp-split .vs{display:none}.bmp-dotgrid{grid-template-columns:repeat(20,1fr)}.bmp-top > *{grid-column:1 / -1}}
+@media (max-width:720px){section{min-height:auto;padding-top:clamp(5.5rem,9vh,8rem);padding-bottom:clamp(3.5rem,7vh,6rem)}section:not(.dark):has(+ section.dark){padding-bottom:clamp(6rem,11vh,9rem)}section.dark+section:not(.dark){padding-top:clamp(6rem,11vh,9rem)}[data-reveal],[data-reveal-num]{transform:translateY(36px);transition-duration:1.4s,1.3s}.stagger>[data-stagger]{transform:translateY(28px);transition-duration:1.2s,1.15s}.level{grid-template-columns:1fr auto;gap:0.5rem 1.25rem;padding:1.5rem 0}.level .ltitle{grid-column:1;grid-row:1}.level .ln{grid-column:2;grid-row:1;text-align:right;padding-top:0.65rem;align-self:start;white-space:nowrap}.level .ldesc{grid-column:1 / -1;grid-row:2;margin-top:0.5rem}.level .lq{grid-column:1 / -1;grid-row:3;text-align:left;padding-top:0.5rem}.co{grid-template-columns:1fr;gap:0.85rem}.co .award{text-align:left}.hero-bottom{grid-template-columns:1fr;gap:1.5rem}.sec-head{grid-template-columns:1fr}.bmp-split{grid-template-columns:1fr}.bmp-split .vs{display:none}.bmp-dotgrid{grid-template-columns:repeat(20,1fr)}.bmp-top > *{grid-column:1 / -1}}
 
 /* ─── WOW EFFECTS ─── */
 .scroll-progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;z-index: var(--z-overlay);pointer-events:none;transition:width 0.1s linear;opacity:0.7}
@@ -1776,7 +1722,7 @@ section.dark .tip-num-block::after{background:color-mix(in srgb,#1a1c22 88%,tran
 .hero-title{transition:filter 0.6s var(--ease-out)}
 .h2-line{display:inline-block;filter:blur(6px);transition:filter 0.9s var(--ease-out);transition-delay:calc(var(--li,0) * 0.12s + 0.05s)}
 .h2-in .h2-line{filter:blur(0)}
-@media (prefers-reduced-motion:reduce){.scroll-progress{display:none}.brand-marquee-row{animation:none}.cta-title .word,.h2-line,.sec-head h2 .h2-line,.intro-title .h2-line{filter:none!important}.hero-title .dot{animation:none}.bmp-dotgrid.in-view .d{animation:none;opacity:0.35}.bmp-dotgrid.in-view .d.accent{opacity:1}.tip-num-block::after,.ft-top .arr{transition:none!important}.h2-line{opacity:1;transform:none}.sec-aside{opacity:1;transform:none}.principle,.bstep{animation:none}}
+@media (prefers-reduced-motion:reduce){.scroll-progress{display:none}.brand-marquee-row{animation:none}.cta-title .word,.h2-line,.sec-head h2 .h2-line,.intro-title .h2-line{filter:none!important}.hero-title .dot{animation:none}.bmp-dotgrid.in-view .d{animation:none;opacity:0.35}.bmp-dotgrid.in-view .d.accent{opacity:1}.tip-num-block::after,.ft-top .arr{transition:none!important}.h2-line{opacity:1;transform:none}.sec-aside{opacity:1;transform:none}}
 @media (max-width:720px){.brand-marquee-row{animation-duration:35s}}
 
 /* ─── LANGUAGE SWITCHER ───
@@ -1808,7 +1754,6 @@ nav.top.on-dark .lang-switch .sep{color:var(--mute-2);opacity:0.35}
    Canonical style based on .pdesc — applied to all descriptive/body text
    for consistent typographic voice across the manifesto.
    Sans (Inter) · 400 weight · 1.0625rem · line-height 1.6 · color mute */
-.principle .pdesc{font-family:var(--sans);font-weight:400;font-size:1.0625rem;line-height:1.6;color:var(--mute)}
 /* Numbers/inline accents inside reading paragraphs */
 .co .desc .num{color:var(--accent);font-family:var(--serif);font-style:italic;font-weight:400}
 /* Strong stays slightly bolder + ink-coloured for emphasis */
@@ -1871,10 +1816,6 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 /* === MOBILE-STACK — все списки в одну колонку, друг под другом === */
 @media (max-width:1024px){
   /* Pain list */
-  .pain-list li{grid-template-columns:1fr;row-gap:0.4rem;padding:1.25rem 0}
-  .pain-list .pn{grid-column:1;font-size:1rem}
-  .pain-list .pt{grid-column:1;font-size:clamp(1.125rem,4vw,1.375rem);max-width:none}
-  .pain-list .pnote{grid-column:1;text-align:left;max-width:none;justify-self:start;padding-bottom:0;align-self:start}
 
   /* Audience list */
   /* Evaluation levels */
@@ -1895,13 +1836,12 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 
 /* —— TOUCH STATES — feedback on tap for all interactive elements —— */
 @media (hover:none) and (pointer:coarse){
-  a:active, button:active, .cta-mega-item:active, .side-progress__menu-item:active, .principle:active:active, .bstep:active, .pain-list li:active, .level:active{
+  a:active, button:active, .cta-mega-item:active, .side-progress__menu-item:active, .level:active{
     transition:transform 0.1s ease-out, color 0.15s ease-out;
   }
   .cta-mega-item:active{transform:scale(0.985)}
   .cta-mega-item:active .cta-mega-arrow{transform:translate(6px,-6px);color:var(--accent)}
   a:active, button:active{opacity:0.7}
-  .pain-list li:active .pt, .pain-list li:active .pnote, .pain-list li:active .pn{color:var(--accent)}
   .level:active .ltitle, .level:active .ldesc, .level:active .lq, .level:active .ln{color:var(--accent)}
   .level:active{border-bottom-color:var(--accent)}
   .ft-top:active{color:var(--accent)}
@@ -1910,8 +1850,6 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
 
 /* —— DISABLE all heavy desktop hover transforms on touch devices —— */
 @media (hover:none) and (pointer:coarse){
-  .pain-list li:hover{padding-left:0 !important}
-  .pain-list li:hover::after{transform:scaleX(0) !important}
   .level:hover{padding-left:0 !important;border-bottom-color:var(--hair) !important}
   .level:hover .ltitle{transform:none !important;letter-spacing:-0.022em !important}
   .level:hover .ldesc{transform:none !important;opacity:1 !important}
@@ -1959,24 +1897,15 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
   /* Numbers grid — comfortable 2-col with proper spacing */
 
   /* Pain list — vertical structure, better readability */
-  .pain-list li{grid-template-columns:auto 1fr;gap:0.45rem 1rem;padding:1.25rem 0;align-items:start}
-  .pain-list .pn{grid-column:1;grid-row:1;font-size:1.0625rem;align-self:start;padding-top:0.15rem}
-  .pain-list .pt{grid-column:2;grid-row:1;font-size:1.0625rem;line-height:1.35}
-  .pain-list .pnote{grid-column:1 / -1;grid-row:2;font-size:0.6875rem;max-width:none;
-    text-align:left;justify-self:start;margin-top:0.5rem;padding-left:0;letter-spacing:0.06em;line-height:1.5}
 
   /* Audience cells — better padding */
 
   /* Brand steps — vertical stack with proper spacing */
-  .bstep{padding:1rem 0}
-  .bname{font-size:1.0625rem !important;margin-bottom:0.4rem}
-  .bdesc{font-size:0.9375rem;line-height:1.5}
 
   /* BMP — clean single-column layout */
   .bmp-split .pct{font-size:clamp(2.5rem,16vw,4.5rem) !important;text-align:center}
   .bmp-split .side{text-align:center}
   .bmp-split .label{margin-left:auto;margin-right:auto;text-align:center;max-width:30ch}
-  .bmp-col{padding:1rem 0}
   .bmp-dotgrid{grid-template-columns:repeat(20,1fr) !important;gap:7px !important;width:100% !important;max-width:none !important;margin-left:0 !important;margin-right:0 !important}
   .bmp-dotgrid .d{aspect-ratio:1;width:100%;height:auto;max-width:none}
   /* bmp-split — 69% left aligned, 31% right aligned on mobile */
@@ -2038,10 +1967,8 @@ section.dark .sec-head--new .sec-sub{color:var(--mute-2)}
     font-size:0.8125rem !important;line-height:1.5;padding:0.65rem 0.85rem;letter-spacing:0;text-transform:none}
 
   /* Partner compare — clean stacked cards */
-  .partner-final{font-size:clamp(1.25rem,6vw,1.625rem) !important;line-height:1.35;text-align:left}
 
   /* Principles — clean stack */
-  .principle{padding:1.25rem 0 1.5rem !important}
 
   /* Marquee — keep flowing on mobile, just smaller */
   .brand-marquee-row .brand{font-size:1.125rem;letter-spacing:-0.01em}
@@ -2419,8 +2346,7 @@ html[lang="ru"] .stat-counter,
 html[lang="ru"] .pct,
 html[lang="ru"] .co .desc .num,
 html[lang="ru"] .rs-card__num,
-html[lang="ru"] .aud-row .ar-num,
-html[lang="ru"] .pain-list .pn{
+html[lang="ru"] .aud-row .ar-num{
   font-family:var(--serif);
 }
 /* RU: optical letter-spacing compensation for italic cyrillic outside hero
@@ -2432,9 +2358,7 @@ html[lang="ru"] .ldesc em,
 html[lang="ru"] .ltitle em,
 html[lang="ru"] .label em,
 html[lang="ru"] .item em,
-html[lang="ru"] .copy em,
-html[lang="ru"] .lab em,
-html[lang="ru"] .pain-list .pn{
+html[lang="ru"] .copy em{
   letter-spacing:0.015em;
 }
 /* Hero tracking — denser main screen per request. Inter Tight stays legible
@@ -2448,7 +2372,7 @@ html[lang="ru"] .hero-title--corner em{
 /* Localized Cyrillic letterforms (correct и/т/г/п, esp. in italic) + figures */
 html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
 /* Fewer ragged orphans/rivers in long Russian words */
-.intro-p,.sec-sub,.pain-foot,.pain-quote,.cta-lead,.partner-final,.aud-quote,.co .desc{
+.intro-p,.sec-sub,.cta-lead,.aud-quote,.co .desc{
   text-wrap:pretty;
 }
 /* Hollow / outline variant */
@@ -2646,32 +2570,19 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   /* ── 1. NEVER break words mid-glyph — critical for Cyrillic ── */
   body,
   .pt,
-  .pdesc,
-  .bdesc,
-  .bname,
   .sec-sub,
   .sec-title,
   .intro-p,
-  .partner-final,
-  .pain-foot,
-  .pain-quote,
   .aud-quote,
   .hero-static,
   .hero-title,
   .hero-sub,
-  .pnote,
   .sec-sub,
   .sec-title,
   .intro-title,
   .intro-p,
-  .partner-final,
-  .pain-foot,
-  .pain-quote,
   .aud-quote,
-  .pdesc,
-  .bdesc,
-  .pt,
-  .ptitle{
+  .pt{
     text-wrap: pretty;
   }
   /* H2 / display titles look best balanced */
@@ -2686,65 +2597,9 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
         that caused pnote to shrink to longest-word width. ── */
   /* Two-column layout on mobile: number spans the top row, then
      symptom (left) + note (right) — compact, mirrors the desktop intent. */
-  .pain-list li{
-    display: grid !important;
-    grid-template-columns: minmax(0,1.5fr) minmax(0,1fr) !important;
-    gap: 0.5rem clamp(0.9rem,3.2vw,1.5rem) !important;
-    align-items: start !important;
-    padding: 1.5rem 0 !important;
-    width: 100%;
-  }
-  .pain-list .pn{
-    display: block;
-    width: 100%;
-    grid-column: 1 / -1 !important;
-    grid-row: 1 !important;
-    font-family: var(--serif);
-    font-style: italic;
-    font-weight: 300;
-    color: var(--accent);
-    font-size: 1rem;
-    line-height: 1;
-    margin: 0 0 0.15rem;
-  }
-    .pain-list .pt{
-    display: block !important;
-    width: 100% !important;
-    max-width: none !important;
-    grid-column: 1 !important;
-    grid-row: 2 !important;
-    justify-self: stretch !important;
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: clamp(1.05rem, 4.2vw, 1.35rem);
-    line-height: 1.22;
-    letter-spacing: -0.02em;
-    text-wrap: pretty;
-    margin: 0;
-  }
   /* pnote sits in the SECOND column, beside the symptom (JS strips its <br>s).
      The scroll-active reveal only tweaks color/transform, so it must not be display:none. */
-  .pain-list .pnote{
-    display:block;
-    grid-column: 2 !important;
-    grid-row: 2 !important;
-    align-self: start;
-    margin: 0.3rem 0 0;
-    max-width:none;
-    text-align:left;
-    justify-self:start;
-  }
-  .pain-list .pnote br br{display:none}
   /* preserve magnetic-char styling neutrality on mobile (chars become words) */
-  .pain-list .pt .word{
-    display: inline-block;
-    white-space: nowrap;
-  }
-  .pain-list .pt .char{
-    display: inline !important;
-    transform: none !important;
-    color: var(--ink) !important;
-  }
   /* ── 4. Brand subtitle — kill its <br> on mobile (also handled by JS) ── */
 
   /* ── 5. 69 / 31 infographic — keep ORIGINAL dot-grid (per request),
@@ -2817,11 +2672,6 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   /* ── 6. Brand-steps tightening on mobile ── */
 
   /* ── 7. Pain-quote refinement — single readable paragraph ── */
-  .pain-quote, .partner-final{
-    font-size: clamp(1rem, 4vw, 1.2rem) !important;
-    line-height: 1.45 !important;
-    text-wrap: pretty;
-  }
   .aud-quote{
     font-size: clamp(1.05rem, 4.4vw, 1.3rem) !important;
     line-height: 1.4 !important;
@@ -2965,8 +2815,6 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
         the user sees the same accent shift desktop hovers produce, but
         driven by scroll. Buttons/links are excluded — only narrative rows. ── */
   /* Principles ("Во что я верю.") */
-  .principle.scroll-active::after{ width: 100% }
-  .principle.scroll-active .ptitle{ color: var(--accent) }
 
   /* Audience ("Это люди, а не цифры.") */
   /* ── J. Companies — "2023→" right side at heading row ──
@@ -3030,21 +2878,8 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   /* ── K. Pain-list — fix hover transform so the pnote does NOT
         slide off-screen to the left. On mobile it shifts RIGHT
         (small 6px nudge from left edge) and changes color. ── */
-  .pain-list li:hover .pnote,
-  .pain-list li.scroll-active .pnote{
-    transform: translateX(6px) !important;
-    transform-origin: left center !important;
-    color: var(--accent) !important;
-  }
   /* Mirror hover state on scroll-active for pain-list too */
-  .pain-list li.scroll-active{
-    padding-left: 0.5rem;
-  }
-  .pain-list li.scroll-active .pt{
-    color: var(--accent);
-  }
   /* Suppress the right-edge ::before arrow on mobile — was a desktop flourish */
-  .pain-list .pnote::before{ display: none !important }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -3217,7 +3052,7 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
     break-after: avoid-page;
   }
   /* Cards and list items — keep together */
-  article, .principle, .level, .co, .pain-list li, .aud-row, .bstep{
+  article, .level, .co, .aud-row{
     page-break-inside: avoid;
     break-inside: avoid;
   }

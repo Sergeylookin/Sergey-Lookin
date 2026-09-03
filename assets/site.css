@@ -73,8 +73,6 @@ nav.top.on-dark .lang-switch button.active{color:#fff}
 /* ─── Buttons ─── */
 .btn{display:inline-flex;align-items:center;gap:.6rem;font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.1em;text-transform:uppercase;font-weight:500;padding:.95rem 1.6rem;border:1px solid var(--hair);border-radius:2px;transition:color .3s var(--ease-out),border-color .3s var(--ease-out),background .3s var(--ease-out);cursor:pointer;background:transparent;color:var(--ink)}
 .btn:hover{border-color:var(--accent);color:var(--accent)}
-.btn--solid{background:var(--ink);color:#fff;border-color:var(--ink)}
-.btn--solid:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .on-dark-block .btn{border-color:var(--hair-dk);color:#fff}
 .on-dark-block .btn:hover{border-color:var(--accent);color:var(--accent)}
 
@@ -217,9 +215,6 @@ nav.top.on-dark .lang-switch button.active{color:#fff}
    404
    ============================================================ */
 .nf{min-height:100vh;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:var(--bg-dark);color:#fff;padding:6rem var(--gutter)}
-.nf__code{font-family:var(--serif);font-weight:600;font-size:clamp(6rem,22vw,16rem);line-height:.85;letter-spacing:-.04em}
-.nf__code .dot{color:var(--accent)}
-.nf__title{font-family:var(--serif);font-weight:500;font-size:clamp(1.5rem,3vw,2.25rem);margin:1rem 0 .75rem;letter-spacing:-.02em}
 .nf__text{color:var(--mute-2);max-width:48ch;margin:0 auto 2.25rem;line-height:1.5}
 .nf__actions{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
 
@@ -246,8 +241,6 @@ body.theme-dark .eyebrow{color:var(--mute-2)}
 body.theme-dark .page-lead{color:var(--mute-2)}
 body.theme-dark .btn{border-color:var(--hair-dk);color:#fff}
 body.theme-dark .btn:hover{border-color:var(--accent);color:var(--accent)}
-body.theme-dark .btn--solid{background:#fff;color:var(--bg-dark);border-color:#fff}
-body.theme-dark .btn--solid:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 /* Portfolio cases on dark */
 body.theme-dark .case{border-top-color:var(--hair-dk)}
 body.theme-dark .case__title{color:#fff}
@@ -315,10 +308,6 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 .pcase__media{display:flex;flex-direction:column;gap:clamp(.6rem,1.2vw,1rem);padding-bottom:clamp(3.5rem,7vw,6rem)}
 .pcase__media img,.pcase__media video{width:100%;display:block;border-radius:2px;background:#1a1c22}
 /* Case results — proof in numbers */
-.pcase__stats{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(1.5rem,4vw,3rem);border-top:1px solid var(--hair-dk);padding:clamp(2.5rem,5vw,4rem) 0 clamp(3.5rem,7vw,6rem)}
-.pstat__num{font-family:var(--serif);font-weight:350;font-size:clamp(2.4rem,5vw,3.75rem);line-height:1;letter-spacing:-.04em;color:var(--accent)}
-.pstat__l{font-family:var(--mono);font-size:var(--t-mono-sm);letter-spacing:.07em;text-transform:uppercase;color:var(--mute-2);margin-top:.7rem;line-height:1.5;max-width:22ch}
-@media(max-width:680px){.pcase__stats{grid-template-columns:1fr;gap:1.6rem}}
 .pcase__media .row{display:grid;grid-template-columns:1fr 1fr;gap:clamp(.6rem,1.2vw,1rem)}
 @media (max-width:680px){.pcase__media .row{grid-template-columns:1fr}}
 
@@ -491,14 +480,13 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
   .next-proj,footer.foot,.nf,body.theme-dark .case__media,.pcase__media img{background:#fff!important}
   footer.foot,.next-proj{border-top:1px solid #ccc!important}
   /* text colours → dark on white */
-  .page-title,.pcase__title,.case__title,.next-proj .nt,.nf__code,.nf__title,
+  .page-title,.pcase__title,.case__title,.next-proj .nt,
   .proof__facts li b,.pcase__f .v{color:#111!important}
   .page-lead,.case__desc,.pcase__cols p,.pcase__lead,.pcase__prose p,.proof__facts li,
-  footer.foot,.nf__text,.pstat__l{color:#333!important}
+  footer.foot,.nf__text{color:#333!important}
   .case__meta,.case__tags,.pcase__f .l,.eyebrow{color:#666!important}
-  .pstat__num{color:#000!important}
   a{color:#111!important;text-decoration:underline}
   /* keep cases and media whole across page breaks */
-  .case,.pcase__about,.pcase__media img,.pstat{break-inside:avoid}
+  .case,.pcase__about,.pcase__media img{break-inside:avoid}
   .pcase__media img,.case__media img{max-width:100%!important;filter:none!important}
 }

@@ -57,6 +57,20 @@ const DEAD_CLASSES = new Set([
   'partner-svc',
   'pnum',
   'principles-grid',
+  'principle',
+  'ptitle',
+  'pdesc',
+  'pain-list',
+  'pnote',
+  'pain-foot',
+  'pain-quote',
+  'partner-final',
+  'bdesc',
+  'bname',
+  'bmp-col',
+  'bstep',
+  'scroll-active',
+  'lab',
 ]);
 const DEAD_IDS = new Set(['services', 'team-system', 'pain', 'partner', 'principles', 'brand']);
 

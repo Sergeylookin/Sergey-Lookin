@@ -1,5 +1,21 @@
 /* manifest.js — interactive layer for index.html (extracted from inline <script>).
    Reads i18n strings from the #i18n-data JSON island in the HTML. */
+/* ─── Переходы между страницами: гасим обещания ───
+   Общий элемент перехода живёт в site.js, но index.html его не грузит, поэтому
+   на манифесте обещания перехода оставались без обработчика: когда браузер
+   пропускает переход, finished реджектится AbortError и падает в консоль. */
+(function(){
+  if(!('startViewTransition' in document)) return;
+  function hush(vt){
+    if(!vt) return;
+    if(vt.ready) vt.ready.catch(function(){});
+    if(vt.finished) vt.finished.catch(function(){});
+    if(vt.updateCallbackDone) vt.updateCallbackDone.catch(function(){});
+  }
+  addEventListener('pageswap', function(e){ hush(e.viewTransition); });
+  addEventListener('pagereveal', function(e){ hush(e.viewTransition); });
+})();
+
 /* ─────────────── i18n (universal core in assets/i18n.js → window.SLi18n) ─────────────── */
 let currentLang = SLi18n.detect();
 
@@ -99,7 +115,6 @@ function applyLang(lang, announce){
   try { if(typeof clearTypographyFlags === 'function') clearTypographyFlags(); }catch(e){}
   try { if(typeof fixTypographyOrphans === 'function') fixTypographyOrphans(); }catch(e){}
   /* Scroll-hover IO targets text content that may have just been replaced */
-  try { if(typeof initScrollHover === 'function') initScrollHover(); }catch(e){}
 }
 
 /* wire up the switcher (core attaches to the primary .lang-switch / .lang-btn buttons;
@@ -1124,7 +1139,7 @@ function fixTypographyOrphans(root){
   const re = new RegExp('(^|[\\s\u00A0])(' + escaped.join('|') + ')([\\s]+)(?=\\S)','giu');
   (root||document).querySelectorAll(selectors.join(',')).forEach(el=>{
     if(el.dataset.typoFixed === '1') return;
-    /* Skip elements that already have nested .char/.word spans (pain-list desktop) */
+    /* Skip elements that already have nested .char/.word spans */
     if(el.querySelector('.char, .word')) return;
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
     const nodes = [];
@@ -1148,38 +1163,6 @@ function clearTypographyFlags(root){
   });
 }
 
-/* ─── Scroll-hover (mobile only): mirror desktop hover state on rows
-   that enter the middle of the viewport. Lets narrative sections like
-   Principles / Audience / Services breathe the accent shift while
-   scrolling, since there's no real :hover on touch. ─── */
-const SCROLL_HOVER_SEL = '.principle, .pain-list li';
-let _scrollHoverIO = null;
-function initScrollHover(){
-  /* tear down any prior observer first (e.g. after resize) */
-  if(_scrollHoverIO){
-    _scrollHoverIO.disconnect();
-    _scrollHoverIO = null;
-    document.querySelectorAll('.scroll-active').forEach(el=>el.classList.remove('scroll-active'));
-  }
-  if(window.innerWidth > 720) return;
-  if(window.matchMedia('(hover:hover)').matches) return; /* desktop with mouse — real hover works */
-  const els = document.querySelectorAll(SCROLL_HOVER_SEL);
-  if(!els.length) return;
-  _scrollHoverIO = new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting) e.target.classList.add('scroll-active');
-      else e.target.classList.remove('scroll-active');
-    });
-  }, {
-    threshold: 0,
-    /* "Trigger band" = middle ~25% of viewport. Negative top + bottom
-       crops the observation area to roughly the center, so the active
-       row is always the one the user is reading. */
-    rootMargin: '-38% 0px -38% 0px'
-  });
-  els.forEach(el => _scrollHoverIO.observe(el));
-}
-
 /* ─────────────── scroll progress bar ─────────────── */
 const progressBar=document.createElement('div');
 progressBar.className='scroll-progress';
@@ -1200,9 +1183,9 @@ const SIDE_LABELS={
   ru:{
     'hero':'Начало',
     'intro':'Введение',
+    'works':'Проекты',
     'credo':'Принципы',
     'audience':'Люди',
-    'brand':'Бренд',
     'evaluation':'Оценка',
     'team':'Команда',
     'mentor':'Менторство',
@@ -1214,9 +1197,9 @@ const SIDE_LABELS={
   en:{
     'hero':'Start',
     'intro':'Intro',
+    'works':'Projects',
     'credo':'Principles',
     'audience':'People',
-    'brand':'Brand',
     'evaluation':'Evaluation',
     'team':'Team',
     'mentor':'Mentorship',
@@ -1376,7 +1359,6 @@ buildSideNavigation();
 updateProgress();
 applyTooltips();
 fixTypographyOrphans();
-initScrollHover();
 /* Re-run typography fix on viewport resize (e.g. mobile rotation, desktop resize) */
 let _typoResizeRaf = null;
 let _lastTypoWidth = window.innerWidth;
@@ -1391,8 +1373,6 @@ window.addEventListener('resize', ()=>{
   _typoResizeRaf = requestAnimationFrame(()=>{
     clearTypographyFlags();
     fixTypographyOrphans();
-    if(typeof enhancePainList==='function')
-    initScrollHover();
   });
 }, {passive:true});
 requestAnimationFrame(()=>sideProgress.classList.add('is-ready'));
@@ -1651,17 +1631,6 @@ const lineRevealIO=new IntersectionObserver(entries=>{
   });
 },{threshold:0,rootMargin:'0px 0px -22% 0px'});
 document.querySelectorAll('.sec-head h2, .intro-title').forEach(h=>lineRevealIO.observe(h));
-
-/* ─────────────── subtle hover lift for content cards ─────────────── */
-if(window.matchMedia('(hover:hover)').matches){
-  const cards = document.querySelectorAll('.principle, .ds-layer, .bstep');
-  cards.forEach(card=>{
-    /* comma separator — bare concat would silently corrupt a pre-existing transition */
-    card.style.transition = (card.style.transition ? card.style.transition + ', ' : '') + 'transform 0.5s var(--ease-out)';
-    card.addEventListener('mouseenter', ()=>{ card.style.transform = 'translateY(-3px)'; });
-    card.addEventListener('mouseleave', ()=>{ card.style.transform = 'translateY(0)'; });
-  });
-}
 
 /* ─────────────── magnetic CTA buttons ─────────────── */
 if(window.matchMedia('(hover:hover)').matches){
@@ -2196,31 +2165,42 @@ setupIntroMonument();
     if(!item || item.t === 'vid') return;
     (item.t === 'pair' ? item.src : [item.src]).forEach(function(u){ const i = new Image(); i.src = u; });
   }
+  /* Узел кадра создаётся ОДИН раз и живёт на элементе плейлиста. Пересоздание
+     на каждом круге заставляло браузер заново качать видео (в логе сети mp4
+     запрашивался повторно) и заново декодировать картинки. */
+  function nodeFor(item){
+    if(item.node) return item.node;
+    let n;
+    if(item.t === 'pair'){
+      n = document.createElement('div');
+      n.className = 'wk-pair';
+      item.src.forEach(function(u){
+        const im = new Image();
+        im.src = u; im.alt = ''; im.decoding = 'async';
+        n.appendChild(im);
+      });
+    } else if(item.t === 'vid'){
+      n = document.createElement('video');
+      n.muted = true; n.loop = true; n.playsInline = true; n.preload = 'auto'; n.src = item.src;
+      if(item.pos) n.style.objectPosition = item.pos;
+    } else {
+      n = new Image();
+      n.src = item.src; n.alt = ''; n.decoding = 'async';
+      if(item.pos) n.style.objectPosition = item.pos;
+    }
+    item.node = n;
+    return n;
+  }
   function render(item){
     const back = slots[1 - front];
     back.className = 'wk-shot' + (item.t === 'cover' || item.t === 'vid' ? ' wk-shot--cover' : '');
     back.textContent = '';
-    if(item.t === 'pair'){
-      const wrap = document.createElement('div');
-      wrap.className = 'wk-pair';
-      item.src.forEach(function(u){
-        const im = new Image();
-        im.src = u; im.alt = ''; im.decoding = 'async';
-        wrap.appendChild(im);
-      });
-      back.appendChild(wrap);
-    } else if(item.t === 'vid'){
-      const v = document.createElement('video');
-      v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = item.src;
-      if(item.pos) v.style.objectPosition = item.pos;
-      back.appendChild(v);
-      const p = v.play();
-      if(p && p.catch) p.catch(function(){});
-    } else {
-      const im = new Image();
-      im.src = item.src; im.alt = ''; im.decoding = 'async';
-      if(item.pos) im.style.objectPosition = item.pos;
-      back.appendChild(im);
+    const node = nodeFor(item);
+    back.appendChild(node);
+    if(item.t === 'vid'){
+      try { node.currentTime = 0; } catch(_){}   /* обложка отыгрывает с начала */
+      const pr = node.play();
+      if(pr && pr.catch) pr.catch(function(){});
     }
     slots[front].classList.remove('is-on');
     back.classList.add('is-on');
@@ -2246,7 +2226,14 @@ setupIntroMonument();
   function stopPlay(){
     clearTimeout(timer);
     timer = null;
-    slots.forEach(function(s){ s.textContent = ''; s.classList.remove('is-on'); });
+    slots.forEach(function(s){
+      /* Открепить видео недостаточно — оторванный от документа элемент
+         продолжает крутиться и жечь кадры. Останавливаем явно. */
+      const v = s.querySelector('video');
+      if(v) v.pause();
+      s.textContent = '';
+      s.classList.remove('is-on');
+    });
     front = 0;
   }
 
