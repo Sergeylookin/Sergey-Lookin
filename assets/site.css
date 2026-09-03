@@ -263,7 +263,7 @@ body.theme-dark .next-proj{border-top:1px solid var(--hair-dk)}
 .pcase__back:hover .a{transform:translateX(-4px)}
 /* Title left + technical facts pinned top-right at the edge */
 .pcase__topgrid{display:grid;grid-template-columns:repeat(12,1fr);column-gap:var(--col-gap);align-items:start;row-gap:clamp(1.5rem,3vw,2.25rem)}
-.pcase__title{view-transition-name:case-title;grid-column:1 / 7;font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(2.75rem,7vw,6.5rem);line-height:.92;letter-spacing:-.04em;margin:0;color:#fff;text-wrap:balance}
+.pcase__title{grid-column:1 / 7;font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(2.75rem,7vw,6.5rem);line-height:.92;letter-spacing:-.04em;margin:0;color:#fff;text-wrap:balance}
 /* Facts + metrics — 2 columns × 3 rows, to the right of the title (facts left col, metrics right col) */
 /* Приход на страницу кейса: назад-ссылка и факты собираются по очереди —
    иначе после перелёта заголовка остальная шапка просто «уже там». */

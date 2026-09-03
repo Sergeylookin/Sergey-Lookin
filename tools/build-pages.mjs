@@ -24,7 +24,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = process.argv.includes('--check');
 
 // ── Single source of truth ────────────────────────────────────────────────
-export const VERSION = 187;
+export const VERSION = 188;
 
 // Shared i18n keys that MUST be identical on every site page. The build validates
 // each page's dict against these (values only) and reports drift — it does not rewrite
@@ -70,10 +70,7 @@ const headLinks = (p) =>
   `<link rel="preload" href="${p}assets/fonts/inter-tight-normal-300_700-cyrillic.woff2" as="font" type="font/woff2" crossorigin>` +
   `<link rel="preload" href="${p}assets/fonts/inter-tight-italic-300_700-cyrillic.woff2" as="font" type="font/woff2" crossorigin>` +
   `<link rel="stylesheet" href="${p}assets/core.min.css?v=${VERSION}">` +
-  `<link rel="stylesheet" href="${p}assets/site.min.css?v=${VERSION}">` +
-  /* Глушитель обещаний перехода — инлайном в head, потому что pagereveal
-     срабатывает раньше отложенных скриптов. */
-  `<script>/* Гасим обещания перехода МАКСИМАЛЬНО рано: pagereveal срабатывает до первой отрисовки, а отложенные скрипты к этому моменту ещё не выполнены — обещание остаётся без обработчика и пропущенный переход падает в консоль AbortError-ом. */(function(){if(!('startViewTransition' in document))return;function h(v){if(!v)return;if(v.ready)v.ready.catch(function(){});if(v.finished)v.finished.catch(function(){});if(v.updateCallbackDone)v.updateCallbackDone.catch(function(){});}addEventListener('pageswap',function(e){h(e.viewTransition)});addEventListener('pagereveal',function(e){h(e.viewTransition)});})();</script>`;
+  `<link rel="stylesheet" href="${p}assets/site.min.css?v=${VERSION}">`;
 
 const navLink = (href, key, label, on) =>
   `<a href="${href}" class="nav-contact${on ? ' is-active' : ''}"${on ? ' aria-current="page"' : ''} data-i18n="${key}">${label}</a>`;

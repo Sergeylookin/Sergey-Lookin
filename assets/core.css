@@ -77,30 +77,18 @@ html.lenis,html.lenis body{height:auto}
 
 ::selection{background:var(--accent);color:var(--accent-ink)}
 
-/* ═══════════ ПЕРЕХОДЫ МЕЖДУ СТРАНИЦАМИ (View Transitions API) ═══════════
-   Кросс-документные переходы на статике: браузер сам снимает кадр уходящей
-   страницы, склеивает его с приходящей — клик по меню перестаёт быть разрывом
-   с перезагрузкой. Где API нет (Firefox) — обычная навигация: ни разметка, ни
-   скрипты не меняются, ничего не ломается. */
-@view-transition{navigation:auto}
-::view-transition-old(root){animation:vtOut .26s var(--ease-out) both}
-::view-transition-new(root){animation:vtIn .44s var(--ease-out) both}
-@keyframes vtOut{to{opacity:0}}
-@keyframes vtIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+/* ─── Reset + smooth-scroll (Lenis) — identical in both themes ─── */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+/* Lenis smooth-scroll (overrides native smooth while active) */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+.lenis.lenis-stopped{overflow:hidden}
+.lenis.lenis-smooth iframe{pointer-events:none}
 
-/* Общий элемент: заголовок кейса физически перелетает из списка в шапку
-   страницы кейса и обратно. object-fit:none обязателен — иначе браузер
-   растягивает снимок старого кегля на габарит нового и текст плющит. */
-::view-transition-group(case-title){animation-duration:.62s;animation-timing-function:var(--ease-out-strong)}
-::view-transition-old(case-title),::view-transition-new(case-title){
-  height:100%;width:100%;object-fit:none;object-position:left top;overflow:clip}
-::view-transition-old(case-title){animation:vtOut .34s var(--ease-out) both}
-::view-transition-new(case-title){animation:vtSoft .5s var(--ease-out) .06s both}
-@keyframes vtSoft{from{opacity:0}to{opacity:1}}
-
-@media (prefers-reduced-motion:reduce){
-  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
-}
+::selection{background:var(--accent);color:var(--accent-ink)}
 
 /* ─── Image deterrents — friction only (the client always has the file; this just
        stops casual drag-to-save / select. Right-click is blocked via JS in site.js). ─── */
