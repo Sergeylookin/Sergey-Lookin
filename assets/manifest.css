@@ -3391,7 +3391,7 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
    Пропорция 16:9 — родная у видео-обложек, они идут вообще без полей. */
 .wk-preview{
   position:fixed;top:0;left:0;
-  width:clamp(260px,23vw,400px);aspect-ratio:16/9;
+  width:clamp(320px,30vw,520px);aspect-ratio:16/9;
   pointer-events:none;opacity:0;
   border-radius:4px;overflow:hidden;background:var(--bg-dark);
   z-index:var(--z-tip);
