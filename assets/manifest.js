@@ -2088,17 +2088,21 @@ setupIntroMonument();
 })();
 
 /* ─────────────── «Что за этим стоит» — кадр проекта под курсором ───────────────
-   Кадр идёт за указателем с задержкой: движение читается как инерция, а не как
-   приклеенная к мыши картинка. На нижних строках переворачивается НАД курсором,
-   иначе упирается в край окна. Выключено на тач-экранах, при
+   При наведении показывается обложка кейса (у Руны, Chobies и маркетинг-кита она
+   видео), дальше кадры из самого кейса перелистываются сами. Две квадратные
+   картинки идут парой и дают тот же горизонтальный формат, что широкие кадры.
+
+   Кадр держится пустого коридора между названиями и колонкой роли и НЕ выходит
+   за блок строк: иначе, наведя на последний проект, получаешь скриншот на
+   пол-экрана следующей секции. Выключено на тач-экранах, при
    prefers-reduced-motion и на узких окнах — там строка просто ссылка. */
 (function(){
   const wk = document.querySelector('.wk');
   if(!wk) return;
-  const prev = wk.querySelector('.wk-preview');
-  const img  = prev && prev.querySelector('img');
-  const rows = Array.prototype.slice.call(wk.querySelectorAll('.wk-a'));
-  if(!prev || !img || !rows.length) return;
+  const prev  = wk.querySelector('.wk-preview');
+  const slots = prev ? Array.prototype.slice.call(prev.querySelectorAll('.wk-shot')) : [];
+  const rows  = Array.prototype.slice.call(wk.querySelectorAll('.wk-a'));
+  if(!prev || slots.length < 2 || !rows.length) return;
   if(!window.matchMedia('(hover:hover)').matches) return;
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -2107,21 +2111,17 @@ setupIntroMonument();
      вьюпорту — кадр уезжал тем дальше, чем ниже строка. */
   document.body.appendChild(prev);
 
-  let tx = 0, ty = 0, x = 0, y = 0, scale = 0.96, on = false, raf = null, warmed = false, lastRow = 0;
+  const COVER_HOLD = 2200;   /* обложке даём отыграть, у трёх кейсов это видео */
+  const SHOT_HOLD  = 1000;   /* кадры внутри листаются быстро */
+  let tx = 0, ty = 0, x = 0, y = 0, scale = 0.96;
+  let on = false, raf = null, warmed = false, lastRow = 0, front = 0, timer = null;
 
-  /* Кадр живёт в пустом коридоре между текстом колонки «Проект» и колонкой
-     «Роль»: названия проектов короткие, справа от них остаётся широкая пустая
-     полоса. Границы коридора считаем по факту — правый край самого длинного
-     названия и левый край роли, — поэтому кадр не задевает текст на любой
-     ширине окна и при любом языке. */
+  /* ── позиция ─────────────────────────────────────────────────────────── */
   function textRight(el){
-    const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-    let node = null, n;
-    while((n = w.nextNode())) if(n.nodeValue.trim()) node = n;
-    if(!node) return el.getBoundingClientRect().left;
     const r = document.createRange();
     r.selectNodeContents(el);
-    return r.getBoundingClientRect().right;
+    const box = r.getBoundingClientRect();
+    return box.width ? box.right : el.getBoundingClientRect().left;
   }
   function bounds(){
     const list = wk.getBoundingClientRect();
@@ -2132,17 +2132,37 @@ setupIntroMonument();
       const t = row.querySelector('.wk-t');
       if(t) titleRight = Math.max(titleRight, textRight(t));
     });
-    const xMin = titleRight + 40;
-    const xMax = (role ? role.getBoundingClientRect().left : list.right) - 28 - w;
-    const yMin = list.top;
-    const yMax = list.bottom - h;
-    return {xMin: xMin, xMax: xMax, yMin: yMin, yMax: yMax, w: w, h: h};
+    return {
+      xMin: titleRight + 40,
+      xMax: (role ? role.getBoundingClientRect().left : list.right) - 28 - w,
+      yMin: list.top,
+      yMax: list.bottom - h,
+      w: w, h: h
+    };
   }
   /* Своё место для каждой строки, а не одна точка на весь список: шаг золотого
      сечения раскидывает соседние строки далеко друг от друга, но значение
      привязано к индексу — один и тот же проект всегда встаёт туда же. */
   function spread(i, seed){ return ((i * 0.6180339887 + seed) % 1) - 0.5; }
 
+  const OFF_Y = 26;
+  function place(i, e, jump){
+    const b = bounds();
+    const cx = (b.xMin + b.xMax) / 2;
+    const dx = spread(i, 0.13) * Math.max(0, b.xMax - b.xMin) * 0.72;
+    tx = Math.max(Math.min(b.xMin, b.xMax), Math.min(cx + dx, b.xMax));
+
+    /* По вертикали идёт за курсором — верхние строки чуть выше, нижние чуть
+       ниже, — но переворачивается НАД курсором, когда снизу не влезает, и в
+       любом случае остаётся внутри блока строк. */
+    const cy = e ? e.clientY : (b.yMin + b.yMax) / 2 + b.h / 2;
+    ty = (cy + OFF_Y <= b.yMax) ? cy + OFF_Y : cy - OFF_Y - b.h;
+    ty = Math.max(b.yMin, Math.min(ty, b.yMax));
+    tx = Math.max(16, Math.min(tx, window.innerWidth - b.w - 16));
+    ty = Math.max(16, Math.min(ty, window.innerHeight - b.h - 16));
+    if(jump){ x = tx; y = ty; }
+    kick();
+  }
   function frame(){
     raf = null;
     x += (tx - x) * 0.16;
@@ -2153,62 +2173,131 @@ setupIntroMonument();
   }
   function kick(){ if(raf === null) raf = requestAnimationFrame(frame); }
 
-  const OFF_Y = 26;
-  function place(i, e, jump){
-    const b = bounds();
-    const cx = (b.xMin + b.xMax) / 2;
-    /* По горизонтали кадр держится коридора, но у каждой строки своё место в
-       нём — иначе все десять карточек бьют в одну точку. Разброс задан долей
-       свободного хода, а не пикселями: на узком окне коридор уже, и смещение
-       сжимается вместе с ним. */
-    const dx = spread(i, 0.13) * Math.max(0, b.xMax - b.xMin) * 0.72;
-    tx = Math.max(Math.min(b.xMin, b.xMax), Math.min(cx + dx, b.xMax));
-
-    /* По вертикали идёт за курсором. На нижних строках переворачивается НАД
-       ним: кадр не должен уходить ниже руки и упираться в край окна. */
-    const cy = e ? e.clientY : (b.yMin + b.yMax) / 2 + b.h / 2;
-    const fitsBelow = cy + OFF_Y + b.h + 16 <= window.innerHeight;
-    ty = fitsBelow ? cy + OFF_Y : cy - OFF_Y - b.h;
-
-    tx = Math.max(16, Math.min(tx, window.innerWidth - b.w - 16));
-    ty = Math.max(16, Math.min(ty, window.innerHeight - b.h - 16));
-    if(jump){ x = tx; y = ty; }
-    kick();
+  /* ── плейлист ────────────────────────────────────────────────────────── */
+  function playlist(row){
+    if(row._pl) return row._pl;
+    const slug = row.dataset.slug, pos = row.dataset.pos || '';
+    const items = [];
+    if(row.dataset.cover === 'vid') items.push({t:'vid', src:'assets/vid/' + slug + '.mp4', pos:pos});
+    else items.push({t:'cover', src:'assets/img/' + slug + '-preview-960.webp', pos:pos});
+    (row.dataset.shots || '').split(',').forEach(function(sh){
+      sh = sh.trim();
+      if(!sh) return;
+      if(sh.indexOf('+') > 0){
+        items.push({t:'pair', src: sh.split('+').map(function(n){ return 'assets/img/' + slug + '-' + n + '-480.webp'; })});
+      } else {
+        items.push({t:'shot', src:'assets/img/' + slug + '-' + sh + '-960.webp'});
+      }
+    });
+    row._pl = items;
+    return items;
+  }
+  function preload(item){
+    if(!item || item.t === 'vid') return;
+    (item.t === 'pair' ? item.src : [item.src]).forEach(function(u){ const i = new Image(); i.src = u; });
+  }
+  function render(item){
+    const back = slots[1 - front];
+    back.className = 'wk-shot' + (item.t === 'cover' || item.t === 'vid' ? ' wk-shot--cover' : '');
+    back.textContent = '';
+    if(item.t === 'pair'){
+      const wrap = document.createElement('div');
+      wrap.className = 'wk-pair';
+      item.src.forEach(function(u){
+        const im = new Image();
+        im.src = u; im.alt = ''; im.decoding = 'async';
+        wrap.appendChild(im);
+      });
+      back.appendChild(wrap);
+    } else if(item.t === 'vid'){
+      const v = document.createElement('video');
+      v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = item.src;
+      if(item.pos) v.style.objectPosition = item.pos;
+      back.appendChild(v);
+      const p = v.play();
+      if(p && p.catch) p.catch(function(){});
+    } else {
+      const im = new Image();
+      im.src = item.src; im.alt = ''; im.decoding = 'async';
+      if(item.pos) im.style.objectPosition = item.pos;
+      back.appendChild(im);
+    }
+    slots[front].classList.remove('is-on');
+    back.classList.add('is-on');
+    front = 1 - front;
+  }
+  function hold(item){ return (item.t === 'vid' || item.t === 'cover') ? COVER_HOLD : SHOT_HOLD; }
+  function play(row){
+    const pl = playlist(row);
+    let i = 0;
+    render(pl[0]);
+    preload(pl[1]);
+    clearTimeout(timer);
+    (function tick(){
+      timer = setTimeout(function(){
+        if(!on) return;
+        i = (i + 1) % pl.length;
+        render(pl[i]);
+        preload(pl[(i + 1) % pl.length]);
+        tick();
+      }, hold(pl[i]));
+    })();
+  }
+  function stopPlay(){
+    clearTimeout(timer);
+    timer = null;
+    slots.forEach(function(s){ s.textContent = ''; s.classList.remove('is-on'); });
+    front = 0;
   }
 
-  /* Прогреваем кадры один раз на входе в список: иначе первая строка показывает
-     пустой прямоугольник, пока грузится webp. */
+  /* ── события ─────────────────────────────────────────────────────────── */
+  /* Прогреваем только обложки: кадры внутри подтягиваются по ходу листания,
+     иначе на входе в список улетает пятьдесят файлов. */
   function warm(){
-    if(warmed) return; warmed = true;
-    rows.forEach(function(r){ const u = r.dataset.img; if(u){ const i = new Image(); i.src = u; } });
+    if(warmed) return;
+    warmed = true;
+    rows.forEach(function(r){
+      if(r.dataset.cover === 'img'){
+        const i = new Image();
+        i.src = 'assets/img/' + r.dataset.slug + '-preview-960.webp';
+      }
+    });
   }
-
   wk.addEventListener('pointerenter', warm);
   wk.addEventListener('pointermove', function(e){ if(on) place(lastRow, e, false); });
   wk.addEventListener('pointerleave', function(){
-    on = false; wk.classList.remove('is-hover'); prev.classList.remove('is-on'); kick();
+    on = false;
+    lastRow = 0;
+    wk.classList.remove('is-hover');
+    prev.classList.remove('is-on');
+    stopPlay();
+    kick();
   });
 
   rows.forEach(function(row, i){
     row.addEventListener('pointerenter', function(e){
-      const src = row.dataset.img;
-      if(src && img.getAttribute('src') !== src) img.setAttribute('src', src);
-      on = true; lastRow = i;
+      on = true;
+      lastRow = i;
       wk.classList.add('is-hover');
       prev.classList.add('is-on');
       place(i, e, true);
+      play(row);
     });
-    /* Клавиатура: фокус показывает кадр у правого края строки */
     row.addEventListener('focus', function(){
       warm();
-      const src = row.dataset.img;
-      if(src && img.getAttribute('src') !== src) img.setAttribute('src', src);
-      on = true; lastRow = i; wk.classList.add('is-hover'); prev.classList.add('is-on');
+      on = true;
+      lastRow = i;
+      wk.classList.add('is-hover');
+      prev.classList.add('is-on');
       place(i, null, true);
-      kick();
+      play(row);
     });
     row.addEventListener('blur', function(){
-      on = false; wk.classList.remove('is-hover'); prev.classList.remove('is-on'); kick();
+      on = false;
+      wk.classList.remove('is-hover');
+      prev.classList.remove('is-on');
+      stopPlay();
+      kick();
     });
   });
   window.addEventListener('resize', function(){ if(on) place(lastRow, null, true); }, {passive:true});
