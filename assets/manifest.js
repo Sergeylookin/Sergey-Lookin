@@ -2050,7 +2050,6 @@ setupIntroMonument();
       setTimeout(() => { sats.forEach((s) => { const d = s.parentNode.querySelector('.msat-desc'); if(d) d.textContent = descFor(s); }); }, 60);
     });
   });
-  window.addEventListener('resize', function(){ if(on) place(true); }, {passive:true});
 })();
 
 /* ─── Кредо: фокус следует за скроллом ───
@@ -2108,20 +2107,41 @@ setupIntroMonument();
      вьюпорту — кадр уезжал тем дальше, чем ниже строка. */
   document.body.appendChild(prev);
 
-  let tx = 0, ty = 0, x = 0, y = 0, scale = 0.96, on = false, raf = null, warmed = false;
+  let tx = 0, ty = 0, x = 0, y = 0, scale = 0.96, on = false, raf = null, warmed = false, lastRow = 0;
 
-  /* Кадр живёт в пустом коридоре между колонкой «Проект» и колонкой «Роль»:
-     названия проектов короткие, справа от них до роли остаётся широкая пустая
-     полоса. По горизонтали кадр там и стоит, по вертикали идёт за курсором —
-     не перекрывает ни одной строки текста и всё равно следит за рукой. */
-  function corridor(){
+  /* Кадр живёт в пустом коридоре между текстом колонки «Проект» и колонкой
+     «Роль»: названия проектов короткие, справа от них остаётся широкая пустая
+     полоса. Границы коридора считаем по факту — правый край самого длинного
+     названия и левый край роли, — поэтому кадр не задевает текст на любой
+     ширине окна и при любом языке. */
+  function textRight(el){
+    const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    let node = null, n;
+    while((n = w.nextNode())) if(n.nodeValue.trim()) node = n;
+    if(!node) return el.getBoundingClientRect().left;
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    return r.getBoundingClientRect().right;
+  }
+  function bounds(){
     const list = wk.getBoundingClientRect();
     const role = wk.querySelector('.wk-r');
-    const w = prev.offsetWidth;
-    const rightLimit = (role ? role.getBoundingClientRect().left : list.right) - 24;
-    const left = Math.min(list.left + list.width * 0.42, rightLimit - w);
-    return Math.max(list.left + 16, Math.min(left, window.innerWidth - w - 16));
+    const w = prev.offsetWidth, h = prev.offsetHeight;
+    let titleRight = list.left + list.width * 0.35;
+    rows.forEach(function(row){
+      const t = row.querySelector('.wk-t');
+      if(t) titleRight = Math.max(titleRight, textRight(t));
+    });
+    const xMin = titleRight + 40;
+    const xMax = (role ? role.getBoundingClientRect().left : list.right) - 28 - w;
+    const yMin = list.top;
+    const yMax = list.bottom - h;
+    return {xMin: xMin, xMax: xMax, yMin: yMin, yMax: yMax, w: w, h: h};
   }
+  /* Своё место для каждой строки, а не одна точка на весь список: шаг золотого
+     сечения раскидывает соседние строки далеко друг от друга, но значение
+     привязано к индексу — один и тот же проект всегда встаёт туда же. */
+  function spread(i, seed){ return ((i * 0.6180339887 + seed) % 1) - 0.5; }
 
   function frame(){
     raf = null;
@@ -2133,14 +2153,25 @@ setupIntroMonument();
   }
   function kick(){ if(raf === null) raf = requestAnimationFrame(frame); }
 
-  /* Кадр стоит НЕПОДВИЖНО — ровно в пустом коридоре и по центру блока строк.
-     За курсором он не идёт: место выбрано так, чтобы не задеть ни одной строки
-     текста, и любое смещение это место ломает. */
-  function place(jump){
-    const h = prev.offsetHeight;
-    const list = wk.getBoundingClientRect();
-    tx = corridor();
-    ty = Math.max(16, Math.min(list.top + list.height / 2 - h / 2, window.innerHeight - h - 16));
+  const OFF_Y = 26;
+  function place(i, e, jump){
+    const b = bounds();
+    const cx = (b.xMin + b.xMax) / 2;
+    /* По горизонтали кадр держится коридора, но у каждой строки своё место в
+       нём — иначе все десять карточек бьют в одну точку. Разброс задан долей
+       свободного хода, а не пикселями: на узком окне коридор уже, и смещение
+       сжимается вместе с ним. */
+    const dx = spread(i, 0.13) * Math.max(0, b.xMax - b.xMin) * 0.72;
+    tx = Math.max(Math.min(b.xMin, b.xMax), Math.min(cx + dx, b.xMax));
+
+    /* По вертикали идёт за курсором. На нижних строках переворачивается НАД
+       ним: кадр не должен уходить ниже руки и упираться в край окна. */
+    const cy = e ? e.clientY : (b.yMin + b.yMax) / 2 + b.h / 2;
+    const fitsBelow = cy + OFF_Y + b.h + 16 <= window.innerHeight;
+    ty = fitsBelow ? cy + OFF_Y : cy - OFF_Y - b.h;
+
+    tx = Math.max(16, Math.min(tx, window.innerWidth - b.w - 16));
+    ty = Math.max(16, Math.min(ty, window.innerHeight - b.h - 16));
     if(jump){ x = tx; y = ty; }
     kick();
   }
@@ -2153,31 +2184,32 @@ setupIntroMonument();
   }
 
   wk.addEventListener('pointerenter', warm);
+  wk.addEventListener('pointermove', function(e){ if(on) place(lastRow, e, false); });
   wk.addEventListener('pointerleave', function(){
     on = false; wk.classList.remove('is-hover'); prev.classList.remove('is-on'); kick();
   });
 
-  rows.forEach(function(row){
-    row.addEventListener('pointerenter', function(){
+  rows.forEach(function(row, i){
+    row.addEventListener('pointerenter', function(e){
       const src = row.dataset.img;
       if(src && img.getAttribute('src') !== src) img.setAttribute('src', src);
-      on = true;
+      on = true; lastRow = i;
       wk.classList.add('is-hover');
       prev.classList.add('is-on');
-      place(true);
+      place(i, e, true);
     });
     /* Клавиатура: фокус показывает кадр у правого края строки */
     row.addEventListener('focus', function(){
       warm();
       const src = row.dataset.img;
       if(src && img.getAttribute('src') !== src) img.setAttribute('src', src);
-      on = true; wk.classList.add('is-hover'); prev.classList.add('is-on');
-      place(true);
+      on = true; lastRow = i; wk.classList.add('is-hover'); prev.classList.add('is-on');
+      place(i, null, true);
       kick();
     });
     row.addEventListener('blur', function(){
       on = false; wk.classList.remove('is-hover'); prev.classList.remove('is-on'); kick();
     });
   });
-  window.addEventListener('resize', function(){ if(on) place(true); }, {passive:true});
+  window.addEventListener('resize', function(){ if(on) place(lastRow, null, true); }, {passive:true});
 })();
