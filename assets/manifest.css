@@ -3344,11 +3344,16 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
   font-family:var(--mono);font-size:var(--t-mono-sm);font-weight:500;
   letter-spacing:0.1em;text-transform:uppercase;color:var(--mute);
   padding-bottom:0.6rem;border-bottom:1px solid var(--hair-dk);
+  /* Отбивка от первой строки: без неё шапка читалась как ещё один проект. */
+  margin-bottom:clamp(0.9rem,1.6vw,1.4rem);
 }
 .wk-cols > :last-child,
 .wk-c{text-align:right}
 .wk-list{list-style:none;margin:0;padding:0}
+/* Линию под последней строкой не рисуем: список заканчивается текстом, а не
+   чертой в пустоту. */
 .wk-row{border-bottom:1px solid var(--hair-dk)}
+.wk-row:last-child{border-bottom:0}
 .wk-a{
   padding:clamp(0.55rem,0.95vw,0.8rem) 0;
   text-decoration:none;color:var(--ink);
@@ -3377,13 +3382,6 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
 .wk-a:hover .wk-c{color:var(--accent)}
 .wk-a:focus-visible{outline:1px solid var(--accent);outline-offset:4px}
 
-.wk-all{
-  display:inline-block;margin-top:clamp(1.4rem,2.8vw,2.25rem);
-  font-family:var(--mono);font-size:var(--t-mono-sm);font-weight:500;
-  letter-spacing:0.1em;text-transform:uppercase;color:var(--mute);
-  text-decoration:none;transition:color 0.3s var(--ease-out);
-}
-.wk-all:hover{color:var(--accent)}
 
 /* Кадр под курсором. position:fixed — координаты указателя уже в системе вьюпорта,
    пересчитывать ничего не надо; трансформ целиком ведёт JS, CSS держит только
