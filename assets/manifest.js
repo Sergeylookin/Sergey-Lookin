@@ -999,6 +999,7 @@ if(footTop) footTop.addEventListener('click',scrollToTop);
 /* ─────────────── hover whispers (big numbers) & TL;DRs (kickers) ─────────────── */
 const SECTION_TIPS={
   ru:{
+    'works':{w:'Здесь заканчиваются слова.',t:'Десять проектов: роль, год, направление.'},
     'credo':{w:'Самый длинный спор, который я выиграл за карьеру.',t:'Дизайн как партнёр, а не как сервис.'},
     'audience':{w:'Не картинки создают впечатление. А дизайн.',t:'Пользователь — это человек, а не сегмент в дашборде.'},
     'evaluation':{w:'Работа считается законченной только тогда, когда начинает работать в реальности.',t:'Четыре уровня, через которые проходит решение.'},
@@ -1007,6 +1008,7 @@ const SECTION_TIPS={
     'companies':{w:'Двенадцать лет в трёх главах.',t:'Три места работы за 12+ лет.'}
   },
   en:{
+    'works':{w:"Where the words end.",t:"Ten projects: role, year, field."},
     'credo':{w:"The longest argument I've won in my career.",t:"Design as partner, not service."},
     'audience':{w:"Pictures don't make the impression. Design does.",t:"A user is a person, not a dashboard segment."},
     'evaluation':{w:"Work counts as finished only when it starts working in reality.",t:"Four levels every solution passes through."},
@@ -2083,4 +2085,92 @@ setupIntroMonument();
   window.__scroll.add(update);
   window.addEventListener('resize', update, {passive:true});
   update();
+})();
+
+/* ─────────────── «Что за этим стоит» — кадр проекта под курсором ───────────────
+   Наведение на строку показывает превью кейса и приглушает остальные строки.
+   Кадр летит за указателем с задержкой (lerp), поэтому движение читается как
+   инерция, а не как приклеенная к мыши картинка. Выключено на тач-экранах,
+   при prefers-reduced-motion и на узких окнах — там строка просто ссылка. */
+(function(){
+  const wk = document.querySelector('.wk');
+  if(!wk) return;
+  const prev = wk.querySelector('.wk-preview');
+  const img  = prev && prev.querySelector('img');
+  const rows = Array.prototype.slice.call(wk.querySelectorAll('.wk-a'));
+  if(!prev || !img || !rows.length) return;
+  if(!window.matchMedia('(hover:hover)').matches) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  /* Кадр обязан висеть в body. У .wk стоит data-reveal, то есть transform, а
+     трансформированный предок делает position:fixed относительным СЕБЕ, а не
+     вьюпорту: координаты курсора переставали совпадать с экраном, и чем ниже
+     строка, тем дальше кадр уплывал вниз, пока не уходил за край. */
+  document.body.appendChild(prev);
+
+  const OFF_X = 34, OFF_Y = 26;      /* кадр идёт справа-снизу от курсора */
+  let tx = 0, ty = 0, x = 0, y = 0, scale = 0.96, on = false, raf = null, warmed = false;
+
+  function frame(){
+    raf = null;
+    /* Первый кадр после появления ставим без догона, иначе картинка прилетает
+       через полэкрана от прошлой позиции. */
+    x += (tx - x) * 0.16;
+    y += (ty - y) * 0.16;
+    scale += ((on ? 1 : 0.96) - scale) * 0.16;
+    prev.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0) scale(' + scale.toFixed(3) + ')';
+    if(on || Math.abs(tx - x) > 0.4 || Math.abs(ty - y) > 0.4) raf = requestAnimationFrame(frame);
+  }
+  function kick(){ if(raf === null) raf = requestAnimationFrame(frame); }
+
+  function place(e, jump){
+    const w = prev.offsetWidth, h = prev.offsetHeight;
+    tx = Math.min(e.clientX + OFF_X, window.innerWidth - w - 16);
+    /* На нижних строках кадр переворачивается НАД курсором. Иначе он упирается
+       в нижний край окна, прижимается к нему и половина строк показывает кадр
+       не рядом с собой, а у самого низа экрана. */
+    const fitsBelow = e.clientY + OFF_Y + h + 16 <= window.innerHeight;
+    ty = fitsBelow ? e.clientY + OFF_Y : e.clientY - OFF_Y - h;
+    ty = Math.max(16, Math.min(ty, window.innerHeight - h - 16));
+    if(jump){ x = tx; y = ty; }
+    kick();
+  }
+
+  /* Прогреваем кадры один раз на входе в список: без этого первая строка
+     показывает пустой прямоугольник, пока грузится webp. */
+  function warm(){
+    if(warmed) return; warmed = true;
+    rows.forEach(function(r){ const u = r.dataset.img; if(u){ const i = new Image(); i.src = u; } });
+  }
+
+  wk.addEventListener('pointerenter', warm);
+  wk.addEventListener('pointermove', function(e){ if(on) place(e, false); });
+  wk.addEventListener('pointerleave', function(){
+    on = false; wk.classList.remove('is-hover'); prev.classList.remove('is-on'); kick();
+  });
+
+  rows.forEach(function(row){
+    row.addEventListener('pointerenter', function(e){
+      const src = row.dataset.img;
+      if(src && img.getAttribute('src') !== src) img.setAttribute('src', src);
+      const wasOff = !on;
+      on = true;
+      wk.classList.add('is-hover');
+      prev.classList.add('is-on');
+      place(e, wasOff);
+    });
+    /* Клавиатура: фокус тоже показывает кадр, но без слежения за курсором */
+    row.addEventListener('focus', function(){
+      const src = row.dataset.img;
+      if(src && img.getAttribute('src') !== src) img.setAttribute('src', src);
+      const r = row.getBoundingClientRect();
+      on = true; wk.classList.add('is-hover'); prev.classList.add('is-on');
+      tx = x = Math.min(r.right + OFF_X, window.innerWidth - prev.offsetWidth - 16);
+      ty = y = Math.min(r.top, window.innerHeight - prev.offsetHeight - 16);
+      kick();
+    });
+    row.addEventListener('blur', function(){
+      on = false; wk.classList.remove('is-hover'); prev.classList.remove('is-on'); kick();
+    });
+  });
 })();
