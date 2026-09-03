@@ -1,21 +1,5 @@
 /* manifest.js — interactive layer for index.html (extracted from inline <script>).
    Reads i18n strings from the #i18n-data JSON island in the HTML. */
-/* ─── Переходы между страницами: гасим обещания ───
-   Общий элемент перехода живёт в site.js, но index.html его не грузит, поэтому
-   на манифесте обещания перехода оставались без обработчика: когда браузер
-   пропускает переход, finished реджектится AbortError и падает в консоль. */
-(function(){
-  if(!('startViewTransition' in document)) return;
-  function hush(vt){
-    if(!vt) return;
-    if(vt.ready) vt.ready.catch(function(){});
-    if(vt.finished) vt.finished.catch(function(){});
-    if(vt.updateCallbackDone) vt.updateCallbackDone.catch(function(){});
-  }
-  addEventListener('pageswap', function(e){ hush(e.viewTransition); });
-  addEventListener('pagereveal', function(e){ hush(e.viewTransition); });
-})();
-
 /* ─────────────── i18n (universal core in assets/i18n.js → window.SLi18n) ─────────────── */
 let currentLang = SLi18n.detect();
 
@@ -1014,7 +998,7 @@ if(footTop) footTop.addEventListener('click',scrollToTop);
 /* ─────────────── hover whispers (big numbers) & TL;DRs (kickers) ─────────────── */
 const SECTION_TIPS={
   ru:{
-    'works':{w:'Здесь заканчиваются слова.',t:'Десять проектов: роль, год, направление.'},
+    'works':{w:'Всё это когда-то было спором.',t:'Десять проектов: роль, год, направление.'},
     'credo':{w:'Самый длинный спор, который я выиграл за карьеру.',t:'Дизайн как партнёр, а не как сервис.'},
     'audience':{w:'Не картинки создают впечатление. А дизайн.',t:'Пользователь — это человек, а не сегмент в дашборде.'},
     'evaluation':{w:'Работа считается законченной только тогда, когда начинает работать в реальности.',t:'Четыре уровня, через которые проходит решение.'},
@@ -1023,7 +1007,7 @@ const SECTION_TIPS={
     'companies':{w:'Двенадцать лет в трёх главах.',t:'Три места работы за 12+ лет.'}
   },
   en:{
-    'works':{w:"Where the words end.",t:"Ten projects: role, year, field."},
+    'works':{w:"All of this was once an argument.",t:"Ten projects: role, year, field."},
     'credo':{w:"The longest argument I've won in my career.",t:"Design as partner, not service."},
     'audience':{w:"Pictures don't make the impression. Design does.",t:"A user is a person, not a dashboard segment."},
     'evaluation':{w:"Work counts as finished only when it starts working in reality.",t:"Four levels every solution passes through."},
