@@ -43,6 +43,34 @@ input:focus,textarea:focus{outline:0;border-color:#4a4a55}
 .btn.pri:hover{filter:brightness(1.1)}
 .btn:disabled{opacity:.4;cursor:default}
 .sec{padding:18px 20px;border-bottom:1px solid var(--line)}
+/* 1. полоска разделов: форма кейса в 60+ экранов, без неё не найти нужное */
+.secnav{position:sticky;top:47px;z-index:4;display:flex;gap:2px;overflow-x:auto;padding:7px 20px;
+  background:rgba(11,11,13,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);scrollbar-width:none}
+.secnav::-webkit-scrollbar{display:none}
+.secnav button{flex:none;padding:5px 10px;border-radius:6px;font-size:12px;color:var(--mute);white-space:nowrap}
+.secnav button:hover{background:#1b1b1f;color:var(--ink)}
+.secnav button.on{background:#1f1f24;color:var(--ink)}
+.secnav .n{font:10px var(--mono);opacity:.6;margin-left:5px}
+.sec>h2{cursor:pointer;user-select:none;display:flex;align-items:center;gap:7px}
+.sec>h2::before{content:'▾';font-size:9px;opacity:.5;transition:transform .15s}
+.sec.folded>h2::before{transform:rotate(-90deg)}
+.sec.folded>*:not(h2){display:none}
+/* 2. счётчик замечаний в шапке — раньше они висели на 5000 px ниже */
+.chkbadge{display:none;align-items:center;gap:6px;padding:5px 11px;border-radius:6px;font-size:12.5px;
+  border:1px solid var(--warn);color:var(--warn);background:rgba(201,151,63,.08)}
+.chkbadge.on{display:inline-flex}
+.chkbadge.err{border-color:var(--accent);color:var(--accent);background:rgba(226,84,58,.08)}
+.chkpop{position:absolute;top:44px;right:20px;z-index:30;width:min(520px,72vw);max-height:52vh;overflow:auto;
+  background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:9px;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+/* 3. восстановление черновика */
+.draftbar{display:flex;align-items:center;gap:10px;padding:10px 20px;background:rgba(201,151,63,.1);
+  border-bottom:1px solid var(--warn);font-size:12.5px;color:#e7d9bd}
+.draftbar .sp{flex:1}
+.draftbar button{padding:5px 11px;border-radius:6px;border:1px solid var(--warn);color:var(--warn);font-size:12px}
+.draftbar button.no{border-color:var(--line);color:var(--mute)}
+/* 4. подсветка блока, который правишь */
+.f.editing>label{color:var(--ink)}
+.savecount{font:10px var(--mono);opacity:.75;margin-left:5px}
 .sec>h2{margin:0 0 12px;font:600 11px/1 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--mute)}
 .f{margin-bottom:13px}
 .f>label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mute);margin-bottom:5px}
@@ -198,9 +226,12 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
 
   <main class="main">
     <div class="bar"><h1 id="ttl">Загрузка…</h1>
+      <button class="chkbadge" id="chkBadge" title="показать замечания"></button>
       <button class="btn" id="revert">Отменить</button>
       <button class="btn" id="save">Сохранить</button>
     </div>
+    <div class="draftbar" id="draftBar" hidden></div>
+    <div class="secnav" id="secnav"></div>
     <div id="form"></div>
     <div class="sec"><h2>Проверка</h2><div class="checks" id="checks"></div></div>
   </main>
@@ -392,7 +423,7 @@ function render(){
   $('#form').addEventListener('input',e=>{
     const t=e.target;
     if(t.id==='year'){ DATA.year=t.value; mark(); return; }
-    if(t.dataset.k){ DATA.dict[t.dataset.l][t.dataset.k]=fromEditor(t.value); mark(); }
+    if(t.dataset.k){ DATA.dict[t.dataset.l][t.dataset.k]=fromEditor(t.value); mark(); syncPreview(t.dataset.k); }
   });
   $('#form').addEventListener('click',e=>{
     const i=e.target.closest('.i'); if(i){ tip(i,i.dataset.hint); e.stopPropagation(); }
@@ -401,6 +432,8 @@ function render(){
   $('#addRow').onclick=()=>{ DATA.media.push({type:'row',items:[{src:'',alt:''},{src:'',alt:''}]}); mark(); drawMedia(); };
   wireCaseOps();
   drawMedia();
+  buildSecNav();
+  offerDraft();
 }
 
 // ── операции над кейсом целиком ────────────────────────────────────────────
@@ -636,7 +669,126 @@ function stemOfCase(){
   return t||('case-'+CUR);
 }
 
-const mark=()=>{ DIRTY=true; $('#save').classList.add('pri'); };
+function changedFields(){
+  if(!ORIG) return [];
+  const out=[];
+  if(MODE==='case'&&DATA){
+    for(const lang of ['ru','en'])
+      for(const k of Object.keys(DATA.dict[lang]||{}))
+        if(DATA.dict[lang][k]!==(ORIG.dict[lang]||{})[k]) out.push(lang.toUpperCase()+' '+k);
+    if(DATA.year!==ORIG.year) out.push('год');
+    if(JSON.stringify(DATA.media)!==JSON.stringify(ORIG.media)) out.push('картинки');
+  } else if(MODE==='page'&&PAGE){
+    for(const lang of ['ru','en'])
+      for(const k of Object.keys(PAGE.dict[lang]||{}))
+        if(PAGE.dict[lang][k]!==(ORIG[lang]||{})[k]) out.push(lang.toUpperCase()+' '+k);
+  }
+  return out;
+}
+const mark=()=>{
+  DIRTY=true;
+  const n=changedFields().length;
+  const b=$('#save');
+  b.classList.add('pri');
+  b.innerHTML='Сохранить'+(n?'<span class="savecount">'+n+'</span>':'');
+  b.title=n?('Изменено: '+changedFields().slice(0,12).join(', ')):'';
+  saveDraft();
+};
+const unmark=()=>{ DIRTY=false; const b=$('#save'); b.classList.remove('pri'); b.textContent='Сохранить'; b.title=''; dropDraft(); };
+
+/* ── 3. Черновик в браузере ────────────────────────────────────────────
+   Правки живут в памяти вкладки: перезагрузил или закрыл — потерял.
+   Пишем их себе в браузер и предлагаем вернуть при следующем открытии. */
+const draftKey=()=> MODE==='case' ? 'draft:case:'+CUR : MODE==='page' ? 'draft:page:'+PAGE.file : null;
+let draftTimer=null;
+function saveDraft(){
+  const k=draftKey(); if(!k) return;
+  clearTimeout(draftTimer);
+  draftTimer=setTimeout(()=>{
+    try{
+      const payload = MODE==='case' ? {dict:DATA.dict,year:DATA.year,media:DATA.media} : {dict:PAGE.dict};
+      localStorage.setItem(k, JSON.stringify({at:Date.now(), payload}));
+    }catch(e){}
+  }, 1200);
+}
+function dropDraft(){ const k=draftKey(); if(k) try{ localStorage.removeItem(k); }catch(e){} }
+function readDraft(){
+  const k=draftKey(); if(!k) return null;
+  try{ const raw=localStorage.getItem(k); return raw?JSON.parse(raw):null; }catch(e){ return null; }
+}
+function offerDraft(){
+  const bar=$('#draftBar'); bar.hidden=true;
+  const d=readDraft(); if(!d) return;
+  const cur = MODE==='case' ? JSON.stringify({dict:DATA.dict,year:DATA.year,media:DATA.media}) : JSON.stringify({dict:PAGE.dict});
+  if(JSON.stringify(d.payload)===cur){ dropDraft(); return; }   // черновик совпал с файлом
+  const when=new Date(d.at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  bar.hidden=false;
+  bar.innerHTML='<b>Есть несохранённый черновик от '+when+'.</b> Правки не попали в файлы.'
+    + '<span class="sp"></span><button data-d="use">Восстановить</button><button class="no" data-d="drop">Удалить черновик</button>';
+  bar.onclick=e=>{
+    const a=(e.target.dataset||{}).d; if(!a) return;
+    if(a==='use'){
+      if(MODE==='case'){ DATA.dict=d.payload.dict; DATA.year=d.payload.year; DATA.media=d.payload.media; render(); }
+      else { PAGE.dict=d.payload.dict; renderPage(); }
+      mark(); toast('Черновик восстановлен. Проверь и нажми «Сохранить».',4000);
+    } else { dropDraft(); }
+    bar.hidden=true;
+  };
+}
+
+/* ── 1. Полоска разделов ───────────────────────────────────────────────── */
+function buildSecNav(){
+  const nav=$('#secnav');
+  const secs=[...$('#form').querySelectorAll('.sec')].filter(s=>s.querySelector('h2'));
+  if(secs.length<2){ nav.innerHTML=''; nav.style.display='none'; return; }
+  nav.style.display='';
+  nav.innerHTML=secs.map((s,i)=>{
+    const n=s.querySelectorAll('input,textarea').length;
+    return '<button data-s="'+i+'">'+esc(s.querySelector('h2').textContent)+(n?'<span class="n">'+n+'</span>':'')+'</button>';
+  }).join('');
+  nav.onclick=e=>{ const b=e.target.closest('[data-s]'); if(!b) return;
+    const s=secs[+b.dataset.s];
+    s.classList.remove('folded');
+    const m=$('.main');
+    // offsetTop считается от позиционированного предка, а не от прокручиваемой
+    // области — поэтому берём разницу прямоугольников, иначе никуда не едет
+    const y=s.getBoundingClientRect().top - m.getBoundingClientRect().top + m.scrollTop - 8;
+    m.scrollTo({top:Math.max(0,y),behavior:'smooth'}); };
+  // сворачивание по клику на заголовок
+  for(const s of secs) s.querySelector('h2').onclick=()=>{ s.classList.toggle('folded'); };
+  // подсветка текущего раздела при прокрутке
+  const mainEl=$('.main');
+  const onScroll=()=>{
+    const top=mainEl.getBoundingClientRect().top;
+    let cur=0;
+    secs.forEach((s,i)=>{ if(s.getBoundingClientRect().top - top <= 100) cur=i; });
+    nav.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i===cur));
+  };
+  mainEl.onscroll=onScroll; onScroll();
+}
+
+/* ── 4. Превью следует за тем, что правишь ─────────────────────────────── */
+let syncTimer=null;
+function syncPreview(key){
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(()=>{
+    const f=$('#frame'); let doc;
+    try{ doc=f.contentDocument; }catch(e){ return; }
+    if(!doc) return;
+    const el=doc.querySelector('[data-i18n="'+CSS.escape(key)+'"]');
+    if(!el) return;
+    try{
+      // у страниц включена плавная прокрутка — она перехватывает и уводит обратно
+      const lenis=f.contentWindow && f.contentWindow.__lenis;
+      if(lenis && lenis.destroy) lenis.destroy();
+      doc.querySelectorAll('[data-reveal]').forEach(x=>{ x.style.opacity=1; x.style.transform='none'; });
+      el.scrollIntoView({block:'center',behavior:'smooth'});
+      const prev=el.style.outline;
+      el.style.outline='2px solid #e2543a'; el.style.outlineOffset='4px';
+      setTimeout(()=>{ el.style.outline=prev; },1200);
+    }catch(e){}
+  }, 220);
+}
 
 // ── история публикаций и откат ──────────────────────────────────────────
 async function openHistory(){
@@ -645,6 +797,7 @@ async function openHistory(){
   document.querySelectorAll('.case,.pg').forEach(b=>b.classList.remove('on'));
   $('#navHist').classList.add('on');
   $('#ttl').textContent='История и откат';
+  $('#chkBadge').classList.remove('on'); $('#secnav').innerHTML=''; $('#draftBar').hidden=true;
   $('#save').style.display=$('#revert').style.display='none';
   $('#checks').innerHTML='<div class="empty">Проверки считаются по кейсам.</div>';
   await drawHistory();
@@ -682,6 +835,7 @@ async function openMedia(){
   document.querySelectorAll('.case,.pg').forEach(b=>b.classList.remove('on'));
   $('#navMedia').classList.add('on'); $('#navHist').classList.remove('on');
   $('#ttl').textContent='Медиатека';
+  $('#chkBadge').classList.remove('on'); $('#secnav').innerHTML=''; $('#draftBar').hidden=true;
   $('#save').style.display=$('#revert').style.display='none';
   $('#checks').innerHTML='<div class="empty">Проверки считаются по кейсам.</div>';
   $('#frame').src='/portfolio.html?t='+Date.now();
@@ -868,12 +1022,14 @@ async function renderPage(){
     btn.onclick=e=>{ e.stopPropagation();
       pickFile(f=>uploadCv(f, btn.dataset.lang), {accept:'.pdf,application/pdf'}); };
   }
+  buildSecNav();
+  offerDraft();
   for(const dz of $('#form').querySelectorAll('.cvdrop')){
     wireDrop(dz,{accept:'.pdf,application/pdf',match:/\.pdf$/i,reject:'Нужен файл .pdf',
       onFiles:f=>uploadCv(f, dz.dataset.lang, dz)});
   }
   $('#form').addEventListener('input',e=>{ const t=e.target;
-    if(t.dataset.pk){ PAGE.dict[t.dataset.l][t.dataset.pk]=fromEditor(t.value); mark(); } });
+    if(t.dataset.pk){ PAGE.dict[t.dataset.l][t.dataset.pk]=fromEditor(t.value); mark(); syncPreview(t.dataset.pk); } });
 }
 // Загрузка CV: одна функция на кнопку, клик по зоне и перетаскивание
 async function uploadCv(f, lang, zone){
@@ -911,14 +1067,14 @@ async function savePage(){
       body:JSON.stringify({companies:MANIFEST.companies,brands:MANIFEST.brands})});
     if(m.error) toast(m.error,5000);
   }
-  DIRTY=false; $('#save').classList.remove('pri'); ORIG=JSON.parse(JSON.stringify(PAGE.dict));
+  unmark(); ORIG=JSON.parse(JSON.stringify(PAGE.dict));
   $('#frame').src='/'+(PAGE.file==='index.html'?'':PAGE.file)+'?t='+Date.now();
   toast(r.ok?'Страница сохранена. На сайт — кнопкой «Опубликовать».':'Ошибка сборки: '+(r.out||''));
 }
 
 async function save(){
   const r=await api('/api/case/'+CUR,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(DATA)});
-  DIRTY=false; $('#save').classList.remove('pri'); ORIG=JSON.parse(JSON.stringify(DATA));
+  unmark(); ORIG=JSON.parse(JSON.stringify(DATA));
   drawChecks(r.problems); refreshPreview(); toast('Сохранено на диск. На сайт — кнопкой «Опубликовать».');
   MODEL=await api('/api/model');
   document.querySelectorAll('.case').forEach(b=>{ const c=MODEL.cases.find(x=>x.n===b.dataset.n);
@@ -926,10 +1082,34 @@ async function save(){
 }
 async function check(){ drawChecks((await api('/api/validate')).problems); }
 function drawChecks(ps){
-  const mine=(ps||[]).filter(p=>p.n===CUR), other=(ps||[]).length-mine.length;
+  ALLCHECKS = ps || [];
+  const mine=ALLCHECKS.filter(p=>p.n===CUR), other=ALLCHECKS.length-mine.length;
   $('#checks').innerHTML = (mine.length? mine.map(p=>`<div class="chk ${p.lvl}"><span class="n">${p.n}</span><span>${p.msg}</span></div>`).join('')
     : '<div class="empty">В этом кейсе замечаний нет.</div>')
     + (other? `<div class="chk info"><span class="n">···</span><span>Ещё ${other} замечани${other%10===1&&other%100!==11?'е':'й'} в других кейсах — покажутся при публикации.</span></div>`:'');
+  drawBadge();
+}
+let ALLCHECKS=[];
+// Замечания жили внизу формы, на 5000 px ниже — их никто не видел.
+// Счётчик в шапке лезет в глаза сам, список открывается по клику.
+function drawBadge(){
+  const b=$('#chkBadge');
+  const mine=ALLCHECKS.filter(p=>p.n===CUR);
+  const err=mine.filter(p=>p.lvl==='err').length;
+  const show=MODE==='case'&&mine.length;
+  b.classList.toggle('on',!!show);
+  b.classList.toggle('err',!!err);
+  if(!show) return;
+  b.textContent=(err?'✗ ':'⚠ ')+mine.length+(mine.length===1?' замечание':mine.length<5?' замечания':' замечаний');
+  b.onclick=()=>{
+    const old=document.querySelector('.chkpop'); if(old){ old.remove(); return; }
+    const pop=document.createElement('div'); pop.className='chkpop';
+    pop.innerHTML=mine.map(p=>`<div class="chk ${p.lvl}"><span>${p.msg}</span></div>`).join('');
+    $('.main').appendChild(pop);
+    setTimeout(()=>document.addEventListener('click',function off(e){
+      if(!e.target.closest('.chkpop')&&e.target!==b){ pop.remove(); document.removeEventListener('click',off); }
+    }),0);
+  };
 }
 
 function refreshPreview(){
