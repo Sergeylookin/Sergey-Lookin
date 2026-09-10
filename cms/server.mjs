@@ -7,7 +7,7 @@
 // жать картинки через sharp. Всё остальное живёт в cms/index.html.
 
 import { createServer } from 'node:http';
-import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, renameSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, renameSync, rmSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve, join, extname } from 'node:path';
 import { execFile } from 'node:child_process';
@@ -384,7 +384,7 @@ function validate() {
 }
 
 const json = (res, code, body) => { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(body)); };
-const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.xml': 'application/xml', '.ico': 'image/x-icon' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.xml': 'application/xml', '.ico': 'image/x-icon', '.pdf': 'application/pdf', '.mp4': 'video/mp4' };
 
 const body = (req) => new Promise((ok) => { const c = []; req.on('data', (d) => c.push(d)); req.on('end', () => ok(Buffer.concat(c))); });
 
@@ -536,6 +536,31 @@ const srv = createServer(async (req, res) => {
         const b = await node('build-en.mjs');
         return json(res, 200, { ok: b.code === 0, out: b.out.slice(-300) });
       }
+    }
+
+    // ── CV: два PDF, русский и английский. Имена файлов постоянны, чтобы
+    // ссылки в about.html не приходилось трогать при каждой замене.
+    if (path === '/api/cv') {
+      const info = (lang) => {
+        const f = resolve(ROOT, 'assets', 'cv', `sergey-lookin-cv-${lang}.pdf`);
+        if (!existsSync(f)) return null;
+        const st = statSync(f);
+        return { name: `sergey-lookin-cv-${lang}.pdf`, kb: Math.round(st.size / 1024), at: st.mtime.toISOString().slice(0, 10) };
+      };
+      return json(res, 200, { ru: info('ru'), en: info('en') });
+    }
+    if (path === '/api/cv/upload' && req.method === 'POST') {
+      const lang = url.searchParams.get('lang');
+      if (lang !== 'ru' && lang !== 'en') return json(res, 400, { error: 'Нужно указать язык.' });
+      const buf = await body(req);
+      if (buf.slice(0, 5).toString() !== '%PDF-') return json(res, 400, { error: 'Это не PDF. Нужен файл .pdf.' });
+      if (buf.length > 25 * 1024 * 1024) return json(res, 400, { error: 'Файл больше 25 МБ — слишком тяжело для сайта.' });
+      mkdirSync(resolve(ROOT, 'assets', 'cv'), { recursive: true });
+      const dst = resolve(ROOT, 'assets', 'cv', `sergey-lookin-cv-${lang}.pdf`);
+      const tmp = dst + '.tmp';
+      writeFileSync(tmp, buf);
+      renameSync(tmp, dst);
+      return json(res, 200, { ok: true, lang, kb: Math.round(buf.length / 1024) });
     }
 
     if (path === '/api/images') return json(res, 200, { images: readdirSync(IMGDIR).filter((f) => f.endsWith('.webp') && !/-(480|960|1440)\.webp$/.test(f)).map((f) => f.replace(/\.webp$/, '')).sort() });

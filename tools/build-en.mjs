@@ -103,6 +103,12 @@ function makeEn(ruHtml, dict, ruUrl, enUrl, isProject) {
     const k = $(el).attr('data-i18n-aria');
     if (k in en) $(el).attr('aria-label', en[k]);
   });
+  // Ссылки, которые отличаются по языку (например русское и английское CV).
+  // Делается ДО bumpAssetDepth, чтобы относительный путь тоже сдвинулся на /en/.
+  $('[data-i18n-href]').each((_i, el) => {
+    const k = $(el).attr('data-i18n-href');
+    if (k in en) $(el).attr('href', en[k]);
+  });
 
   if (isProject) {
     // swap the copied RU CreativeWork for the EN one
