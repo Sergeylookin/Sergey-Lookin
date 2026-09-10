@@ -842,7 +842,13 @@ const srv = createServer(async (req, res) => {
       const staged = await git('diff', '--cached', '--name-only');
       if (!staged.out.trim()) { steps.push({ name: 'Публикация', ok: true, out: 'Менять нечего — на сайте уже актуальная версия.' }); return json(res, 200, { ok: true, steps, nothing: true }); }
       const msg = JSON.parse((await body(req)).toString('utf8') || '{}').message || 'Правки через CMS';
-      const ci = await git('commit', '-m', msg);
+      // Сообщение передаём ФАЙЛОМ, а не аргументом: на Windows кириллица
+      // в командной строке доезжает до git испорченной, и в истории
+      // оставались кракозябры вместо подписи к правке.
+      const msgFile = resolve(ROOT, '.git', 'CMS_MSG');
+      writeFileSync(msgFile, msg + '\n', 'utf8');
+      const ci = await git('-c', 'i18n.commitEncoding=UTF-8', 'commit', '-F', msgFile);
+      rmSync(msgFile, { force: true });
       steps.push({ name: 'Коммит', ok: ci.code === 0, out: ci.out.slice(-400) });
       if (ci.code !== 0) return json(res, 200, { ok: false, steps });
       const ps = await git('push', 'origin', 'main');
