@@ -454,8 +454,15 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=u
 const body = (req) => new Promise((ok) => { const c = []; req.on('data', (d) => c.push(d)); req.on('end', () => ok(Buffer.concat(c))); });
 
 const srv = createServer(async (req, res) => {
-  const url = new URL(req.url, 'http://localhost');
-  const path = decodeURIComponent(url.pathname);
+  // Разбор адреса ВНУТРИ try: кривой запрос (например «//») роняет new URL,
+  // а вместе с ним ронял и весь сервер — CMS просто закрывалась.
+  let url, path;
+  try {
+    url = new URL(req.url, 'http://localhost');
+    path = decodeURIComponent(url.pathname);
+  } catch {
+    res.writeHead(400); return res.end('плохой адрес');
+  }
   try {
     if (path === '/' || path === '/index.html') {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
@@ -720,6 +727,11 @@ const srv = createServer(async (req, res) => {
     json(res, 500, { error: String(e && e.stack || e) });
   }
 });
+
+// Сеть безопасности: что бы ни случилось в одном запросе, окно CMS не должно
+// закрываться. Иначе человек теряет несохранённые правки и не понимает почему.
+process.on('uncaughtException', (e) => console.log('\n  Сбой в запросе (CMS продолжает работать):\n  ' + (e && e.stack || e) + '\n'));
+process.on('unhandledRejection', (e) => console.log('\n  Сбой в запросе (CMS продолжает работать):\n  ' + (e && e.stack || e) + '\n'));
 
 const URL_LOCAL = `http://localhost:${PORT}`;
 
