@@ -297,6 +297,56 @@ for (const [name, script] of [['сетка и ссылки', 'build-cases.mjs'],
   ok(name, pass, note);
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Три стража на баги, которые уже случались. Каждый ловит СВОЙ класс, а не
+// конкретный случай: иначе следующая такая же ошибка пройдёт мимо.
+g('Стражи');
+{
+  const cms = readFileSync(resolve(ROOT, 'cms/index.html'), 'utf8');
+
+  // 1. Чистое поле сохраняет только те классы span, которые перечислены в
+  // SPAN_OK. Появится на сайте новый — поле начнёт молча его съедать, и
+  // человек об этом узнает по сломанной вёрстке. Сверяем список с фактом.
+  const okList = (cms.match(/const SPAN_OK\s*=\s*\[([^\]]*)\]/) || [, ''])[1]
+    .split(',').map((s) => s.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean);
+  const used = new Set();
+  const files = ['index.html', 'about.html', 'portfolio.html', '404.html',
+    ...(model.cases || []).map((c) => `projects/${c.n}.html`)];
+  for (const f of files) {
+    const p = resolve(ROOT, f);
+    if (!existsSync(p)) continue;
+    const m = readFileSync(p, 'utf8').match(/<script id="i18n-data" type="application\/json">([\s\S]*?)<\/script>/);
+    if (!m) continue;
+    let d; try { d = JSON.parse(m[1]); } catch { continue; }
+    for (const lang of ['ru', 'en'])
+      for (const v of Object.values(d[lang] || {}))
+        for (const s of String(v).matchAll(/<span class="([^"]+)"/g))
+          for (const c of s[1].split(/\s+/)) used.add(c);
+  }
+  const orphan = [...used].filter((c) => !okList.includes(c));
+  ok('чистое поле знает все классы span на сайте', orphan.length === 0,
+    orphan.length ? 'не в SPAN_OK: ' + orphan.join(', ') : `классов: ${[...used].join(', ') || 'нет'}`);
+
+  // 2. Порядок сборки при публикации обязан совпадать с npm run build:
+  // build-en читает русские страницы, build-pages их пишет.
+  const pkg = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8'));
+  const seq = (src) => (src.match(/build-(contacts|pages|en|cases)\.mjs/g) || []);
+  const wantOrder = seq(pkg.scripts.build).filter((x) => x !== 'build-cases.mjs');
+  const srv = readFileSync(resolve(ROOT, 'cms/server.mjs'), 'utf8');
+  const pubLine = (srv.match(/for \(const \[name, script\] of \[[^\]]*\]\]\)/) || [''])[0];
+  const gotOrder = seq(pubLine);
+  ok('публикация собирает в том же порядке, что npm run build',
+    gotOrder.join('>') === wantOrder.filter((x) => gotOrder.includes(x)).join('>'),
+    `публикация: ${gotOrder.join(' → ') || '?'}`);
+
+  // 3. Готовая, но не отправленная версия должна быть видна интерфейсу —
+  // иначе кнопку «Опубликовать» после отката не нажать.
+  const ch = await get('/api/changes');
+  ok('неотправленные версии видны', typeof ch.ahead === 'number', `ahead: ${ch.ahead}`);
+  ok('кнопка публикации смотрит и на версии, и на файлы',
+    /!ch\.files\.length\s*&&\s*!ch\.ahead/.test(cms));
+}
+
 g('Чистота');
 const left = git('status', '--porcelain').split('\n').filter((l) => l.trim());
 const modified = left.filter((l) => !l.startsWith('??'));
