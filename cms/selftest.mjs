@@ -333,11 +333,14 @@ g('Стражи');
   const seq = (src) => (src.match(/build-(contacts|pages|en|cases)\.mjs/g) || []);
   const wantOrder = seq(pkg.scripts.build).filter((x) => x !== 'build-cases.mjs');
   const srv = readFileSync(resolve(ROOT, 'cms/server.mjs'), 'utf8');
-  const pubLine = (srv.match(/for \(const \[name, script\] of \[[^\]]*\]\]\)/) || [''])[0];
+  const pubLine = (srv.match(/for \(const \[name, script\] of \[[\s\S]*?\]\]\)/) || [''])[0];
   const gotOrder = seq(pubLine);
+  // Проверка обязана НАЙТИ строку. Пустой список сравнивается с пустым и
+  // проходит вхолостую — так страж и делает вид, что охраняет.
+  ok('строка сборки при публикации найдена', gotOrder.length >= 2, `нашлось: ${gotOrder.length}`);
   ok('публикация собирает в том же порядке, что npm run build',
-    gotOrder.join('>') === wantOrder.filter((x) => gotOrder.includes(x)).join('>'),
-    `публикация: ${gotOrder.join(' → ') || '?'}`);
+    gotOrder.length >= 2 && gotOrder.join('>') === wantOrder.filter((x) => gotOrder.includes(x)).join('>'),
+    `публикация: ${gotOrder.join(' → ') || 'строка не найдена'}`);
 
   // 3. Готовая, но не отправленная версия должна быть видна интерфейсу —
   // иначе кнопку «Опубликовать» после отката не нажать.
