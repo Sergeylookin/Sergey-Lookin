@@ -156,6 +156,21 @@ function writeDict(html, dict) {
   return html.replace(m[0], m[1] + '{' + body + '}' + m[3]);
 }
 
+// Запись файла, которая не падает на Windows. Обычный «во временный + переименовать»
+// ломается с EPERM, когда файл кто-то держит открытым — его только что читала
+// медиатека, показывал браузер или трогал sharp. Сначала пробуем переименовать
+// несколько раз, потом пишем поверх напрямую. Временный файл не оставляем в любом случае.
+async function writeFileSafe(dst, buf) {
+  const tmp = dst + '.tmp';
+  writeFileSync(tmp, buf);
+  for (let i = 0; i < 6; i++) {
+    try { renameSync(tmp, dst); return true; }
+    catch { await new Promise((r) => setTimeout(r, 120 * (i + 1))); }
+  }
+  try { writeFileSync(dst, buf); return true; }
+  finally { try { rmSync(tmp, { force: true }); } catch {} }
+}
+
 // Windows какое-то время держит файл после записи (и sharp, и просмотрщик),
 // поэтому удаление сразу после загрузки падало с EPERM. Пробуем несколько раз.
 async function rmRetry(path, tries = 6) {
@@ -706,9 +721,7 @@ const srv = createServer(async (req, res) => {
       if (buf.length > 25 * 1024 * 1024) return json(res, 400, { error: 'Файл больше 25 МБ — слишком тяжело для сайта.' });
       mkdirSync(resolve(ROOT, 'assets', 'cv'), { recursive: true });
       const dst = resolve(ROOT, 'assets', 'cv', `sergey-lookin-cv-${lang}.pdf`);
-      const tmp = dst + '.tmp';
-      writeFileSync(tmp, buf);
-      renameSync(tmp, dst);
+      await writeFileSafe(dst, buf);
       return json(res, 200, { ok: true, lang, kb: Math.round(buf.length / 1024) });
     }
 
@@ -738,8 +751,7 @@ const srv = createServer(async (req, res) => {
       if (buf.length > 40 * 1024 * 1024) return json(res, 400, { error: 'Больше 40 МБ — тяжело для сайта.' });
       mkdirSync(resolve(ROOT, 'assets', 'vid'), { recursive: true });
       const dst = resolve(ROOT, 'assets', 'vid', slug + '.mp4');
-      const tmp = dst + '.tmp';
-      writeFileSync(tmp, buf); renameSync(tmp, dst);
+      await writeFileSafe(dst, buf);
       return json(res, 200, { ok: true, slug, mb: (buf.length / 1048576).toFixed(1) });
     }
 
@@ -806,9 +818,7 @@ const srv = createServer(async (req, res) => {
       const buf = await body(req);
       if (buf.slice(8, 12).toString() !== 'WEBP') return json(res, 400, { error: 'Это не webp. Экспортируй из Figma в webp.' });
       const dst = resolve(IMGDIR, name + '.webp');
-      const tmp = dst + '.tmp';
-      writeFileSync(tmp, buf);
-      renameSync(tmp, dst);
+      await writeFileSafe(dst, buf);
       const sharp = (await import('sharp')).default;
       const meta = await sharp(dst).metadata();
       for (const w of VARIANTS) {
