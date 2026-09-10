@@ -203,6 +203,74 @@ const badVid = await raw('/api/video?slug=runa', Buffer.from('не видео'))
 ok('не-mp4 отклоняется', !!badVid.error);
 
 // ─────────────────────────────────────────────────────────────────────────
+// Приём PNG и JPG. Главное, что здесь охраняется: готовый webp обязан лечь
+// байт-в-байт. Стоит кому-то «на всякий случай» прогнать его через sharp —
+// и все картинки сайта тихо пережмутся по второму разу.
+g('Форматы картинок');
+{
+  const sharp = (await import('sharp')).default;
+  const png = await sharp({ create: { width: 300, height: 200, channels: 3, background: { r: 10, g: 90, b: 200 } } }).png().toBuffer();
+  const jpg = await sharp(png).jpeg({ quality: 92 }).toBuffer();
+
+  const pr = await raw('/api/probe', png);
+  ok('вес считается заранее', pr.kind === 'png' && pr.q90Kb > 0 && pr.losslessKb > 0 && pr.w === 300,
+    pr.error || `${pr.origKb} КБ → ${pr.q90Kb} / ${pr.losslessKb} КБ`);
+  ok('мусор не принимается за картинку', !!(await raw('/api/probe', Buffer.from('это просто текст'))).error);
+
+  const up1 = await raw('/api/upload?stem=selftestfmt&mode=compress', png);
+  const up2 = await raw('/api/upload?stem=selftestfmt&mode=lossless', jpg);
+  ok('PNG приезжает как webp', up1.ok && up1.mode === 'compress' && up1.kind === 'png');
+  ok('JPG приезжает как webp', up2.ok && up2.kind === 'jpg');
+  for (const u of [up1, up2])
+    if (u.name) ok(`${u.name} на диске — webp`,
+      existsSync(resolve(ROOT, 'assets/img', u.name + '.webp')) &&
+      readFileSync(resolve(ROOT, 'assets/img', u.name + '.webp')).slice(8, 12).toString() === 'WEBP');
+
+  // Готовый webp не должен меняться ни на байт.
+  const orig = readFileSync(resolve(ROOT, 'assets/img/runa-1.webp'));
+  const keep = await raw('/api/upload?stem=selftestkeep', orig);
+  const back = keep.name ? readFileSync(resolve(ROOT, 'assets/img', keep.name + '.webp')) : Buffer.alloc(0);
+  ok('готовый webp не пережимается', keep.mode === 'keep' && Buffer.compare(orig, back) === 0,
+    `${orig.length} → ${back.length} байт`);
+
+  // Убираем за собой всё, включая копии для телефонов.
+  for (const n of [up1.name, up2.name, keep.name].filter(Boolean))
+    for (const f of [`${n}.webp`, `${n}-480.webp`, `${n}-960.webp`, `${n}-1440.webp`]) {
+      const p = resolve(ROOT, 'assets/img', f);
+      if (existsSync(p)) rmSync(p, { force: true });
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Контакты. Ссылка стоит в шести местах; тест меняет её и смотрит, что
+// доехало во все, включая английскую версию, а потом возвращает как было.
+g('Контакты и ссылки');
+{
+  const before = await get('/api/contacts');
+  ok('контакты читаются', Array.isArray(before.items) && before.items.length >= 3);
+
+  const bad = await post('/api/contacts', { items: [{ id: 'tg', url: 't.me/без-схемы', handle: 'x' }], extra: before.extra });
+  ok('ссылка без https:// отклоняется', !!bad.error);
+  const bad2 = await post('/api/contacts', { items: [{ id: 'em', url: 'mailto:не-почта', handle: 'x' }], extra: before.extra });
+  ok('кривая почта отклоняется', !!bad2.error);
+
+  const hit = (f) => (readFileSync(resolve(ROOT, f), 'utf8').match(/selftest_probe/g) || []).length;
+  const probe = JSON.parse(JSON.stringify(before.items));
+  const tg = probe.find((x) => x.id === 'tg');
+  tg.url = 'https://t.me/selftest_probe'; tg.handle = '@selftest_probe';
+  await post('/api/contacts', { items: probe, extra: before.extra });
+  ok('доехало до главной', hit('index.html') === 3, `совпадений: ${hit('index.html')}`);
+  ok('доехало до «Обо мне»', hit('about.html') === 2, `совпадений: ${hit('about.html')}`);
+  ok('английская версия пересобралась', hit('en/index.html') === 3 && hit('en/about.html') === 2);
+  ok('почта в машинную разметку не идёт',
+    !/"sameAs":\s*\[[^\]]*mailto:/.test(readFileSync(resolve(ROOT, 'about.html'), 'utf8')));
+
+  await post('/api/contacts', { items: before.items, extra: before.extra });
+  ok('вернулось как было', hit('index.html') === 0 && hit('en/about.html') === 0);
+  restore('content/contacts.json', 'index.html', 'about.html', 'en/index.html', 'en/about.html');
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 g('Проверки содержания');
 const probs = (await get('/api/validate')).problems || [];
 ok('проверки работают', Array.isArray(probs), `замечаний: ${probs.length}`);
