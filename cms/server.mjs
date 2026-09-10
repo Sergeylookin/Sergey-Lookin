@@ -167,6 +167,77 @@ async function rmRetry(path, tries = 6) {
   return !existsSync(path);
 }
 
+// ── «Где работал» + бренды ──────────────────────────────────────────────────
+const IDX = () => resolve(ROOT, 'index.html');
+
+function readManifest() {
+  const html = readFileSync(IDX(), 'utf8').replace(/^﻿/, '');
+  const $ = load(html, { decodeEntities: false });
+  const d = JSON.parse($('#i18n-data').html() || '{}');
+  const companies = [];
+  $('.co-list .co').each((i, el) => {
+    const n = i + 1;
+    companies.push({
+      n,
+      yrs: $(el).find('.yrs').html() || '',
+      name: $(el).find('.name').html() || '',
+      role: { ru: d.ru[`co.${n}.role`] || '', en: d.en[`co.${n}.role`] || '' },
+      desc: { ru: d.ru[`co.${n}.desc`] || '', en: d.en[`co.${n}.desc`] || '' },
+      aw: { ru: d.ru[`co.${n}.aw`] || '', en: d.en[`co.${n}.aw`] || '' },
+    });
+  });
+  const brands = [];
+  $('.brand-list span').each((_i, el) => brands.push($(el).html() || ''));
+  return { companies, brands, brandLabel: { ru: d.ru['co.marquee.lbl'] || '', en: d.en['co.marquee.lbl'] || '' } };
+}
+
+function saveManifest(payload) {
+  const p = IDX();
+  const orig = readFileSync(p, 'utf8');
+  const bom = orig.charCodeAt(0) === 0xfeff;
+  let html = orig.replace(/^﻿/, '');
+  const dict = JSON.parse(load(html, { decodeEntities: false })('#i18n-data').html() || '{}');
+  const before = readManifest();
+  let touched = 0;
+
+  // годы и названия — обычный текст внутри .co-list, меняем точечно
+  (payload.companies || []).forEach((c, i) => {
+    const was = before.companies[i];
+    if (!was) return;
+    for (const [field, cls] of [['yrs', 'yrs'], ['name', 'name']]) {
+      const next = String(c[field] ?? '');
+      if (next === was[field]) continue;
+      const re = new RegExp('(<div class="' + cls + '">)' + escRe(was[field]) + '(</div>)');
+      if (re.test(html)) { html = html.replace(re, '$1' + next + '$2'); touched++; }
+    }
+    for (const f of ['role', 'desc', 'aw']) {
+      for (const lang of ['ru', 'en']) {
+        const key = `co.${c.n}.${f}`;
+        const next = String((c[f] || {})[lang] ?? '');
+        if (next === (was[f] || {})[lang]) continue;
+        dict[lang][key] = next;
+        if (lang === 'ru') { const nx = replaceInner(html, key, next); if (nx) html = nx; }
+        touched++;
+      }
+    }
+  });
+
+  // бегущая строка брендов — простой список, пересобираем целиком
+  if (Array.isArray(payload.brands) && payload.brands.join('|') !== before.brands.join('|')) {
+    const inner = payload.brands.filter((b) => String(b).trim()).map((b) => `<span>${b}</span>`).join('');
+    const m = html.match(/(<div class="brand-list">)([\s\S]*?)(<\/div>)/);
+    if (m) { html = html.replace(m[0], m[1] + inner + m[3]); touched++; }
+  }
+
+  if (!touched) return { changed: 0 };
+  html = writeDict(html, dict);
+  const tmp = p + '.tmp';
+  writeFileSync(tmp, (bom ? '﻿' : '') + html, 'utf8');
+  renameSync(tmp, p);
+  return { changed: touched };
+}
+const escRe = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // ── Медиатека ───────────────────────────────────────────────────────────────
 // Собирает ВСЕ оригиналы из assets/img и для каждого ищет, где он используется.
 // Это главное: заменить файл можно везде одинаково, а понять последствия —
@@ -464,9 +535,15 @@ const srv = createServer(async (req, res) => {
     res.writeHead(400); return res.end('плохой адрес');
   }
   try {
-    if (path === '/' || path === '/index.html') {
+    // Интерфейс CMS живёт по своему адресу, а не по «/». Иначе главная сайта
+    // недостижима, и в превью манифеста открывалась сама же CMS.
+    if (path === '/__cms' || path === '/__cms/') {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
       return res.end(readFileSync(resolve(HERE, 'index.html')));
+    }
+    if (path === '/' || path === '/index.html') {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
+      return res.end(readFileSync(resolve(ROOT, 'index.html')));
     }
     if (path === '/api/model') {
       const reg = readReg();
@@ -652,6 +729,58 @@ const srv = createServer(async (req, res) => {
       for (const w of VARIANTS) { if (w >= meta.width) continue; await sharp(resolve(IMGDIR, name + '.webp')).resize({ width: w }).webp({ quality: 82 }).toFile(resolve(IMGDIR, `${name}-${w}.webp`)); }
       return json(res, 200, { ok: true, name, w: meta.width, h: meta.height, variants: variantsOf(name) });
     }
+    // ── видео-обложки кейсов ─────────────────────────────────────────────
+    if (path === '/api/video' && req.method === 'POST') {
+      const slug = url.searchParams.get('slug');
+      if (!/^[a-z0-9-]+$/.test(slug || '')) return json(res, 400, { error: 'Неверное имя.' });
+      const buf = await body(req);
+      if (buf.slice(4, 8).toString() !== 'ftyp') return json(res, 400, { error: 'Это не mp4. Нужен файл .mp4.' });
+      if (buf.length > 40 * 1024 * 1024) return json(res, 400, { error: 'Больше 40 МБ — тяжело для сайта.' });
+      mkdirSync(resolve(ROOT, 'assets', 'vid'), { recursive: true });
+      const dst = resolve(ROOT, 'assets', 'vid', slug + '.mp4');
+      const tmp = dst + '.tmp';
+      writeFileSync(tmp, buf); renameSync(tmp, dst);
+      return json(res, 200, { ok: true, slug, mb: (buf.length / 1048576).toFixed(1) });
+    }
+
+    // ── история версий: последние публикации и откат ─────────────────────
+    if (path === '/api/history') {
+      const g = await git('log', '-25', '--format=%h%ci%s');
+      const items = g.out.split('\n').filter(Boolean).map((l) => {
+        const [hash, date, subj] = l.split('');
+        return { hash, date: (date || '').slice(0, 16), subj };
+      });
+      const ahead = await git('log', 'origin/main..HEAD', '--format=%h');
+      return json(res, 200, { items, unpublished: ahead.out.split('\n').filter(Boolean).length });
+    }
+    if (path === '/api/history/revert' && req.method === 'POST') {
+      const { hash } = JSON.parse((await body(req)).toString('utf8'));
+      if (!/^[0-9a-f]{6,40}$/.test(hash || '')) return json(res, 400, { error: 'Неверная версия.' });
+      const dirty = await git('status', '--porcelain');
+      if (dirty.out.split('\n').filter((l) => l.trim() && !l.startsWith('??')).length)
+        return json(res, 400, { error: 'Есть несохранённые правки. Сначала сохрани или отмени их.' });
+      const r = await git('revert', '--no-edit', hash);
+      if (r.code !== 0) {
+        await git('revert', '--abort');
+        return json(res, 400, { error: 'Не удалось откатить — правки поверх этой версии мешают. Откатывай с конца, по одной.' });
+      }
+      const b = await rebuild();
+      return json(res, 200, { ok: b.ok, out: r.out.slice(-300) });
+    }
+
+    // ── блок «Где работал» и бегущая строка брендов на манифесте ────────
+    // Годы и названия компаний лежат обычным текстом, а роль/описание/награда —
+    // переводимыми ключами. Правим их вместе, иначе один блок пришлось бы
+    // собирать в двух разных местах интерфейса.
+    if (path === '/api/manifest') {
+      if (req.method === 'GET') return json(res, 200, readManifest());
+      if (req.method === 'POST') {
+        const r = saveManifest(JSON.parse((await body(req)).toString('utf8')));
+        const b = await node('build-en.mjs');
+        return json(res, 200, { ok: b.code === 0, ...r });
+      }
+    }
+
     // ── медиатека: все картинки сайта и где каждая используется ──────────
     if (path === '/api/media') return json(res, 200, mediaLibrary());
 
@@ -733,7 +862,7 @@ const srv = createServer(async (req, res) => {
 process.on('uncaughtException', (e) => console.log('\n  Сбой в запросе (CMS продолжает работать):\n  ' + (e && e.stack || e) + '\n'));
 process.on('unhandledRejection', (e) => console.log('\n  Сбой в запросе (CMS продолжает работать):\n  ' + (e && e.stack || e) + '\n'));
 
-const URL_LOCAL = `http://localhost:${PORT}`;
+const URL_LOCAL = `http://localhost:${PORT}/__cms`;
 
 srv.on('error', (e) => {
   if (e.code === 'EADDRINUSE') {

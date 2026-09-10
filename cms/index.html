@@ -123,6 +123,19 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
 .mcard__acts{display:flex;gap:5px;padding:0 9px 9px}
 .mcard__acts button{flex:1;padding:5px 6px;border:1px solid var(--line);border-radius:5px;font-size:11.5px;color:var(--mute);background:#17171b}
 .mcard__acts button:hover{border-color:var(--accent);color:var(--accent)}
+/* компании и бренды */
+.co-ed{border:1px solid var(--line);border-radius:9px;background:#0e0e11;padding:11px;margin-bottom:9px}
+.co-ed__top{display:grid;grid-template-columns:130px 1fr;gap:8px;margin-bottom:9px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:4px 6px 4px 11px;font-size:12.5px;background:#0e0e11}
+.chip button{width:16px;height:16px;border-radius:50%;border:1px solid var(--line);color:var(--mute);font-size:11px;line-height:1}
+.chip button:hover{border-color:var(--accent);color:var(--accent)}
+/* история */
+.hrow{display:grid;grid-template-columns:74px 108px 1fr auto;gap:10px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#0e0e11;margin-bottom:6px;font-size:12.5px}
+.hrow .hh{font:11px var(--mono);color:var(--mute)}
+.hrow .hd{font:11px var(--mono);color:var(--mute)}
+.hrow.live{border-color:#2f5d43}
+.hnow{font:10px var(--mono);color:var(--ok);letter-spacing:.06em}
 
 /* ── превью ── */
 .prev{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--panel)}
@@ -172,7 +185,8 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
     <div class="brand">CMS<small id="root">портфолио</small></div>
     <div class="cases" id="cases"></div>
     <div class="grouphead">Всё остальное</div>
-    <div class="pages"><button class="pg" id="navMedia">Медиатека — все картинки</button></div>
+    <div class="pages"><button class="pg" id="navMedia">Медиатека — все картинки</button>
+      <button class="pg" id="navHist">История и откат</button></div>
     <div class="grouphead">Страницы сайта</div>
     <div class="pages" id="pages"></div>
     <div class="sidefoot">
@@ -302,7 +316,7 @@ const markCur=()=>document.querySelectorAll('.case').forEach(b=>b.classList.togg
 async function open(n){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='case'; PAGE=null; document.querySelectorAll('.pg').forEach(b=>b.classList.remove('on'));
-  $('#navMedia').classList.remove('on');
+  $('#navMedia').classList.remove('on'); $('#navHist').classList.remove('on');
   CUR=n; DATA=await api('/api/case/'+n); ORIG=JSON.parse(JSON.stringify(DATA)); DIRTY=false;
   markCur();
   $('#save').style.display=$('#revert').style.display='';
@@ -352,10 +366,15 @@ function render(){
       <div class="seg seg--wide" id="statusSeg">
         ${MODEL.statuses.map(s=>`<button data-s="${s}" class="${s===meta.status?'on':''}">${MODEL.statusRu[s]}</button>`).join('')}
       </div></div>
-    <div class="f"><label>Обложка в сетке <button class="i" data-hint="Картинка карточки в портфолио. Обычно это отдельный файл вида slug-preview.webp. Перетащи новую или впиши имя без .webp.">i</button></label>
-      <div class="mi"><img src="${meta.cover&&meta.cover.poster?'/assets/img/'+meta.cover.poster+'.webp':''}" alt="">
+    <div class="f"><label>Обложка в сетке <button class="i" data-hint="Картинка карточки в портфолио и кадр ховера на манифесте. Если у кейса видео-обложка, картинка остаётся постером — тем, что видно до запуска ролика.">i</button></label>
+      <div class="mi"><img src="${meta.cover&&meta.cover.poster?'/assets/img/'+meta.cover.poster+'.webp?t='+STAMP:''}" alt="">
         <div><input id="cover" value="${esc((meta.cover||{}).poster||'')}" placeholder="имя файла без .webp">
         <div class="drop" id="dropCover" style="margin-top:6px;padding:10px">перетащи обложку или нажми, чтобы выбрать</div></div></div></div>
+    ${meta.cover&&meta.cover.kind==='vid'?
+      '<div class="f"><label>Видео-обложка <button class="i" data-hint="Ролик, который проигрывается на карточке в портфолио. Картинка выше остаётся постером — её видно, пока видео не загрузилось.">i</button></label>'
+      + '<div class="cvrow"><div><b>assets/vid/'+esc(meta.slug)+'.mp4</b><div class="cvmeta">меняется целиком, имя остаётся прежним</div></div>'
+      + '<button class="btn pri" id="pickVid">Заменить видео</button>'
+      + '<div class="drop" id="dropVid">перетащи mp4 или нажми, чтобы выбрать</div></div></div>' : ''}
     <div class="f"><label>Год <button class="i" data-hint="Показывается в трёх местах: шапка кейса, карточка портфолио, таблица на манифесте. Можно диапазон: 2023—2026.">i</button></label>
       <input id="year" value="${esc(DATA.year)}" style="max-width:200px"></div>
     <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:4px">
@@ -408,6 +427,18 @@ function wireCaseOps(){
     await reloadAll('Обложка обновлена.');
   };
   $('#cover').onchange=e=>setCover(e.target.value.trim());
+  if($('#dropVid')){
+    const upVid=async f=>{
+      const z=$('#dropVid'), lbl=z.textContent; z.textContent='загружаю…';
+      const r=await fetch('/api/video?slug='+encodeURIComponent(meta.slug),{method:'POST',body:f}).then(x=>x.json());
+      z.textContent=lbl;
+      if(r.error) return toast(r.error,4500);
+      STAMP=Date.now(); refreshPreview();
+      toast('Видео заменено ('+r.mb+' МБ). Не забудь «Опубликовать».',4200);
+    };
+    wireDrop($('#dropVid'),{accept:'.mp4,video/mp4',match:/\.mp4$/i,reject:'Нужен файл .mp4',onFiles:upVid});
+    $('#pickVid').onclick=e=>{ e.stopPropagation(); pickFile(upVid,{accept:'.mp4,video/mp4'}); };
+  }
   wireDrop($('#dropCover'),{onFiles:async f=>{
     const dc=$('#dropCover'); const label=dc.textContent; dc.textContent='загружаю…';
     const r=await fetch('/api/upload?stem='+encodeURIComponent(stemOfCase()+'-preview'),{method:'POST',body:f}).then(x=>x.json());
@@ -607,6 +638,39 @@ function stemOfCase(){
 
 const mark=()=>{ DIRTY=true; $('#save').classList.add('pri'); };
 
+// ── история публикаций и откат ──────────────────────────────────────────
+async function openHistory(){
+  if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
+  MODE='hist'; CUR=null; PAGE=null; DIRTY=false;
+  document.querySelectorAll('.case,.pg').forEach(b=>b.classList.remove('on'));
+  $('#navHist').classList.add('on');
+  $('#ttl').textContent='История и откат';
+  $('#save').style.display=$('#revert').style.display='none';
+  $('#checks').innerHTML='<div class="empty">Проверки считаются по кейсам.</div>';
+  await drawHistory();
+}
+async function drawHistory(){
+  const h=await api('/api/history');
+  $('#form').innerHTML='<div class="sec"><h2>История</h2>'
+    + '<p style="color:var(--mute);font-size:12.5px;margin:0 0 4px">Каждая строка — сохранённое состояние сайта. «Откатить» создаёт новую версию, которая возвращает всё как было: ничего не стирается, вперёд тоже можно вернуться.</p>'
+    + (h.unpublished? '<p style="color:var(--warn);font-size:12.5px;margin:6px 0 0">Не опубликовано изменений: '+h.unpublished+'. Нажми «Опубликовать», чтобы они попали на сайт.</p>':'')
+    + '</div><div class="sec">'
+    + h.items.map((it,i)=>'<div class="hrow'+(i===0?' live':'')+'">'
+        + '<span class="hh">'+esc(it.hash)+'</span><span class="hd">'+esc(it.date)+'</span>'
+        + '<span>'+esc(it.subj)+'</span>'
+        + (i===0?'<span class="hnow">сейчас на сайте</span>':'<button class="x" data-h="'+esc(it.hash)+'">Откатить</button>')
+        + '</div>').join('')
+    + '</div>';
+  $('#form').onclick=async e=>{
+    const b=e.target.closest('[data-h]'); if(!b) return;
+    if(!confirm('Вернуть сайт к состоянию «'+b.closest('.hrow').children[2].textContent+'»?\n\nСоздастся новая версия с возвратом. Прежняя история сохранится, откатить обратно можно будет так же.')) return;
+    const r=await api('/api/history/revert',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({hash:b.dataset.h})});
+    if(r.error) return toast(r.error,6000);
+    toast('Откат готов. Нажми «Опубликовать», чтобы он попал на сайт.',5000);
+    await drawHistory();
+  };
+}
+
 // ── медиатека: все картинки сайта в одном месте ──────────────────────────
 // Смысл в колонке «где стоит»: заменить файл можно одним движением, а понять
 // последствия — только если видно, в скольких местах он используется.
@@ -616,7 +680,7 @@ async function openMedia(){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='media'; CUR=null; PAGE=null; DIRTY=false;
   document.querySelectorAll('.case,.pg').forEach(b=>b.classList.remove('on'));
-  $('#navMedia').classList.add('on');
+  $('#navMedia').classList.add('on'); $('#navHist').classList.remove('on');
   $('#ttl').textContent='Медиатека';
   $('#save').style.display=$('#revert').style.display='none';
   $('#checks').innerHTML='<div class="empty">Проверки считаются по кейсам.</div>';
@@ -721,8 +785,9 @@ async function openPage(file){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='page'; CUR=null; DIRTY=false;
   document.querySelectorAll('.case').forEach(b=>b.classList.remove('on'));
-  $('#navMedia').classList.remove('on');
+  $('#navMedia').classList.remove('on'); $('#navHist').classList.remove('on');
   document.querySelectorAll('.pg').forEach(b=>b.classList.toggle('on', b.dataset.f===file));
+  MANIFEST=null;
   PAGE=await api('/api/page/'+encodeURIComponent(file));
   ORIG=JSON.parse(JSON.stringify(PAGE.dict));
   $('#ttl').textContent=PAGE.label;
@@ -735,6 +800,27 @@ async function renderPage(){
   const n=Object.keys(PAGE.dict.ru).filter(k=>PAGE.groups.some(g=>g.keys.includes(k))).length;
   let h='<div class="sec"><h2>'+esc(PAGE.label)+'</h2><p style="color:var(--mute);font-size:12.5px;margin:0">'
     + n + ' редактируемых надписей. Шапка, подвал и всё, что собирается из кейсов, здесь не показано — им владеет сборка.</p></div>';
+  if(PAGE.file==='index.html'){
+    const mf=await api('/api/manifest');
+    MANIFEST=mf;
+    const fld=(path,val,long)=>'<'+(long?'textarea rows="3"':'input')+' data-mf="'+path+'">'+(long?esc(toEditor(val)):'')+'</'+(long?'textarea':'input')+'>';
+    h+='<div class="sec"><h2>Где работал</h2>'
+      + '<p style="color:var(--mute);font-size:12.5px;margin:0 0 11px">Годы и названия компаний — обычный текст, одинаковый в обоих языках. Роль, описание и награда переводятся.<br><b style="color:#b9b9c2">&lt;span class=&quot;num&quot;&gt;…&lt;/span&gt;</b> вокруг чисел — это подсветка цифр на сайте. Текст внутри меняй свободно, сами скобки не удаляй.</p>'
+      + mf.companies.map(c=>'<div class="co-ed">'
+          + '<div class="co-ed__top">'+fld('c.'+c.n+'.yrs',c.yrs)+fld('c.'+c.n+'.name',c.name)+'</div>'
+          + ['role','desc','aw'].map(f=>{
+              const lbl={role:'Роль',desc:'Описание',aw:'Награда и признание'}[f];
+              const long=f!=='role';
+              return '<div class="f"><label>'+lbl+'</label><div class="pair">'
+                + '<div><div class="lang">RU</div>'+fld('c.'+c.n+'.'+f+'.ru',c[f].ru,long)+'</div>'
+                + '<div><div class="lang">EN</div>'+fld('c.'+c.n+'.'+f+'.en',c[f].en,long)+'</div></div></div>';
+            }).join('')
+          + '</div>').join('')
+      + '</div>'
+      + '<div class="sec"><h2>Бренды в бегущей строке</h2>'
+      + '<div class="chips" id="chips"></div>'
+      + '<div style="display:flex;gap:7px"><input id="newBrand" placeholder="добавить бренд и нажать Enter" style="max-width:280px"><button class="btn" id="addBrand">Добавить</button></div></div>';
+  }
   if(PAGE.file==='about.html'){
     const cv=await api('/api/cv');
     const row=(lang,label)=>{
@@ -764,6 +850,19 @@ async function renderPage(){
   }
   $('#form').innerHTML=h;
   for(const el of $('#form').querySelectorAll('input[data-pk]')) el.value=toEditor(PAGE.dict[el.dataset.l][el.dataset.pk]);
+  if(MANIFEST){
+    for(const el of $('#form').querySelectorAll('[data-mf]')){
+      const [,n,f,lang]=el.dataset.mf.split('.');
+      const c=MANIFEST.companies.find(x=>String(x.n)===n);
+      el.value=toEditor(lang? c[f][lang] : c[f]);
+    }
+    $('#form').addEventListener('input',e=>{ const t=e.target; if(!t.dataset.mf) return;
+      const [,n,f,lang]=t.dataset.mf.split('.');
+      const c=MANIFEST.companies.find(x=>String(x.n)===n);
+      if(lang) c[f][lang]=fromEditor(t.value); else c[f]=fromEditor(t.value);
+      mark(); });
+    drawChips();
+  }
   // CV: заменить можно тремя способами — кнопкой, кликом по зоне и перетаскиванием
   for(const btn of $('#form').querySelectorAll('.cvpick')){
     btn.onclick=e=>{ e.stopPropagation();
@@ -789,9 +888,29 @@ async function uploadCv(f, lang, zone){
   await renderPage();
 }
 
+let MANIFEST=null;
+
+function drawChips(){
+  const box=$('#chips'); if(!box) return;
+  box.innerHTML=MANIFEST.brands.map((b,i)=>'<span class="chip">'+esc(b)+'<button data-b="'+i+'" title="убрать">×</button></span>').join('')
+    || '<span style="color:var(--mute);font-size:12.5px">пусто</span>';
+  box.onclick=e=>{ const b=e.target.closest('[data-b]'); if(!b) return;
+    MANIFEST.brands.splice(+b.dataset.b,1); mark(); drawChips(); };
+  const inp=$('#newBrand'), btn=$('#addBrand');
+  const addOne=()=>{ const v=inp.value.trim(); if(!v) return;
+    MANIFEST.brands.push(v); inp.value=''; mark(); drawChips(); $('#newBrand').focus(); };
+  if(btn) btn.onclick=addOne;
+  if(inp) inp.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); addOne(); } };
+}
+
 async function savePage(){
   const r=await api('/api/page/'+encodeURIComponent(PAGE.file),{method:'POST',
     headers:{'content-type':'application/json'},body:JSON.stringify({dict:PAGE.dict})});
+  if(MANIFEST && PAGE.file==='index.html'){
+    const m=await api('/api/manifest',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({companies:MANIFEST.companies,brands:MANIFEST.brands})});
+    if(m.error) toast(m.error,5000);
+  }
   DIRTY=false; $('#save').classList.remove('pri'); ORIG=JSON.parse(JSON.stringify(PAGE.dict));
   $('#frame').src='/'+(PAGE.file==='index.html'?'':PAGE.file)+'?t='+Date.now();
   toast(r.ok?'Страница сохранена. На сайт — кнопкой «Опубликовать».':'Ошибка сборки: '+(r.out||''));
@@ -815,13 +934,14 @@ function drawChecks(ps){
 
 function refreshPreview(){
   if(MODE==='media'){ $('#frame').src='/portfolio.html?t='+Date.now(); return; }
+  if(MODE==='hist') return;
   const path = MODE==='page' ? (PAGE.file==='index.html'?'/':'/'+PAGE.file) : `/projects/${CUR}.html`;
   $('#frame').src=(LANG==='en'?'/en':'')+path+'?t='+Date.now();
 }
 $('#lang').onclick=e=>{ const b=e.target.closest('button'); if(!b) return;
   LANG=b.dataset.l; $('#lang').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); refreshPreview(); };
 $('#reload').onclick=refreshPreview;
-$('#save').onclick=()=>{ if(MODE==='media') return toast('В медиатеке сохранять нечего — файлы пишутся сразу.'); MODE==='page'?savePage():save(); };
+$('#save').onclick=()=>{ if(MODE==='media'||MODE==='hist') return toast('Здесь сохранять нечего.'); MODE==='page'?savePage():save(); };
 $('#revert').onclick=()=>{ if(!confirm('Вернуть поля к последнему сохранению?')) return;
   if(MODE==='page'){ PAGE.dict=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; renderPage(); }
   else { DATA=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; render(); } };
@@ -830,6 +950,7 @@ addEventListener('beforeunload',e=>{ if(DIRTY){ e.preventDefault(); e.returnValu
 
 /* ── правила ── */
 $('#navMedia').onclick=openMedia;
+$('#navHist').onclick=openHistory;
 
 $('#addCase').onclick=async()=>{
   const title=prompt('Название нового кейса:\n\nОн создастся скрытым — на сайт не попадёт, пока сам не переключишь.');

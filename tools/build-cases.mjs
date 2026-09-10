@@ -178,9 +178,13 @@ for (const c of allCases()) data[c.id] = caseData(c.id);
 
 const problems = [];
 const writes = [];
+// Сравниваем без оглядки на переносы строк: в рабочей папке они могут быть
+// CRLF (так их выгружает git), а генератор всегда пишет LF — иначе страж
+// сообщал бы о рассинхроне на файле, который на самом деле совпадает.
+const eol = (t) => String(t).split('\r\n').join('\n');
 const queue = (rel, next) => {
   const cur = rd(rel);
-  if (strip(cur) === strip(next)) return;
+  if (eol(strip(cur)) === eol(strip(next))) return;
   problems.push(rel);
   if (!CHECK) writes.push([rel, (hasBom(rel) ? '﻿' : '') + strip(next)]);
 };
