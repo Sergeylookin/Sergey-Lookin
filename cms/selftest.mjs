@@ -209,11 +209,15 @@ ok('не-mp4 отклоняется', !!badVid.error);
 g('Форматы картинок');
 {
   const sharp = (await import('sharp')).default;
-  const png = await sharp({ create: { width: 300, height: 200, channels: 3, background: { r: 10, g: 90, b: 200 } } }).png().toBuffer();
+  // Картинка должна быть достаточно крупной и пёстрой: одноцветный
+  // прямоугольник весит меньше килобайта, и все замеры округлятся в ноль.
+  const noise = Buffer.alloc(1200 * 800 * 3);
+  for (let i = 0; i < noise.length; i++) noise[i] = (i * 37 + (i >> 9) * 11) & 0xff;
+  const png = await sharp(noise, { raw: { width: 1200, height: 800, channels: 3 } }).png().toBuffer();
   const jpg = await sharp(png).jpeg({ quality: 92 }).toBuffer();
 
   const pr = await raw('/api/probe', png);
-  ok('вес считается заранее', pr.kind === 'png' && pr.q90Kb > 0 && pr.losslessKb > 0 && pr.w === 300,
+  ok('вес считается заранее', pr.kind === 'png' && pr.q90Kb > 0 && pr.losslessKb > 0 && pr.w === 1200,
     pr.error || `${pr.origKb} КБ → ${pr.q90Kb} / ${pr.losslessKb} КБ`);
   ok('мусор не принимается за картинку', !!(await raw('/api/probe', Buffer.from('это просто текст'))).error);
 
@@ -260,8 +264,9 @@ g('Контакты и ссылки');
   tg.url = 'https://t.me/selftest_probe'; tg.handle = '@selftest_probe';
   await post('/api/contacts', { items: probe, extra: before.extra });
   ok('доехало до главной', hit('index.html') === 3, `совпадений: ${hit('index.html')}`);
-  ok('доехало до «Обо мне»', hit('about.html') === 2, `совпадений: ${hit('about.html')}`);
-  ok('английская версия пересобралась', hit('en/index.html') === 3 && hit('en/about.html') === 2);
+  ok('доехало до «Обо мне»', hit('about.html') === 3, `совпадений: ${hit('about.html')}`);
+  ok('английская версия пересобралась', hit('en/index.html') === 3 && hit('en/about.html') === 3,
+    `en: ${hit('en/index.html')} и ${hit('en/about.html')}`);
   ok('почта в машинную разметку не идёт',
     !/"sameAs":\s*\[[^\]]*mailto:/.test(readFileSync(resolve(ROOT, 'about.html'), 'utf8')));
 
