@@ -13,6 +13,12 @@ import { dirname, resolve, join, extname } from 'node:path';
 import { execFile } from 'node:child_process';
 import { load } from 'cheerio';
 
+// sharp кэширует открытые файлы, и на Windows из-за этого не удаётся ни
+// переименовать, ни перезаписать картинку, которую он недавно читал.
+// Кэш выключаем: пара миллисекунд на чтение против сорванной замены файла.
+const sharpMod = await import('sharp');
+sharpMod.default.cache(false);
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 const IMGDIR = resolve(ROOT, 'assets', 'img');
@@ -737,7 +743,7 @@ const srv = createServer(async (req, res) => {
       if (!buf.length) return json(res, 400, { error: 'Пустой файл.' });
       if (buf.slice(8, 12).toString() !== 'WEBP') return json(res, 400, { error: 'Это не webp. Экспортируй из Figma в webp.' });
       writeFileSync(resolve(IMGDIR, name + '.webp'), buf);
-      const sharp = (await import('sharp')).default;
+      const sharp = sharpMod.default;
       const meta = await sharp(resolve(IMGDIR, name + '.webp')).metadata();
       for (const w of VARIANTS) { if (w >= meta.width) continue; await sharp(resolve(IMGDIR, name + '.webp')).resize({ width: w }).webp({ quality: 82 }).toFile(resolve(IMGDIR, `${name}-${w}.webp`)); }
       return json(res, 200, { ok: true, name, w: meta.width, h: meta.height, variants: variantsOf(name) });
@@ -819,7 +825,7 @@ const srv = createServer(async (req, res) => {
       if (buf.slice(8, 12).toString() !== 'WEBP') return json(res, 400, { error: 'Это не webp. Экспортируй из Figma в webp.' });
       const dst = resolve(IMGDIR, name + '.webp');
       await writeFileSafe(dst, buf);
-      const sharp = (await import('sharp')).default;
+      const sharp = sharpMod.default;
       const meta = await sharp(dst).metadata();
       for (const w of VARIANTS) {
         const v = resolve(IMGDIR, `${name}-${w}.webp`);
