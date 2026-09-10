@@ -11,11 +11,12 @@ import sharp from 'sharp';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { casePages } from './case-ids.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const IMGDIR = resolve(ROOT, 'assets', 'img');
 const WIDTHS = [480, 960, 1440];
-const PAGES = ['portfolio.html', 'about.html', ...Array.from({ length: 10 }, (_, i) => `projects/${String(i + 1).padStart(2, '0')}.html`)];
+const PAGES = ['portfolio.html', 'about.html', ...casePages()];
 
 const SIZES = {
   preview:  '(max-width: 860px) 92vw, 56vw',   // portfolio grid card media

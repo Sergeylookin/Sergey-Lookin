@@ -69,6 +69,18 @@ ids.forEach((id, idx) => {
     for (const t of [1, 2, 3]) if (P[`c${n}.t${t}`] != null) k[lang][`card.t${t}`] = P[`c${n}.t${t}`];
     k[lang]['works.title'] = I[`wk.${n}.t`] ?? '';
     k[lang]['works.dir'] = I[`wk.${n}.c`] ?? '';
+    // год в таблице #works короче года кейса (колонка 4rem). Если он не просто
+    // началом диапазона — сохраняем как есть, чтобы миграция ничего не сдвинула.
+    if (lang === 'ru') {
+      const rowYear = $row.find('.wk-y').text().trim();
+      const caseYear = (() => {
+        const $$ = load(caseHtml, { decodeEntities: false });
+        let y = '';
+        $$('.pcase__f').each((_i, el) => { if ($$(el).find('.l').attr('data-i18n') === 'f.year') y = $$(el).find('.v').text().trim(); });
+        return y;
+      })();
+      if (rowYear && rowYear !== String(caseYear).split(/[—–-]/)[0].trim()) k.ru['works.year'] = rowYear;
+    }
     // роль в таблице манифеста хранится ОТДЕЛЬНО только если она осознанно отличается
     const rowRole = I[`wk.${n}.r`] ?? '';
     if (rowRole && rowRole !== (cd[lang]['p.role'] ?? '')) k[lang]['works.role'] = rowRole;

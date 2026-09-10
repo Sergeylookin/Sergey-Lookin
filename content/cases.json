@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "01",
+      "slug": "runa",
+      "order": 1,
+      "status": "published",
+      "cover": {
+        "kind": "vid",
+        "poster": "runa-preview",
+        "video": "assets/vid/runa.mp4"
+      },
+      "shots": "1,2+3,4,5",
+      "pos": "",
+      "flip": false
+    },
+    {
+      "id": "02",
+      "slug": "rocketwork",
+      "order": 2,
+      "status": "published",
+      "cover": {
+        "kind": "img",
+        "poster": "rocketwork-preview"
+      },
+      "shots": "1,5",
+      "pos": "",
+      "flip": true
+    },
+    {
+      "id": "03",
+      "slug": "fingular",
+      "order": 3,
+      "status": "published",
+      "cover": {
+        "kind": "img",
+        "poster": "fingular-preview"
+      },
+      "shots": "1,2,3",
+      "pos": "50% 42%",
+      "flip": false
+    },
+    {
+      "id": "04",
+      "slug": "chobies",
+      "order": 4,
+      "status": "published",
+      "cover": {
+        "kind": "vid",
+        "poster": "chobies-preview",
+        "video": "assets/vid/chobies.mp4"
+      },
+      "shots": "1,2+3,4",
+      "pos": "50% 45%",
+      "flip": true
+    },
+    {
+      "id": "05",
+      "slug": "duft",
+      "order": 5,
+      "status": "published",
+      "cover": {
+        "kind": "img",
+        "poster": "duft-preview"
+      },
+      "shots": "1,2+3,4",
+      "pos": "50% 22%",
+      "flip": false
+    },
+    {
+      "id": "06",
+      "slug": "squad",
+      "order": 6,
+      "status": "published",
+      "cover": {
+        "kind": "img",
+        "poster": "squad-preview"
+      },
+      "shots": "1,2+3,4,5",
+      "pos": "",
+      "flip": true
+    },
+    {
+      "id": "07",
+      "slug": "mk",
+      "order": 7,
+      "status": "published",
+      "cover": {
+        "kind": "vid",
+        "poster": "mk-preview",
+        "video": "assets/vid/mk.mp4"
+      },
+      "shots": "1,2+3,4",
+      "pos": "",
+      "flip": false
+    },
+    {
+      "id": "08",
+      "slug": "poscredit",
+      "order": 8,
+      "status": "published",
+      "cover": {
+        "kind": "img",
+        "poster": "poscredit-preview"
+      },
+      "shots": "1,2+3,4",
+      "pos": "50% 45%",
+      "flip": true
+    },
+    {
+      "id": "09",
+      "slug": "heatbit",
+      "order": 9,
+      "status": "published",
+      "cover": {
+        "kind": "img",
+        "poster": "heatbit-preview"
+      },
+      "shots": "1,2+3,4,5",
+      "pos": "50% 32%",
+      "flip": false
+    },
+    {
+      "id": "10",
+      "slug": "choise",
+      "order": 10,
+      "status": "published",
+      "cover": {
+        "kind": "img",
+        "poster": "choise-preview"
+      },
+      "shots": "1,2+3,4",
+      "pos": "50% 42%",
+      "flip": true
+    }
+  ]
+}

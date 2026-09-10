@@ -6,6 +6,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { casePages } from './case-ids.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -63,7 +64,7 @@ const ALT = {
 };
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-const PAGES = Array.from({ length: 10 }, (_, i) => `projects/${String(i + 1).padStart(2, '0')}.html`);
+const PAGES = casePages();
 
 let changed = 0;
 for (const page of PAGES) {

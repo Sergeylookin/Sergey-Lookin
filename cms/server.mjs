@@ -7,7 +7,7 @@
 // жать картинки через sharp. Всё остальное живёт в cms/index.html.
 
 import { createServer } from 'node:http';
-import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, renameSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, renameSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve, join, extname } from 'node:path';
 import { execFile } from 'node:child_process';
@@ -48,6 +48,25 @@ const EDITABLE = new Set(FIELDS.map((f) => f.k));
 
 const casePath = (n) => resolve(ROOT, 'projects', `${n}.html`);
 const caseIds = () => readdirSync(resolve(ROOT, 'projects')).filter((f) => /^\d\d\.html$/.test(f)).map((f) => f.slice(0, 2)).sort();
+
+// ── реестр: id (адрес, навсегда) / order (позиция) / status (черновик-опубликован-архив) ──
+const REG = resolve(ROOT, 'content', 'cases.json');
+const readReg = () => JSON.parse(readFileSync(REG, 'utf8'));
+function writeReg(reg) {
+  reg.cases.sort((a, b) => a.order - b.order).forEach((c, i) => { c.order = i + 1; });
+  const tmp = REG + '.tmp';
+  writeFileSync(tmp, JSON.stringify(reg, null, 2) + '\n', 'utf8');
+  renameSync(tmp, REG);
+}
+const STATUSES = ['published', 'hidden'];
+const STATUS_RU = { published: 'На сайте', hidden: 'Скрыт' };
+
+// Пересборка всего, что зависит от состава кейсов. Зовётся после любой операции.
+async function rebuild() {
+  const a = await node('build-cases.mjs');
+  const b = await node('build-en.mjs');
+  return { ok: a.code === 0 && b.code === 0, out: (a.out + b.out).slice(-500) };
+}
 
 function readDict($) {
   const raw = $('#i18n-data').html() || '{}';
@@ -282,7 +301,123 @@ const srv = createServer(async (req, res) => {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
       return res.end(readFileSync(resolve(HERE, 'index.html')));
     }
-    if (path === '/api/model') return json(res, 200, { fields: FIELDS, cases: caseIds().map((n) => { const c = loadCase(n); return { n, title: c.dict.ru['p.title'], year: c.year, role: c.dict.ru['p.role'] }; }) });
+    if (path === '/api/model') {
+      const reg = readReg();
+      const byId = Object.fromEntries(reg.cases.map((c) => [c.id, c]));
+      const cases = reg.cases.slice().sort((a, b) => a.order - b.order).map((rc) => {
+        const c = loadCase(rc.id);
+        return { n: rc.id, title: c.dict.ru['p.title'], year: c.year, role: c.dict.ru['p.role'],
+                 status: rc.status, order: rc.order, cover: rc.cover, slug: rc.slug };
+      });
+      return json(res, 200, { fields: FIELDS, cases, statuses: STATUSES, statusRu: STATUS_RU });
+    }
+
+    // создать новый кейс: копия шаблона с очищенным содержимым, сразу черновик
+    if (path === '/api/case/new' && req.method === 'POST') {
+      const { title = 'Новый кейс', slug = '' } = JSON.parse((await body(req)).toString('utf8') || '{}');
+      const reg = readReg();
+      const ids = caseIds();
+      const id = String(Math.max(...ids.map(Number)) + 1).padStart(2, '0');
+      const src = readFileSync(casePath(ids[ids.length - 1]), 'utf8');
+      const bom = src.charCodeAt(0) === 0xfeff;
+      let html = src.replace(/^﻿/, '');
+      const d = JSON.parse(load(html, { decodeEntities: false })('#i18n-data').html() || '{}');
+      // чистим всё содержательное, каркас и служебные ключи оставляем
+      for (const lang of ['ru', 'en']) {
+        for (const k of Object.keys(d[lang])) {
+          if (EDITABLE.has(k) || k.startsWith('card.') || k.startsWith('works.')) d[lang][k] = '';
+        }
+        d[lang]['p.title'] = title;
+        d[lang]['meta.title'] = title + ' · Сергей Лукин';
+      }
+      for (const k of EDITABLE) { const nx = replaceInner(html, k, d.ru[k] ?? ''); if (nx) html = nx; }
+      html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${d.ru['meta.title']}</title>`);
+      html = html.replace(/(data-i18n="f\.year">[^<]*<\/div><div class="v">)[^<]*(<\/div>)/, `$1$2`);
+      const md = replaceRegion(html, '<section class="pcase__full pcase__media"', '\n');
+      if (md) html = md;
+      html = html.replace(/projects\/\d\d\.html/g, `projects/${id}.html`);
+      const nd = replaceInner(html.replace('id="i18n-data"', 'id="i18n-data" data-i18n="__dict__"'), '__dict__', JSON.stringify(d));
+      if (nd) html = nd.replace(' data-i18n="__dict__"', '');
+      writeFileSync(casePath(id), (bom ? '﻿' : '') + html, 'utf8');
+      reg.cases.push({ id, slug: slug || 'case-' + id, order: 9999, status: 'hidden',
+                       cover: { kind: 'img', poster: '' }, shots: '', pos: '', flip: false });
+      writeReg(reg);
+      const r = await rebuild();
+      return json(res, 200, { ok: r.ok, id, out: r.out });
+    }
+
+    if (path === '/api/order' && req.method === 'POST') {
+      const { ids } = JSON.parse((await body(req)).toString('utf8'));
+      const reg = readReg();
+      ids.forEach((id, i) => { const c = reg.cases.find((x) => x.id === id); if (c) c.order = i + 1; });
+      writeReg(reg);
+      const r = await rebuild();
+      return json(res, 200, { ok: r.ok, out: r.out });
+    }
+
+    if (path.startsWith('/api/case/') && path.endsWith('/status') && req.method === 'POST') {
+      const id = path.split('/')[3];
+      const { status } = JSON.parse((await body(req)).toString('utf8'));
+      if (!STATUSES.includes(status)) return json(res, 400, { error: 'неизвестный статус' });
+      const reg = readReg();
+      const c = reg.cases.find((x) => x.id === id);
+      if (!c) return json(res, 404, { error: 'нет такого кейса' });
+      if (status !== 'published' && reg.cases.filter((x) => x.status === 'published').length <= 1)
+        return json(res, 400, { error: 'Это последний кейс на сайте — сетка портфолио опустеет. Сначала опубликуй другой.' });
+      c.status = status;
+      writeReg(reg);
+      const r = await rebuild();
+      return json(res, 200, { ok: r.ok, out: r.out });
+    }
+
+    if (path.startsWith('/api/case/') && path.endsWith('/duplicate') && req.method === 'POST') {
+      const from = path.split('/')[3];
+      const reg = readReg();
+      const ids = caseIds();
+      const id = String(Math.max(...ids.map(Number)) + 1).padStart(2, '0');
+      let html = readFileSync(casePath(from), 'utf8');
+      const bom = html.charCodeAt(0) === 0xfeff;
+      html = html.replace(/^﻿/, '').replace(/projects\/\d\d\.html/g, `projects/${id}.html`);
+      const d = JSON.parse(load(html, { decodeEntities: false })('#i18n-data').html() || '{}');
+      for (const lang of ['ru', 'en']) d[lang]['p.title'] = (d[lang]['p.title'] || '') + (lang === 'ru' ? ' (копия)' : ' (copy)');
+      const t = replaceInner(html, 'p.title', d.ru['p.title']); if (t) html = t;
+      const nd = replaceInner(html.replace('id="i18n-data"', 'id="i18n-data" data-i18n="__dict__"'), '__dict__', JSON.stringify(d));
+      if (nd) html = nd.replace(' data-i18n="__dict__"', '');
+      writeFileSync(casePath(id), (bom ? '﻿' : '') + html, 'utf8');
+      const src = reg.cases.find((x) => x.id === from);
+      reg.cases.push({ ...JSON.parse(JSON.stringify(src)), id, slug: (src.slug || 'case') + '-copy', order: 9999, status: 'hidden' });
+      writeReg(reg);
+      const r = await rebuild();
+      return json(res, 200, { ok: r.ok, id, out: r.out });
+    }
+
+    // удаление навсегда: только по точному совпадению названия, как в GitHub
+    if (path.startsWith('/api/case/') && path.endsWith('/delete') && req.method === 'POST') {
+      const id = path.split('/')[3];
+      const { confirm } = JSON.parse((await body(req)).toString('utf8'));
+      const c = loadCase(id);
+      if ((confirm || '').trim() !== (c.dict.ru['p.title'] || '').trim())
+        return json(res, 400, { error: 'Название не совпало — кейс не тронут.' });
+      const reg = readReg();
+      reg.cases = reg.cases.filter((x) => x.id !== id);
+      writeReg(reg);
+      rmSync(casePath(id), { force: true });
+      rmSync(resolve(ROOT, 'en', 'projects', `${id}.html`), { force: true });
+      const r = await rebuild();
+      return json(res, 200, { ok: r.ok, out: r.out });
+    }
+
+    if (path.startsWith('/api/case/') && path.endsWith('/cover') && req.method === 'POST') {
+      const id = path.split('/')[3];
+      const { poster, kind } = JSON.parse((await body(req)).toString('utf8'));
+      const reg = readReg();
+      const c = reg.cases.find((x) => x.id === id);
+      if (!c) return json(res, 404, { error: 'нет такого кейса' });
+      c.cover = { ...c.cover, kind: kind || c.cover.kind || 'img', poster: poster || '' };
+      writeReg(reg);
+      const r = await rebuild();
+      return json(res, 200, { ok: r.ok, out: r.out });
+    }
     if (path.startsWith('/api/case/')) {
       const n = path.split('/')[3];
       if (req.method === 'GET') return json(res, 200, loadCase(n));

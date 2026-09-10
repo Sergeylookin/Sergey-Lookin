@@ -13,19 +13,20 @@ import { load } from 'cheerio';
 import { readFileSync, writeFileSync, mkdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve, join } from 'node:path';
+import { caseIds, hiddenIds } from './case-ids.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = 'https://sergeylookin.github.io/Sergey-Lookin/';
 
 // RU file → { ruUrl, enUrl, enFile }. Home uses the clean directory URL.
+// Список кейсов берётся из папки projects — раньше здесь было зашито «10»,
+// и одиннадцатый кейс просто не попал бы ни в EN, ни в карту сайта.
 const PAGES = [
   { file: 'index.html',     ruPath: '',              enFile: 'en/index.html',     enPath: 'en/' },
   { file: 'about.html',     ruPath: 'about.html',    enFile: 'en/about.html',     enPath: 'en/about.html' },
   { file: 'portfolio.html', ruPath: 'portfolio.html',enFile: 'en/portfolio.html', enPath: 'en/portfolio.html' },
-  ...Array.from({ length: 10 }, (_, i) => {
-    const n = String(i + 1).padStart(2, '0');
-    return { file: `projects/${n}.html`, ruPath: `projects/${n}.html`, enFile: `en/projects/${n}.html`, enPath: `en/projects/${n}.html` };
-  }),
+  ...caseIds().map((n) =>
+    ({ file: `projects/${n}.html`, ruPath: `projects/${n}.html`, enFile: `en/projects/${n}.html`, enPath: `en/projects/${n}.html` })),
 ];
 
 const strip = (s) => (s || '').replace(/<[^>]+>/g, '');
@@ -143,7 +144,12 @@ for (const p of PAGES) {
 // 3) sitemap with both trees + hreflang alternates
 const sm = ['<?xml version="1.0" encoding="UTF-8"?>',
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'];
-for (const p of PAGES) {
+// Черновики и архив в карту сайта не попадают: страница существует и открывается
+// по прямой ссылке, но поисковику её не предлагаем (у неё же стоит noindex).
+const hidden = new Set(hiddenIds().map((n) => `projects/${n}.html`));
+let smUrls = 0;
+for (const p of PAGES.filter((x) => !hidden.has(x.file))) {
+  smUrls += 2;
   const ruUrl = BASE + p.ruPath, enUrl = BASE + p.enPath;
   const lastmod = statSync(join(ROOT, p.file)).mtime.toISOString().slice(0, 10);
   for (const [self, ru, en] of [[ruUrl, ruUrl, enUrl], [enUrl, ruUrl, enUrl]]) {
@@ -159,4 +165,4 @@ for (const p of PAGES) {
 sm.push('</urlset>', '');
 writeFileSync(join(ROOT, 'sitemap.xml'), sm.join('\n'));
 
-console.log(`\n✔ en pages: ${enWritten} written, ${ruChanged} RU pages got hreflang, sitemap regenerated (${PAGES.length * 2} urls)`);
+console.log(`\n✔ en pages: ${enWritten} written, ${ruChanged} RU pages got hreflang, sitemap regenerated (${smUrls} urls)`);

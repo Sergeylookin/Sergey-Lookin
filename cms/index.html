@@ -69,6 +69,13 @@ input:focus,textarea:focus{outline:0;border-color:#4a4a55}
 .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg button{padding:5px 11px;font:11px var(--mono);color:var(--mute)}
 .seg button.on{background:#1f1f24;color:var(--ink)}
+.seg--wide{display:grid;grid-template-columns:repeat(3,1fr)}
+.seg--wide button{padding:7px 4px;font-size:11.5px;font-family:var(--sans);letter-spacing:0}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.case--off b{opacity:.6}
+.badge{font:10px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:4px;border:1px solid var(--line);color:var(--mute);vertical-align:middle}
+.badge--published{display:none}
+.badge--hidden{color:var(--warn);border-color:var(--warn)}
 
 /* ── проверки ── */
 .checks{padding:12px 20px;display:grid;gap:6px}
@@ -103,6 +110,7 @@ input:focus,textarea:focus{outline:0;border-color:#4a4a55}
     <div class="brand">CMS<small id="root">портфолио</small></div>
     <div class="cases" id="cases"></div>
     <div class="sidefoot">
+      <button class="btn" id="addCase">+ Новый кейс</button>
       <button class="btn" id="rules">Правила ↗</button>
       <button class="btn pri" id="pub">Опубликовать</button>
     </div>
@@ -189,17 +197,45 @@ function toast(msg,ms=2600){ const t=document.createElement('div'); t.className=
 /* ── список кейсов ── */
 async function boot(){
   MODEL = await api('/api/model');
-  $('#cases').innerHTML = MODEL.cases.map(c=>
-    `<button class="case" data-n="${c.n}"><b>${c.n} · ${c.title||'—'}</b><span>${c.year||''} · ${c.role||''}</span></button>`).join('');
+  drawList();
   $('#cases').onclick = e=>{ const b=e.target.closest('.case'); if(b) open(b.dataset.n); };
-  open(MODEL.cases[0].n);
+  open(CUR && MODEL.cases.some(c=>c.n===CUR) ? CUR : MODEL.cases[0].n);
 }
+
+// Список кейсов: статус точкой, порядок — перетаскиванием строки.
+function drawList(){
+  const dot={published:'var(--ok)',hidden:'var(--warn)'};
+  $('#cases').innerHTML = MODEL.cases.map(c=>
+    `<button class="case${c.status!=='published'?' case--off':''}" data-n="${c.n}" draggable="true">
+       <b><i class="dot" style="background:${dot[c.status]}" title="${MODEL.statusRu[c.status]}"></i>${c.n} · ${c.title||'без названия'}</b>
+       <span>${c.year||'—'} · ${c.role||'—'}${c.status!=='published'?' · '+MODEL.statusRu[c.status]:''}</span>
+     </button>`).join('');
+  let drag=null;
+  for(const el of $('#cases').querySelectorAll('.case')){
+    el.ondragstart=e=>{ drag=el; el.style.opacity=.4; e.dataTransfer.effectAllowed='move'; };
+    el.ondragend=()=>{ el.style.opacity=1; drag=null; saveOrder(); };
+    el.ondragover=e=>{ e.preventDefault(); if(!drag||drag===el) return;
+      const r=el.getBoundingClientRect();
+      el.parentNode.insertBefore(drag, (e.clientY-r.top)/r.height>.5 ? el.nextSibling : el); };
+  }
+}
+async function saveOrder(){
+  const ids=[...$('#cases').querySelectorAll('.case')].map(b=>b.dataset.n);
+  if(ids.join()===MODEL.cases.map(c=>c.n).join()) return;
+  toast('Меняю порядок…');
+  const r=await api('/api/order',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ids})});
+  MODEL=await api('/api/model'); drawList(); markCur(); refreshPreview();
+  toast(r.ok?'Порядок сохранён. Сетка и таблица пересобраны.':'Не удалось: '+(r.out||''));
+}
+const markCur=()=>document.querySelectorAll('.case').forEach(b=>b.classList.toggle('on',b.dataset.n===CUR));
 
 async function open(n){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   CUR=n; DATA=await api('/api/case/'+n); ORIG=JSON.parse(JSON.stringify(DATA)); DIRTY=false;
-  document.querySelectorAll('.case').forEach(b=>b.classList.toggle('on',b.dataset.n===n));
-  $('#ttl').textContent = `${n} · ${DATA.dict.ru['p.title']||''}`;
+  markCur();
+  const meta=MODEL.cases.find(c=>c.n===n)||{};
+  $('#ttl').innerHTML = `${n} · ${esc(DATA.dict.ru['p.title']||'без названия')}`
+    + ` <span class="badge badge--${meta.status}">${MODEL.statusRu[meta.status]||''}</span>`;
   render(); refreshPreview(); check();
 }
 
@@ -220,7 +256,22 @@ function render(){
     ['Текст',['p.ov','p.ta','p.so','p.re']],
     ['Факты',['p.f1','p.f2','p.f3','p.f4','p.f5']],
     ['Поиск и превью в мессенджерах',['meta.title','meta.description']]];
-  let h=`<div class="sec"><h2>Год</h2><div class="f"><label>Год <button class="i" data-hint="Показывается в трёх местах: шапка кейса, карточка портфолио, таблица на манифесте. Можно диапазон: 2023—2026.">i</button></label><input id="year" value="${esc(DATA.year)}" style="max-width:200px"></div></div>`;
+  const meta=MODEL.cases.find(c=>c.n===CUR)||{status:'published',cover:{}};
+  let h=`<div class="sec"><h2>Кейс</h2>
+    <div class="f"><label>Где показывается <button class="i" data-hint="«На сайте» — кейс в сетке портфолио, в таблице манифеста и в карте сайта. «Скрыт» — исчезает из сетки, таблицы и поиска, но страница остаётся на своём адресе и содержимое цело. Вернуть можно в любой момент одним кликом, ничего заново заполнять не надо.">i</button></label>
+      <div class="seg seg--wide" id="statusSeg">
+        ${MODEL.statuses.map(s=>`<button data-s="${s}" class="${s===meta.status?'on':''}">${MODEL.statusRu[s]}</button>`).join('')}
+      </div></div>
+    <div class="f"><label>Обложка в сетке <button class="i" data-hint="Картинка карточки в портфолио. Обычно это отдельный файл вида slug-preview.webp. Перетащи новую или впиши имя без .webp.">i</button></label>
+      <div class="mi"><img src="${meta.cover&&meta.cover.poster?'/assets/img/'+meta.cover.poster+'.webp':''}" alt="">
+        <div><input id="cover" value="${esc((meta.cover||{}).poster||'')}" placeholder="имя файла без .webp">
+        <div class="drop" id="dropCover" style="margin-top:6px;padding:10px">перетащи обложку сюда</div></div></div></div>
+    <div class="f"><label>Год <button class="i" data-hint="Показывается в трёх местах: шапка кейса, карточка портфолио, таблица на манифесте. Можно диапазон: 2023—2026.">i</button></label>
+      <input id="year" value="${esc(DATA.year)}" style="max-width:200px"></div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:4px">
+      <button class="btn" id="dupCase">Сделать копию</button>
+      <button class="btn" id="delCase" style="margin-left:auto;color:var(--accent)">Удалить навсегда</button>
+    </div></div>`;
   for(const [name,keys] of groups){
     h+=`<div class="sec"><h2>${name}</h2>`+keys.map(k=>{const f=MODEL.fields.find(x=>x.k===k); return f?field(f):'';}).join('')+`</div>`;
   }
@@ -239,7 +290,63 @@ function render(){
   });
   $('#addFull').onclick=()=>{ DATA.media.push({type:'full',src:'',alt:''}); mark(); drawMedia(); };
   $('#addRow').onclick=()=>{ DATA.media.push({type:'row',items:[{src:'',alt:''},{src:'',alt:''}]}); mark(); drawMedia(); };
+  wireCaseOps();
   drawMedia();
+}
+
+// ── операции над кейсом целиком ────────────────────────────────────────────
+async function reloadAll(msg){
+  MODEL=await api('/api/model'); drawList(); await open(CUR); if(msg) toast(msg);
+}
+function wireCaseOps(){
+  $('#statusSeg').onclick=async e=>{
+    const b=e.target.closest('[data-s]'); if(!b) return;
+    const r=await api('/api/case/'+CUR+'/status',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({status:b.dataset.s})});
+    if(r.error) return toast(r.error, 5000);
+    MODEL=await api('/api/model'); drawList(); markCur();
+    const m=MODEL.cases.find(c=>c.n===CUR);
+    $('#statusSeg').querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x.dataset.s===m.status));
+    $('#ttl').innerHTML=`${CUR} · ${esc(DATA.dict.ru['p.title']||'')} <span class="badge badge--${m.status}">${MODEL.statusRu[m.status]}</span>`;
+    refreshPreview();
+    toast(m.status==='published'?'Кейс вернулся на сайт. Сетка и таблица пересобраны.':'Кейс скрыт. Убран из сетки, таблицы и поиска — страница и все тексты целы, вернуть можно в любой момент.', 4200);
+  };
+  const setCover=async(poster)=>{
+    const r=await api('/api/case/'+CUR+'/cover',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({poster})});
+    if(r.error) return toast(r.error);
+    await reloadAll('Обложка обновлена.');
+  };
+  $('#cover').onchange=e=>setCover(e.target.value.trim());
+  const dc=$('#dropCover');
+  dc.ondragover=e=>{e.preventDefault(); dc.classList.add('hot');};
+  dc.ondragleave=()=>dc.classList.remove('hot');
+  dc.ondrop=async e=>{ e.preventDefault(); dc.classList.remove('hot');
+    const f=[...e.dataTransfer.files].find(x=>/\.webp$/i.test(x.name));
+    if(!f) return toast('Только .webp');
+    dc.textContent='загружаю…';
+    const r=await fetch('/api/upload?stem='+encodeURIComponent(stemOfCase()+'-preview'),{method:'POST',body:f}).then(x=>x.json());
+    dc.textContent='перетащи обложку сюда';
+    if(r.error) return toast(r.error);
+    await setCover(r.name);
+  };
+  $('#dupCase').onclick=async()=>{
+    if(!confirm('Создать копию этого кейса? Она появится скрытой, на сайт не попадёт.')) return;
+    const r=await api('/api/case/'+CUR+'/duplicate',{method:'POST'});
+    if(r.error) return toast(r.error);
+    MODEL=await api('/api/model'); drawList(); await open(r.id);
+    toast('Копия создана и скрыта — заполняй спокойно.');
+  };
+  $('#delCase').onclick=async()=>{
+    const title=DATA.dict.ru['p.title']||'';
+    const ans=prompt(`Удалить кейс НАВСЕГДА — файл страницы будет стёрт.\n\nЕсли просто хочешь убрать его с сайта — закрой это окно и переключи его в «Скрыт» — он останется целым.\n\nДля удаления впиши название кейса точно:\n${title}`);
+    if(ans===null) return;
+    const r=await api('/api/case/'+CUR+'/delete',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({confirm:ans})});
+    if(r.error) return toast(r.error, 5000);
+    CUR=null; MODEL=await api('/api/model'); drawList(); await open(MODEL.cases[0].n);
+    toast('Кейс удалён. Сетка и таблица пересобраны.');
+  };
 }
 document.addEventListener('click',e=>{ if(!e.target.closest('.i')&&!e.target.closest('.tip')) hideTip(); });
 
@@ -340,6 +447,16 @@ addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preve
 addEventListener('beforeunload',e=>{ if(DIRTY){ e.preventDefault(); e.returnValue=''; } });
 
 /* ── правила ── */
+$('#addCase').onclick=async()=>{
+  const title=prompt('Название нового кейса:\n\nОн создастся скрытым — на сайт не попадёт, пока сам не переключишь.');
+  if(!title) return;
+  toast('Создаю…');
+  const r=await api('/api/case/new',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({title})});
+  if(r.error) return toast(r.error);
+  MODEL=await api('/api/model'); drawList(); await open(r.id);
+  toast('Кейс '+r.id+' создан. Заполни поля и переключи статус на «на сайте».', 4200);
+};
+
 $('#rules').onclick=()=>{
   const names=Object.keys(RULES);
   const v=document.createElement('div'); v.className='veil';

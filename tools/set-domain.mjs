@@ -18,6 +18,7 @@
 // Idempotent — safe to re-run with the same or a different URL.
 
 import { readFileSync, writeFileSync } from 'node:fs';
+import { casePages } from './case-ids.mjs';
 
 const raw = process.argv[2] || '';
 if (!/^https?:\/\/[a-z0-9.-]+/i.test(raw)) {
@@ -31,7 +32,7 @@ const domain = origin + basePath;                          // full base, no trai
 
 const PAGES = [
   'index.html', 'about.html', 'portfolio.html', '404.html',
-  ...Array.from({ length: 10 }, (_, i) => `projects/${String(i + 1).padStart(2, '0')}.html`),
+  ...casePages(),
 ];
 
 for (const rel of PAGES) {
