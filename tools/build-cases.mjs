@@ -15,6 +15,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { load } from 'cheerio';
+import sharp from 'sharp';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = process.argv.includes('--check');
@@ -107,7 +108,7 @@ function card(c, pos, d) {
     ? `<div class="case__ph" aria-hidden="true"></div>`
     : c.cover.kind === 'vid'
       ? `<video poster="assets/img/${c.cover.poster}.webp" muted loop playsinline preload="none" aria-label="${esc(title)}"><source src="${c.cover.video}?v=VERSION" type="video/mp4"></video>`
-      : `<img src="assets/img/${c.cover.poster}.webp"${srcset(c.cover.poster, 1400, '(max-width: 860px) 92vw, 56vw')} alt="${esc(title)}" decoding="async" loading="lazy">`;
+      : `<img src="assets/img/${c.cover.poster}.webp"${srcset(c.cover.poster, 1400, '(max-width: 860px) 92vw, 56vw')} alt="${esc(title)}"${DIMS[c.cover.poster] ? ` width="${DIMS[c.cover.poster].w}" height="${DIMS[c.cover.poster].h}"` : ''} decoding="async" loading="lazy">`;
   const tags = [1, 2, 3]
     .filter((t) => d.ru[`card.t${t}`])
     .map((t) => `<span data-i18n="c${n}.t${t}">${d.ru[`card.t${t}`]}</span>`).join('');
@@ -172,6 +173,17 @@ function caseData(id) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Размеры обложек читаем один раз: без width/height браузер не знает
+// пропорций карточки и страница дёргается, пока грузятся картинки.
+const DIMS = {};
+for (const c of allCases()) {
+  const n = c.cover && c.cover.poster;
+  if (!n || DIMS[n]) continue;
+  const f = resolve(ROOT, 'assets', 'img', n + '.webp');
+  if (!existsSync(f)) continue;
+  try { const m = await sharp(f).metadata(); DIMS[n] = { w: m.width, h: m.height }; } catch {}
+}
+
 const live = liveCases();
 const data = {};
 for (const c of allCases()) data[c.id] = caseData(c.id);

@@ -15,6 +15,26 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const API = 'http://localhost:8150';
 const GIT = existsSync('C:\\Program Files\\Git\\cmd\\git.exe') ? 'C:\\Program Files\\Git\\cmd\\git.exe' : 'git';
 
+// ⚠ Тест возвращает файлы к последнему сохранённому состоянию (git checkout).
+// Если в папке есть несохранённые правки — они будут стёрты. Поэтому сначала
+// проверяем чистоту и отказываемся работать, а не молча уничтожаем чужой труд.
+{
+  const gitBin = existsSync('C:\\Program Files\\Git\\cmd\\git.exe') ? 'C:\\Program Files\\Git\\cmd\\git.exe' : 'git';
+  let pending = [];
+  try {
+    pending = execFileSync(gitBin, ['status', '--porcelain'], { cwd: ROOT, encoding: 'utf8' })
+      .split('\n').filter((l) => l.trim() && !l.startsWith('??')).map((l) => l.slice(3).trim());
+  } catch {}
+  if (pending.length) {
+    console.log('\n  Тест не запущен: в папке есть несохранённые правки.\n');
+    for (const f of pending.slice(0, 10)) console.log('   · ' + f);
+    if (pending.length > 10) console.log(`   и ещё ${pending.length - 10}`);
+    console.log('\n  Тест возвращает файлы к последней сохранённой версии, поэтому такие');
+    console.log('  правки он бы стёр. Сначала опубликуй их или отмени, потом запускай.\n');
+    process.exit(2);
+  }
+}
+
 const results = [];
 let group = '';
 const g = (name) => { group = name; };
