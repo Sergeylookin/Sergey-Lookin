@@ -61,6 +61,101 @@ function writeReg(reg) {
 const STATUSES = ['published', 'hidden'];
 const STATUS_RU = { published: 'На сайте', hidden: 'Скрыт' };
 
+// ── остальные страницы сайта ────────────────────────────────────────────────
+// Редактируются те же inline-словари. Не даём трогать две группы ключей:
+//  · общий каркас (nav.*, ft.*, skip, f.*, ui.all/next) — им владеет build-pages.mjs;
+//  · генерируемые cN.* и wk.N.* — их пересобирает build-cases.mjs из самих кейсов,
+//    правка здесь просто потеряется при следующей сборке.
+const PAGES = [
+  { file: 'index.html', label: 'Манифест' },
+  { file: 'about.html', label: 'Обо мне' },
+  { file: 'portfolio.html', label: 'Портфолио — шапка' },
+  { file: '404.html', label: 'Страница 404' },
+];
+const SHELL = /^(nav\.|ft\.|skip$|f\.(client|year|role)$|ui\.(all|next|nextTitle)$)/;
+const GENERATED = /^(?:c\d+\.|wk\.\d+\.)/;
+const editableKey = (k) => !SHELL.test(k) && !GENERATED.test(k);
+
+// Понятные имена групп — ключи сгруппированы по префиксу до первой точки.
+const GROUPS = {
+  meta: 'Поиск и превью в мессенджерах', hero: 'Первый экран', intro: 'Вступление',
+  wk: 'Экран «Проекты»', credo: 'Принципы', whisper: 'Реплики на полях',
+  ev: 'Оценка работы', bmp: 'Пропорция', tm: 'Команда', mentor: 'Менторство',
+  aud: 'Аудитория', ds: 'Дизайн-системы', rs: 'Что получает бизнес',
+  co: 'Где работал', cta: 'Контакты', ab: 'Текст «Обо мне»', pf: 'Заголовок портфолио',
+  e404: 'Тексты 404', nf: 'Тексты 404',
+};
+
+function loadPage(page) {
+  const raw = readFileSync(resolve(ROOT, page.file), 'utf8');
+  const html = raw.replace(/^﻿/, '');
+  const dict = JSON.parse(load(html, { decodeEntities: false })('#i18n-data').html() || '{}');
+  const keys = Object.keys(dict.ru || {}).filter(editableKey);
+  const groups = {};
+  for (const k of keys) {
+    const g = k.split('.')[0];
+    (groups[g] = groups[g] || []).push(k);
+  }
+  return {
+    file: page.file, label: page.label, dict,
+    groups: Object.entries(groups).map(([g, ks]) => ({ id: g, label: GROUPS[g] || g, keys: ks })),
+  };
+}
+
+function savePage(page, payload) {
+  const p = resolve(ROOT, page.file);
+  const orig = readFileSync(p, 'utf8');
+  const bom = orig.charCodeAt(0) === 0xfeff;
+  let html = orig.replace(/^﻿/, '');
+  const dict = JSON.parse(load(html, { decodeEntities: false })('#i18n-data').html() || '{}');
+
+  // Пишем ТОЛЬКО те ключи, что реально изменились. Иначе наступаем на грабли:
+  // на некоторых страницах тело и словарь давно разошлись (в index.html заголовок
+  // credo.title в теле один, а в словаре другой), и «переписать всё из словаря»
+  // молча меняет текст сайта в местах, которых никто не просил трогать.
+  const changed = { ru: [], en: [] };
+  for (const lang of ['ru', 'en']) {
+    for (const [k, v] of Object.entries(payload.dict[lang] || {})) {
+      if (!editableKey(k) || !(k in (dict[lang] || {}))) continue;   // новых ключей не заводим
+      if (dict[lang][k] === v) continue;
+      dict[lang][k] = v;
+      changed[lang].push(k);
+    }
+  }
+  if (!changed.ru.length && !changed.en.length) return { changed: 0 };
+
+  for (const k of changed.ru) {
+    const nx = replaceInner(html, k, dict.ru[k]);
+    if (nx) html = nx;
+    // ключи, которые сидят в aria-label, а не в тексте
+    html = html.replace(new RegExp(`(data-i18n-aria="${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*aria-label=")[^"]*(")`),
+      (_m, a, b) => a + String(dict.ru[k]).replace(/"/g, '&quot;') + b);
+  }
+  if (changed.ru.includes('meta.title')) html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${dict.ru['meta.title']}</title>`);
+  if (changed.ru.includes('meta.description')) {
+    html = html.replace(/(<meta name="description" content=")[^"]*(")/, `$1${String(dict.ru['meta.description']).replace(/"/g, '&quot;')}$2`);
+  }
+  html = writeDict(html, dict);
+
+  const tmp = p + '.tmp';
+  writeFileSync(tmp, (bom ? '﻿' : '') + html, 'utf8');
+  renameSync(tmp, p);
+  return { changed: changed.ru.length + changed.en.length };
+}
+
+// index.html держит словарь с пробелами после двоеточий, кейсы — вплотную.
+// Формат исходника сохраняем, иначе одна правка даёт диф на весь словарь.
+function writeDict(html, dict) {
+  const m = html.match(/(<script id="i18n-data" type="application\/json">)([\s\S]*?)(<\/script>)/);
+  if (!m) return html;
+  const spaced = m[2].startsWith('{"ru": ');
+  const body = Object.entries(dict).map(([lang, kv]) => {
+    const pairs = Object.entries(kv).map(([k, v]) => JSON.stringify(k) + (spaced ? ': ' : ':') + JSON.stringify(v));
+    return JSON.stringify(lang) + (spaced ? ': {' : ':{') + pairs.join(spaced ? ', ' : ',') + '}';
+  }).join(spaced ? ', ' : ',');
+  return html.replace(m[0], m[1] + '{' + body + '}' + m[3]);
+}
+
 // Пересборка всего, что зависит от состава кейсов. Зовётся после любой операции.
 async function rebuild() {
   const a = await node('build-cases.mjs');
@@ -428,6 +523,21 @@ const srv = createServer(async (req, res) => {
         return json(res, 200, { ok: true, en: b.code === 0, enOut: b.out.slice(-300), problems: validate() });
       }
     }
+    // ── остальные страницы сайта ──────────────────────────────────────────
+    if (path === '/api/pages') return json(res, 200, { pages: PAGES.map(({ file, label }) => ({ file, label })) });
+
+    if (path.startsWith('/api/page/')) {
+      const file = decodeURIComponent(path.slice('/api/page/'.length));
+      const page = PAGES.find((p) => p.file === file);
+      if (!page) return json(res, 404, { error: 'нет такой страницы' });
+      if (req.method === 'GET') return json(res, 200, loadPage(page));
+      if (req.method === 'POST') {
+        savePage(page, JSON.parse((await body(req)).toString('utf8')));
+        const b = await node('build-en.mjs');
+        return json(res, 200, { ok: b.code === 0, out: b.out.slice(-300) });
+      }
+    }
+
     if (path === '/api/images') return json(res, 200, { images: readdirSync(IMGDIR).filter((f) => f.endsWith('.webp') && !/-(480|960|1440)\.webp$/.test(f)).map((f) => f.replace(/\.webp$/, '')).sort() });
     if (path === '/api/upload' && req.method === 'POST') {
       // Имя подбирает СЕРВЕР, сверяясь с диском: клиент видит только картинки

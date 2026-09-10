@@ -27,6 +27,11 @@ input:focus,textarea:focus{outline:0;border-color:#4a4a55}
 .case b{display:block;font-weight:600;font-size:13px}
 .case span{font:11px var(--mono);opacity:.65}
 .sidefoot{border-top:1px solid var(--line);padding:10px;display:grid;gap:6px}
+.grouphead{padding:9px 16px 5px;border-top:1px solid var(--line);font:600 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:#5c5c66}
+.pages{padding:4px 6px 8px;flex:none;max-height:31vh;overflow:auto}
+.pg{display:block;width:100%;text-align:left;padding:7px 10px;border-radius:6px;color:var(--mute);font-size:13px}
+.pg:hover{background:#1b1b1f;color:var(--ink)}
+.pg.on{background:#1f1f24;color:var(--ink)}
 
 /* ── центр ── */
 .main{overflow:auto;min-height:0;padding:0 0 80px}
@@ -109,6 +114,8 @@ input:focus,textarea:focus{outline:0;border-color:#4a4a55}
   <aside class="side">
     <div class="brand">CMS<small id="root">портфолио</small></div>
     <div class="cases" id="cases"></div>
+    <div class="grouphead">Страницы сайта</div>
+    <div class="pages" id="pages"></div>
     <div class="sidefoot">
       <button class="btn" id="addCase">+ Новый кейс</button>
       <button class="btn" id="rules">Правила ↗</button>
@@ -134,6 +141,7 @@ input:focus,textarea:focus{outline:0;border-color:#4a4a55}
 <script>
 const $ = (s,r=document)=>r.querySelector(s), api = (p,o)=>fetch(p,o).then(r=>r.json());
 let MODEL=null, CUR=null, DATA=null, ORIG=null, LANG='ru', DIRTY=false;
+let PAGES=[], MODE='case', PAGE=null;
 
 const RULES = {
   'Тексты': `
@@ -198,6 +206,9 @@ function toast(msg,ms=2600){ const t=document.createElement('div'); t.className=
 async function boot(){
   MODEL = await api('/api/model');
   drawList();
+  PAGES=(await api('/api/pages')).pages;
+  $('#pages').innerHTML=PAGES.map(p=>`<button class="pg" data-f="${p.file}">${p.label}</button>`).join('');
+  $('#pages').onclick = e=>{ const b=e.target.closest('.pg'); if(b) openPage(b.dataset.f); };
   $('#cases').onclick = e=>{ const b=e.target.closest('.case'); if(b) open(b.dataset.n); };
   open(CUR && MODEL.cases.some(c=>c.n===CUR) ? CUR : MODEL.cases[0].n);
 }
@@ -231,6 +242,7 @@ const markCur=()=>document.querySelectorAll('.case').forEach(b=>b.classList.togg
 
 async function open(n){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
+  MODE='case'; PAGE=null; document.querySelectorAll('.pg').forEach(b=>b.classList.remove('on'));
   CUR=n; DATA=await api('/api/case/'+n); ORIG=JSON.parse(JSON.stringify(DATA)); DIRTY=false;
   markCur();
   const meta=MODEL.cases.find(c=>c.n===n)||{};
@@ -421,6 +433,48 @@ function stemOfCase(){
 
 const mark=()=>{ DIRTY=true; $('#save').classList.add('pri'); };
 
+// ── редактор обычной страницы (манифест, «Обо мне», шапка портфолио, 404) ──
+async function openPage(file){
+  if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
+  MODE='page'; CUR=null; DIRTY=false;
+  document.querySelectorAll('.case').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.pg').forEach(b=>b.classList.toggle('on', b.dataset.f===file));
+  PAGE=await api('/api/page/'+encodeURIComponent(file));
+  ORIG=JSON.parse(JSON.stringify(PAGE.dict));
+  $('#ttl').textContent=PAGE.label;
+  renderPage();
+  $('#frame').src='/'+(file==='index.html'?'':file)+'?t='+Date.now();
+  $('#checks').innerHTML='<div class="empty">Проверки считаются по кейсам.</div>';
+}
+function renderPage(){
+  const n=Object.keys(PAGE.dict.ru).filter(k=>PAGE.groups.some(g=>g.keys.includes(k))).length;
+  let h='<div class="sec"><h2>'+esc(PAGE.label)+'</h2><p style="color:var(--mute);font-size:12.5px;margin:0">'
+    + n + ' редактируемых надписей. Шапка, подвал и всё, что собирается из кейсов, здесь не показано — им владеет сборка.</p></div>';
+  for(const g of PAGE.groups){
+    h+='<div class="sec"><h2>'+esc(g.label)+'</h2>'+g.keys.map(k=>{
+      const ru=PAGE.dict.ru[k]??'', en=PAGE.dict.en[k]??'';
+      const long=String(ru).length>60||String(ru).includes('<br>');
+      const tag=long?'textarea':'input';
+      const fld=(lang,val)=>'<div><div class="lang">'+lang.toUpperCase()+'</div><'+tag+' data-pk="'+esc(k)+'" data-l="'+lang+'"'
+        +(long?' rows="'+(String(val).length>200?4:2)+'"':'')+'>'+(tag==='textarea'?esc(val):'')+'</'+tag+'></div>';
+      return '<div class="f"><label><code style="font-size:11px;opacity:.7">'+esc(k)+'</code>'
+        + (String(en).trim()===''&&String(ru).trim()!==''? ' <span style="color:var(--warn)">· нет перевода</span>':'')
+        + '</label><div class="pair">'+fld('ru',ru)+fld('en',en)+'</div></div>';
+    }).join('')+'</div>';
+  }
+  $('#form').innerHTML=h;
+  for(const el of $('#form').querySelectorAll('input[data-pk]')) el.value=PAGE.dict[el.dataset.l][el.dataset.pk]??'';
+  $('#form').addEventListener('input',e=>{ const t=e.target;
+    if(t.dataset.pk){ PAGE.dict[t.dataset.l][t.dataset.pk]=t.value; mark(); } });
+}
+async function savePage(){
+  const r=await api('/api/page/'+encodeURIComponent(PAGE.file),{method:'POST',
+    headers:{'content-type':'application/json'},body:JSON.stringify({dict:PAGE.dict})});
+  DIRTY=false; $('#save').classList.remove('pri'); ORIG=JSON.parse(JSON.stringify(PAGE.dict));
+  $('#frame').src='/'+(PAGE.file==='index.html'?'':PAGE.file)+'?t='+Date.now();
+  toast(r.ok?'Страница сохранена. На сайт — кнопкой «Опубликовать».':'Ошибка сборки: '+(r.out||''));
+}
+
 async function save(){
   const r=await api('/api/case/'+CUR,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(DATA)});
   DIRTY=false; $('#save').classList.remove('pri'); ORIG=JSON.parse(JSON.stringify(DATA));
@@ -437,13 +491,18 @@ function drawChecks(ps){
     + (other? `<div class="chk info"><span class="n">···</span><span>Ещё ${other} замечани${other%10===1&&other%100!==11?'е':'й'} в других кейсах — покажутся при публикации.</span></div>`:'');
 }
 
-function refreshPreview(){ const u=(LANG==='en'?'/en':'')+`/projects/${CUR}.html?t=`+Date.now(); $('#frame').src=u; }
+function refreshPreview(){
+  const path = MODE==='page' ? (PAGE.file==='index.html'?'/':'/'+PAGE.file) : `/projects/${CUR}.html`;
+  $('#frame').src=(LANG==='en'?'/en':'')+path+'?t='+Date.now();
+}
 $('#lang').onclick=e=>{ const b=e.target.closest('button'); if(!b) return;
   LANG=b.dataset.l; $('#lang').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); refreshPreview(); };
 $('#reload').onclick=refreshPreview;
-$('#save').onclick=save;
-$('#revert').onclick=()=>{ if(confirm('Вернуть поля к последнему сохранению?')){ DATA=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; render(); } };
-addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); save(); } });
+$('#save').onclick=()=>MODE==='page'?savePage():save();
+$('#revert').onclick=()=>{ if(!confirm('Вернуть поля к последнему сохранению?')) return;
+  if(MODE==='page'){ PAGE.dict=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; renderPage(); }
+  else { DATA=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; render(); } };
+addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); MODE==='page'?savePage():save(); } });
 addEventListener('beforeunload',e=>{ if(DIRTY){ e.preventDefault(); e.returnValue=''; } });
 
 /* ── правила ── */

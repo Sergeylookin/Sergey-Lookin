@@ -125,7 +125,7 @@ function card(c, pos, d) {
 function workRow(c, pos, d) {
   const n = String(pos);
   const attrs = [`class="wk-a"`, `href="projects/${c.id}.html"`, `data-slug="${esc(c.slug)}"`,
-    `data-cover="${c.cover.kind}"`, `data-shots="${esc(c.shots)}"`];
+    `data-cover="${c.cover.kind}"`, `data-shots="${esc(d.shots || c.shots)}"`];
   if (c.pos) attrs.push(`data-pos="${esc(c.pos)}"`);
   return `<li class="wk-row"><a ${attrs.join(' ')}>`
     + `<span class="wk-n">${String(pos).padStart(2, '0')}</span>`
@@ -139,6 +139,26 @@ function workRow(c, pos, d) {
 // Колонка года в #works шириной 4rem: диапазон «2023—2026» туда не влезает.
 const shortYear = (y) => String(y).split(/[—–-]/)[0].trim();
 
+// data-shots — раскладка кадров для мобильной ленты и ховер-трейла на манифесте
+// (assets/manifest.js собирает из неё <slug>-<n>-960.webp и пары -480).
+// Выводим её ИЗ САМОГО МЕДИА-БЛОКА кейса: иначе добавил картинку — а на телефоне
+// её нет, и никто об этом не узнает.
+function deriveShots($) {
+  const num = (src) => (String(src || '').match(/-(\d+)\.webp$/) || [])[1];
+  const out = [];
+  $('section.pcase__media').children().each((_i, el) => {
+    const $el = $(el);
+    const tag = el.tagName ? el.tagName.toLowerCase() : '';
+    if (tag === 'img') { const n = num($el.attr('src')); if (n) out.push(n); }
+    else if (tag === 'div' && $el.hasClass('row')) {
+      const ns = [];
+      $el.find('img').each((_j, im) => { const n = num($(im).attr('src')); if (n) ns.push(n); });
+      if (ns.length) out.push(ns.join('+'));
+    }
+  });
+  return out.join(',');
+}
+
 // ── чтение данных кейса ─────────────────────────────────────────────────────
 function caseData(id) {
   const html = strip(rd(`projects/${id}.html`));
@@ -148,7 +168,7 @@ function caseData(id) {
   $('.pcase__f').each((_i, el) => {
     if ($(el).find('.l').attr('data-i18n') === 'f.year') year = $(el).find('.v').text().trim();
   });
-  return { ru: d.ru, en: d.en, year, html };
+  return { ru: d.ru, en: d.en, year, html, shots: deriveShots($) };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -230,6 +250,17 @@ for (const c of allCases()) {
   if (hide && !has) html = html.replace('</head>', tag + '</head>');
   if (!hide && has) html = html.replace(tag, '');
   queue(`projects/${c.id}.html`, html);
+}
+
+// реестр держим в согласии с фактическим медиа кейса
+if (!CHECK) {
+  const reg = registry();
+  let regChanged = false;
+  for (const c of reg.cases) {
+    const real = data[c.id] && data[c.id].shots;
+    if (real != null && c.shots !== real) { c.shots = real; regChanged = true; }
+  }
+  if (regChanged) writeFileSync(resolve(ROOT, 'content/cases.json'), JSON.stringify(reg, null, 2) + '\n', 'utf8');
 }
 
 if (CHECK) {
