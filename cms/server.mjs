@@ -171,9 +171,20 @@ function readDict($) {
 // Медиа-блок кейса: последовательность строк. Каждая — либо одна картинка во всю ширину,
 // либо пара в .row. Видео и всё непонятное сохраняем как есть и не даём редактировать,
 // чтобы не сломать руками собранную разметку.
+// Про каждую картинку отдаём всё, что нужно показать в редакторе: вес, есть ли
+// файл на диске, какие уменьшенные копии сделаны.
+function fileInfo(name) {
+  const f = resolve(IMGDIR, name + '.webp');
+  if (!name || !existsSync(f)) return { exists: false, kb: 0, variants: [] };
+  return { exists: true, kb: Math.round(statSync(f).size / 1024), variants: variantsOf(name) };
+}
+
 function readMedia($) {
   const out = [];
-  const pick = ($im) => ({ src: base($im.attr('src')), alt: $im.attr('alt') || '', w: $im.attr('width') || '', h: $im.attr('height') || '' });
+  const pick = ($im) => {
+    const src = base($im.attr('src'));
+    return { src, alt: $im.attr('alt') || '', w: $im.attr('width') || '', h: $im.attr('height') || '', ...fileInfo(src) };
+  };
   $('section.pcase__media').contents().each((_i, el) => {
     if (el.type === 'comment') { out.push({ type: 'comment', html: '<!--' + el.data + '-->' }); return; }
     if (el.type === 'text') return;                       // отступы между блоками — воссоздаём сами
@@ -580,6 +591,26 @@ const srv = createServer(async (req, res) => {
       for (const w of VARIANTS) { if (w >= meta.width) continue; await sharp(resolve(IMGDIR, name + '.webp')).resize({ width: w }).webp({ quality: 82 }).toFile(resolve(IMGDIR, `${name}-${w}.webp`)); }
       return json(res, 200, { ok: true, name, w: meta.width, h: meta.height, variants: variantsOf(name) });
     }
+    // заменить КОНКРЕТНЫЙ файл, имя сохраняется — ссылки на него не рвутся
+    if (path === '/api/replace' && req.method === 'POST') {
+      const name = url.searchParams.get('name');
+      if (!/^[a-z0-9-]+$/.test(name || '')) return json(res, 400, { error: 'Неверное имя файла.' });
+      const buf = await body(req);
+      if (buf.slice(8, 12).toString() !== 'WEBP') return json(res, 400, { error: 'Это не webp. Экспортируй из Figma в webp.' });
+      const dst = resolve(IMGDIR, name + '.webp');
+      const tmp = dst + '.tmp';
+      writeFileSync(tmp, buf);
+      renameSync(tmp, dst);
+      const sharp = (await import('sharp')).default;
+      const meta = await sharp(dst).metadata();
+      for (const w of VARIANTS) {
+        const v = resolve(IMGDIR, `${name}-${w}.webp`);
+        if (w >= meta.width) { if (existsSync(v)) rmSync(v, { force: true }); continue; }
+        await sharp(dst).resize({ width: w }).webp({ quality: 82 }).toFile(v);
+      }
+      return json(res, 200, { ok: true, name, w: meta.width, h: meta.height, ...fileInfo(name) });
+    }
+
     if (path === '/api/validate') return json(res, 200, { problems: validate() });
     if (path === '/api/changes') { const g = await git('status', '--short'); return json(res, 200, { files: g.out.split('\n').map((s) => s.trim()).filter(Boolean) }); }
     if (path === '/api/publish' && req.method === 'POST') {
