@@ -13,6 +13,7 @@
 exclude:
   - cms/            # редактор: движок, интерфейс, .bat — только для локальной машины
   - tools/          # скрипты сборки
+  - content
   - content/        # реестр кейсов, исходные данные
   - package.json
   - package-lock.json

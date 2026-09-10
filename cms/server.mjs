@@ -156,6 +156,49 @@ function writeDict(html, dict) {
   return html.replace(m[0], m[1] + '{' + body + '}' + m[3]);
 }
 
+// ── Медиатека ───────────────────────────────────────────────────────────────
+// Собирает ВСЕ оригиналы из assets/img и для каждого ищет, где он используется.
+// Это главное: заменить файл можно везде одинаково, а понять последствия —
+// только если видно, в скольких местах он стоит.
+function mediaLibrary() {
+  const originals = readdirSync(IMGDIR)
+    .filter((f) => f.endsWith('.webp') && !/-(480|960|1440)\.webp$/.test(f))
+    .map((f) => f.replace(/\.webp$/, ''));
+
+  // где искать: страницы сайта + кейсы + реестр обложек
+  const scan = [];
+  for (const p of ['index.html', 'about.html', 'portfolio.html', '404.html']) {
+    if (existsSync(resolve(ROOT, p))) scan.push({ file: p, where: PAGES.find((x) => x.file === p)?.label || p, html: readFileSync(resolve(ROOT, p), 'utf8') });
+  }
+  const titles = {};
+  for (const id of caseIds()) {
+    const html = readFileSync(casePath(id), 'utf8');
+    const d = JSON.parse(load(html.replace(/^﻿/, ''), { decodeEntities: false })('#i18n-data').html() || '{}');
+    titles[id] = d.ru['p.title'] || id;
+    scan.push({ file: `projects/${id}.html`, where: `Кейс ${id} · ${titles[id]}`, html });
+  }
+  let reg = { cases: [] };
+  try { reg = readReg(); } catch {}
+
+  const items = originals.map((name) => {
+    const used = [];
+    const re = new RegExp('(?:^|/)' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?:-(?:480|960|1440))?\\.webp', 'i');
+    for (const s of scan) if (re.test(s.html)) used.push({ file: s.file, where: s.where });
+    for (const c of reg.cases) {
+      if (c.cover && c.cover.poster === name) {
+        used.push({ file: 'portfolio.html', where: `Обложка кейса ${c.id} · ${titles[c.id] || ''} — карточка в портфолио и ховер на манифесте` });
+      }
+    }
+    // одна и та же страница могла попасться дважды — схлопываем
+    const seen = new Set();
+    const uniq = used.filter((u) => (seen.has(u.where) ? false : seen.add(u.where)));
+    return { name, ...fileInfo(name), used: uniq };
+  });
+
+  items.sort((a, b) => (b.used.length - a.used.length) || a.name.localeCompare(b.name));
+  return { items, total: items.length, unused: items.filter((i) => !i.used.length).length };
+}
+
 // Пересборка всего, что зависит от состава кейсов. Зовётся после любой операции.
 async function rebuild() {
   const a = await node('build-cases.mjs');
@@ -591,6 +634,20 @@ const srv = createServer(async (req, res) => {
       for (const w of VARIANTS) { if (w >= meta.width) continue; await sharp(resolve(IMGDIR, name + '.webp')).resize({ width: w }).webp({ quality: 82 }).toFile(resolve(IMGDIR, `${name}-${w}.webp`)); }
       return json(res, 200, { ok: true, name, w: meta.width, h: meta.height, variants: variantsOf(name) });
     }
+    // ── медиатека: все картинки сайта и где каждая используется ──────────
+    if (path === '/api/media') return json(res, 200, mediaLibrary());
+
+    if (path === '/api/media/delete' && req.method === 'POST') {
+      const { name } = JSON.parse((await body(req)).toString('utf8'));
+      const lib = mediaLibrary();
+      const it = lib.items.find((x) => x.name === name);
+      if (!it) return json(res, 404, { error: 'нет такого файла' });
+      if (it.used.length) return json(res, 400, { error: 'Файл используется: ' + it.used.map((u) => u.where).join('; ') + '. Сначала убери его оттуда.' });
+      rmSync(resolve(IMGDIR, name + '.webp'), { force: true });
+      for (const w of VARIANTS) rmSync(resolve(IMGDIR, `${name}-${w}.webp`), { force: true });
+      return json(res, 200, { ok: true });
+    }
+
     // заменить КОНКРЕТНЫЙ файл, имя сохраняется — ссылки на него не рвутся
     if (path === '/api/replace' && req.method === 'POST') {
       const name = url.searchParams.get('name');
@@ -634,8 +691,12 @@ const srv = createServer(async (req, res) => {
       steps.push({ name: 'Отправка', ok: ps.code === 0, out: ps.out.slice(-400) });
       return json(res, 200, { ok: ps.code === 0, steps, published: ps.code === 0 });
     }
-    // всё остальное — сам сайт, чтобы превью было настоящим
-    const f = resolve(ROOT, '.' + path);
+    // всё остальное — сам сайт, чтобы превью было настоящим.
+    // Страницы ссылаются на ассеты абсолютно — /Sergey-Lookin/assets/… — потому что
+    // сайт живёт в подпапке GitHub Pages. Локально мы отдаём проект с корня, поэтому
+    // этот префикс снимаем: иначе 404-я и часть страниц открывались бы без стилей.
+    const localPath = path.startsWith('/Sergey-Lookin/') ? path.slice('/Sergey-Lookin'.length) : path;
+    const f = resolve(ROOT, '.' + localPath);
     if (f.startsWith(ROOT) && existsSync(f) && extname(f)) {
       res.writeHead(200, { 'content-type': MIME[extname(f)] || 'application/octet-stream', 'cache-control': 'no-store' });
       return res.end(readFileSync(f));

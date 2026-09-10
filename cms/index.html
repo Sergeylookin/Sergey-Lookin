@@ -65,7 +65,9 @@ input:focus,textarea:focus{outline:0;border-color:#4a4a55}
 .locked{opacity:.55;font:11px var(--mono);color:var(--mute)}
 .drop{border:1px dashed #3a3a44;border-radius:8px;padding:16px;text-align:center;color:var(--mute);font-size:12px}
 .drop.hot{border-color:var(--accent);color:var(--accent)}
-.drop--new{margin-top:9px;padding:22px;border-style:dashed;border-width:2px;line-height:1.5}
+.drop--new{margin-top:9px;padding:20px;border-style:dashed;border-width:2px;line-height:1.55}
+.drop--new b{color:var(--ink);font-size:13px}
+.drop:hover{border-color:#55555f;color:#b9b9c2}
 /* блок медиа: показываем раскладку так, как она встанет на странице */
 .mb{border:1px solid var(--line);border-radius:9px;background:#0e0e11;margin-bottom:9px;overflow:hidden}
 .mb__bar{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--line);font:11px var(--mono);color:var(--mute)}
@@ -294,12 +296,29 @@ function field(f){
   const ru=DATA.dict.ru[f.k]??'', en=DATA.dict.en[f.k]??'';
   const tag=f.kind==='text'?'textarea':'input';
   const rows=f.kind==='text'?(f.k.startsWith('p.f')||f.k==='p.lead'?2:5):'';
-  const mk=(lang,val)=>`<div><div class="lang">${lang.toUpperCase()}</div><${tag} data-k="${f.k}" data-l="${lang}" ${rows?`rows="${rows}"`:''}>${tag==='textarea'?esc(val):''}</${tag}></div>`;
+  const mk=(lang,val)=>`<div><div class="lang">${lang.toUpperCase()}</div><${tag} data-k="${f.k}" data-l="${lang}" ${rows?`rows="${rows}"`:''}>${tag==='textarea'?esc(toEditor(val)):''}</${tag}></div>`;
   return `<div class="f"><label>${f.label}${f.optional?' <span class="opt">· необязательно</span>':''}
       <button class="i" data-hint="${esc(f.hint)}">i</button></label>
     <div class="pair">${mk('ru',ru)}${mk('en',en)}</div></div>`;
 }
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* Неразрывный пробел в текстах записан как &nbsp; — он держит предлоги, чтобы
+   «в» и «на» не висели в конце строки. Показывать эту абракадабру в поле нельзя,
+   терять её тоже нельзя. Поэтому в редакторе она живёт настоящим символом
+   (выглядит обычным пробелом), а при сохранении возвращается в разметку.
+   Переносы <br> в поле показываем переводом строки — так же честно. */
+const NB='\u00a0';
+const toEditor=v=>String(v??'').replace(/&nbsp;/g,NB).replace(/<br\s*\/?>/gi,'\n');
+const fromEditor=v=>String(v??'').replace(new RegExp(NB,'g'),'&nbsp;').replace(/\r?\n/g,'<br>');
+
+/* Расстановка неразрывных пробелов по правилу, по которому набран сайт:
+   после коротких слов (до двух букв) и перед тире. */
+function bindShort(v){
+  return String(v??'')
+    .replace(new RegExp('(^|[\\s'+NB+'(«"])([А-Яа-яЁёA-Za-z]{1,2})\\s+','g'), '$1$2'+NB)
+    .replace(/\s+—/g, NB+'—');
+}
 
 function render(){
   const groups=[['Шапка',['p.title','p.client','p.role','p.lead']],
@@ -316,7 +335,7 @@ function render(){
     <div class="f"><label>Обложка в сетке <button class="i" data-hint="Картинка карточки в портфолио. Обычно это отдельный файл вида slug-preview.webp. Перетащи новую или впиши имя без .webp.">i</button></label>
       <div class="mi"><img src="${meta.cover&&meta.cover.poster?'/assets/img/'+meta.cover.poster+'.webp':''}" alt="">
         <div><input id="cover" value="${esc((meta.cover||{}).poster||'')}" placeholder="имя файла без .webp">
-        <div class="drop" id="dropCover" style="margin-top:6px;padding:10px">перетащи обложку сюда</div></div></div></div>
+        <div class="drop" id="dropCover" style="margin-top:6px;padding:10px">перетащи обложку или нажми, чтобы выбрать</div></div></div></div>
     <div class="f"><label>Год <button class="i" data-hint="Показывается в трёх местах: шапка кейса, карточка портфолио, таблица на манифесте. Можно диапазон: 2023—2026.">i</button></label>
       <input id="year" value="${esc(DATA.year)}" style="max-width:200px"></div>
     <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:4px">
@@ -330,11 +349,11 @@ function render(){
       <div style="display:flex;gap:7px;margin-top:9px"><button class="btn" id="addFull">+ во всю ширину</button><button class="btn" id="addRow">+ пара</button></div></div>`;
   $('#form').innerHTML=h;
 
-  for(const el of $('#form').querySelectorAll('input[data-k]')) el.value = DATA.dict[el.dataset.l][el.dataset.k] ?? '';
+  for(const el of $('#form').querySelectorAll('input[data-k]')) el.value = toEditor(DATA.dict[el.dataset.l][el.dataset.k]);
   $('#form').addEventListener('input',e=>{
     const t=e.target;
     if(t.id==='year'){ DATA.year=t.value; mark(); return; }
-    if(t.dataset.k){ DATA.dict[t.dataset.l][t.dataset.k]=t.value; mark(); }
+    if(t.dataset.k){ DATA.dict[t.dataset.l][t.dataset.k]=fromEditor(t.value); mark(); }
   });
   $('#form').addEventListener('click',e=>{
     const i=e.target.closest('.i'); if(i){ tip(i,i.dataset.hint); e.stopPropagation(); }
@@ -369,18 +388,13 @@ function wireCaseOps(){
     await reloadAll('Обложка обновлена.');
   };
   $('#cover').onchange=e=>setCover(e.target.value.trim());
-  const dc=$('#dropCover');
-  dc.ondragover=e=>{e.preventDefault(); dc.classList.add('hot');};
-  dc.ondragleave=()=>dc.classList.remove('hot');
-  dc.ondrop=async e=>{ e.preventDefault(); dc.classList.remove('hot');
-    const f=[...e.dataTransfer.files].find(x=>/\.webp$/i.test(x.name));
-    if(!f) return toast('Только .webp');
-    dc.textContent='загружаю…';
+  wireDrop($('#dropCover'),{onFiles:async f=>{
+    const dc=$('#dropCover'); const label=dc.textContent; dc.textContent='загружаю…';
     const r=await fetch('/api/upload?stem='+encodeURIComponent(stemOfCase()+'-preview'),{method:'POST',body:f}).then(x=>x.json());
-    dc.textContent='перетащи обложку сюда';
-    if(r.error) return toast(r.error);
+    dc.textContent=label;
+    if(r.error) return toast(r.error,4000);
     await setCover(r.name);
-  };
+  }});
   $('#dupCase').onclick=async()=>{
     if(!confirm('Создать копию этого кейса? Она появится скрытой, на сайт не попадёт.')) return;
     const r=await api('/api/case/'+CUR+'/duplicate',{method:'POST'});
@@ -409,7 +423,7 @@ function drawMedia(){
     return '<div class="slot" data-i="'+i+'" data-j="'+j+'">'
       + (it.src
           ? '<img class="slot__img" src="'+url+'" alt="" loading="lazy" data-open="'+esc(it.src)+'">'
-          : '<div class="slot__empty">пусто — перетащи webp</div>')
+          : '<div class="slot__empty">пусто — перетащи файл или нажми</div>')
       + '<div class="slot__acts">'
         + (it.src?'<button data-act="open">Открыть</button>':'')
         + '<button data-act="replace">'+(it.src?'Заменить':'Загрузить')+'</button>'
@@ -442,7 +456,8 @@ function drawMedia(){
   }).join('') || '<div class="locked">Картинок пока нет.</div>';
 
   box.insertAdjacentHTML('beforeend',
-    '<div class="drop drop--new" id="dropNew">Перетащи сюда новые webp — добавятся в конец кейса.<br><span style="opacity:.65">Можно сразу несколько.</span></div>');
+    '<div class="drop drop--new" id="dropNew"><b>Добавить картинки</b><br>'
+    + '<span style="opacity:.7">перетащи сюда или нажми, чтобы выбрать на компьютере — можно сразу несколько</span></div>');
 
   const at=(i,j)=>{ const m=DATA.media[i]; return j>=0?m.items[j]:m; };
 
@@ -469,15 +484,12 @@ function drawMedia(){
     im.onclick=()=>{ const sl=im.closest('.slot'); lightbox(at(+sl.dataset.i,+sl.dataset.j),+sl.dataset.i,+sl.dataset.j); };
   }
 
-  // перетаскивание файла прямо на слот — заменить именно эту картинку
+  // на слот можно и перетащить файл, и кликнуть по пустому месту
   for(const sl of box.querySelectorAll('.slot')){
-    sl.ondragover=e=>{ if(!drag){ e.preventDefault(); sl.classList.add('hot'); } };
-    sl.ondragleave=()=>sl.classList.remove('hot');
-    sl.ondrop=async e=>{ if(drag) return; e.preventDefault(); e.stopPropagation(); sl.classList.remove('hot');
-      const f=[...e.dataTransfer.files].find(x=>/\.webp$/i.test(x.name));
-      if(!f) return toast('Только .webp — экспортируй из Figma в webp.');
-      await putImage(f, at(+sl.dataset.i,+sl.dataset.j), +sl.dataset.i, +sl.dataset.j);
-    };
+    const i=+sl.dataset.i, j=+sl.dataset.j;
+    wireDrop(sl,{guard:()=>!!drag,onFiles:f=>putImage(f, at(i,j), i, j)});
+    // у заполненного слота клик по картинке открывает просмотр, а не файловое окно
+    if(at(i,j).src) sl.onclick=e=>{ if(e.target.closest('button')) return; lightbox(at(i,j),i,j); };
   }
 
   // перестановка блоков мышью
@@ -495,21 +507,17 @@ function drawMedia(){
 
   // общая зона: новые картинки в конец
   const dn=$('#dropNew');
-  dn.ondragover=e=>{ if(!drag){ e.preventDefault(); dn.classList.add('hot'); } };
-  dn.ondragleave=()=>dn.classList.remove('hot');
-  dn.ondrop=async e=>{ if(drag) return; e.preventDefault(); dn.classList.remove('hot');
-    const files=[...e.dataTransfer.files].filter(f=>/\.webp$/i.test(f.name));
-    if(!files.length) return toast('Только .webp');
+  wireDrop(dn,{multiple:true,guard:()=>!!drag,onFiles:async files=>{
     const label=dn.innerHTML; dn.textContent='загружаю…';
     let n=0;
     for(const f of files){
       const r=await fetch('/api/upload?stem='+encodeURIComponent(stemOfCase()),{method:'POST',body:f}).then(x=>x.json());
-      if(r.error){ toast(r.error); break; }
+      if(r.error){ toast(r.error,4000); break; }
       DATA.media.push({type:'full',src:r.name,alt:'',w:r.w,h:r.h,exists:true,kb:0,variants:r.variants}); n++;
     }
     dn.innerHTML=label;
     if(n){ STAMP=Date.now(); mark(); drawMedia(); toast(n===1?'Картинка добавлена — впиши alt.':'Добавлено '+n+'. Впиши alt каждой.'); }
-  };
+  }});
 }
 
 // Заменить файл в конкретном слоте. Если слот пустой — заливаем как новую
@@ -527,11 +535,24 @@ async function putImage(f, it, i, j){
   toast(it.src? 'Файл заменён. Копии для телефона пересозданы.' : 'Картинка загружена.');
 }
 
-function pickFile(cb){
+function pickFile(cb,{accept='.webp,image/webp',multiple=false}={}){
   const inp=document.createElement('input');
-  inp.type='file'; inp.accept='.webp,image/webp';
-  inp.onchange=()=>{ if(inp.files[0]) cb(inp.files[0]); };
+  inp.type='file'; inp.accept=accept; inp.multiple=multiple;
+  inp.onchange=()=>{ if(inp.files.length) cb(multiple?[...inp.files]:inp.files[0]); };
   inp.click();
+}
+
+// Любая зона загрузки работает двумя способами: перетащить файл ИЛИ кликнуть
+// и выбрать в окне Windows. Одно поведение на всю CMS.
+function wireDrop(el,{accept='.webp,image/webp',multiple=false,match=/\.webp$/i,reject='Только .webp — экспортируй из Figma в webp.',onFiles,guard}={}){
+  const take=list=>{ const ok=[...list].filter(f=>match.test(f.name));
+    if(!ok.length) return toast(reject,4000);
+    onFiles(multiple?ok:ok[0]); };
+  el.ondragover=e=>{ if(guard&&guard()) return; e.preventDefault(); el.classList.add('hot'); };
+  el.ondragleave=()=>el.classList.remove('hot');
+  el.ondrop=e=>{ if(guard&&guard()) return; e.preventDefault(); e.stopPropagation(); el.classList.remove('hot'); take(e.dataTransfer.files); };
+  el.onclick=e=>{ if(e.target.closest('button,a,input')) return; pickFile(f=>take(multiple?f:[f]),{accept,multiple}); };
+  el.style.cursor='pointer';
 }
 
 // Просмотр картинки целиком
@@ -591,7 +612,8 @@ async function renderPage(){
         + (f? esc(f.name)+' · '+f.kb+' КБ · обновлён '+f.at : '<span style="color:var(--accent)">файла нет</span>')
         + '</div></div>'
         + (f? '<a class="btn" href="/assets/cv/'+f.name+'?t='+Date.now()+'" target="_blank">Открыть</a>':'')
-        + '<div class="drop cvdrop" data-lang="'+lang+'">перетащи новый PDF</div></div>';
+        + '<button class="btn pri cvpick" data-lang="'+lang+'">'+(f?'Заменить файл':'Загрузить файл')+'</button>'
+        + '<div class="drop cvdrop" data-lang="'+lang+'">перетащи новый PDF или нажми, чтобы выбрать</div></div>';
     };
     h+='<div class="sec"><h2>CV — файлы</h2>'
       + '<p style="color:var(--mute);font-size:12.5px;margin:0 0 10px">Ссылка в контактах ведёт на эти файлы. Имена постоянные — заменяешь файл, ссылка остаётся рабочей. На русской странице открывается русское CV, на английской — английское.</p>'
@@ -600,33 +622,42 @@ async function renderPage(){
   for(const g of PAGE.groups){
     h+='<div class="sec"><h2>'+esc(g.label)+'</h2>'+g.keys.map(k=>{
       const ru=PAGE.dict.ru[k]??'', en=PAGE.dict.en[k]??'';
-      const long=String(ru).length>60||String(ru).includes('<br>');
+      const long=String(toEditor(ru)).length>60||String(ru).includes('<br>');
       const tag=long?'textarea':'input';
       const fld=(lang,val)=>'<div><div class="lang">'+lang.toUpperCase()+'</div><'+tag+' data-pk="'+esc(k)+'" data-l="'+lang+'"'
-        +(long?' rows="'+(String(val).length>200?4:2)+'"':'')+'>'+(tag==='textarea'?esc(val):'')+'</'+tag+'></div>';
+        +(long?' rows="'+(String(val).length>200?4:2)+'"':'')+'>'+(tag==='textarea'?esc(toEditor(val)):'')+'</'+tag+'></div>';
       return '<div class="f"><label><code style="font-size:11px;opacity:.7">'+esc(k)+'</code>'
         + (String(en).trim()===''&&String(ru).trim()!==''? ' <span style="color:var(--warn)">· нет перевода</span>':'')
         + '</label><div class="pair">'+fld('ru',ru)+fld('en',en)+'</div></div>';
     }).join('')+'</div>';
   }
   $('#form').innerHTML=h;
-  for(const el of $('#form').querySelectorAll('input[data-pk]')) el.value=PAGE.dict[el.dataset.l][el.dataset.pk]??'';
+  for(const el of $('#form').querySelectorAll('input[data-pk]')) el.value=toEditor(PAGE.dict[el.dataset.l][el.dataset.pk]);
+  // CV: заменить можно тремя способами — кнопкой, кликом по зоне и перетаскиванием
+  for(const btn of $('#form').querySelectorAll('.cvpick')){
+    btn.onclick=e=>{ e.stopPropagation();
+      pickFile(f=>uploadCv(f, btn.dataset.lang), {accept:'.pdf,application/pdf'}); };
+  }
   for(const dz of $('#form').querySelectorAll('.cvdrop')){
-    dz.ondragover=e=>{e.preventDefault(); dz.classList.add('hot');};
-    dz.ondragleave=()=>dz.classList.remove('hot');
-    dz.ondrop=async e=>{ e.preventDefault(); dz.classList.remove('hot');
-      const f=[...e.dataTransfer.files].find(x=>/\.pdf$/i.test(x.name));
-      if(!f) return toast('Нужен файл .pdf');
-      dz.textContent='загружаю…';
-      const r=await fetch('/api/cv/upload?lang='+dz.dataset.lang,{method:'POST',body:f}).then(x=>x.json());
-      if(r.error){ toast(r.error, 4500); dz.textContent='перетащи новый PDF'; return; }
-      toast('CV заменено ('+r.kb+' КБ). Не забудь «Опубликовать».', 4000);
-      await renderPage();
-    };
+    wireDrop(dz,{accept:'.pdf,application/pdf',match:/\.pdf$/i,reject:'Нужен файл .pdf',
+      onFiles:f=>uploadCv(f, dz.dataset.lang, dz)});
   }
   $('#form').addEventListener('input',e=>{ const t=e.target;
-    if(t.dataset.pk){ PAGE.dict[t.dataset.l][t.dataset.pk]=t.value; mark(); } });
+    if(t.dataset.pk){ PAGE.dict[t.dataset.l][t.dataset.pk]=fromEditor(t.value); mark(); } });
 }
+// Загрузка CV: одна функция на кнопку, клик по зоне и перетаскивание
+async function uploadCv(f, lang, zone){
+  const label = zone ? zone.textContent : null;
+  if(zone) zone.textContent='загружаю…';
+  const busy = zone ? null : toast('Загружаю…', 60000);
+  const r=await fetch('/api/cv/upload?lang='+lang,{method:'POST',body:f}).then(x=>x.json());
+  if(busy) busy.remove();
+  if(zone) zone.textContent=label;
+  if(r.error) return toast(r.error, 4500);
+  toast('CV заменено ('+r.kb+' КБ). Не забудь «Опубликовать».', 4000);
+  await renderPage();
+}
+
 async function savePage(){
   const r=await api('/api/page/'+encodeURIComponent(PAGE.file),{method:'POST',
     headers:{'content-type':'application/json'},body:JSON.stringify({dict:PAGE.dict})});
