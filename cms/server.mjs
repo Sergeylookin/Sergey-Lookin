@@ -840,7 +840,18 @@ const srv = createServer(async (req, res) => {
         'sitemap.xml');
       steps.push({ name: 'Отбор файлов', ok: add.code === 0, out: add.out.slice(-300) });
       const staged = await git('diff', '--cached', '--name-only');
-      if (!staged.out.trim()) { steps.push({ name: 'Публикация', ok: true, out: 'Менять нечего — на сайте уже актуальная версия.' }); return json(res, 200, { ok: true, steps, nothing: true }); }
+      // Новых правок в файлах может не быть, а неотправленные версии — быть:
+      // так бывает после отката, который сам создаёт версию. Её тоже надо
+      // довезти до сайта, иначе кнопка молча отвечает «менять нечего».
+      if (!staged.out.trim()) {
+        const ahead = await git('log', 'origin/main..HEAD', '--format=%h');
+        const n = ahead.out.split('\n').filter(Boolean).length;
+        if (!n) { steps.push({ name: 'Публикация', ok: true, out: 'Менять нечего — на сайте уже актуальная версия.' }); return json(res, 200, { ok: true, steps, nothing: true }); }
+        steps.push({ name: 'Готово к отправке', ok: true, out: `версий без публикации: ${n}` });
+        const ps0 = await git('push', 'origin', 'main');
+        steps.push({ name: 'Отправка', ok: ps0.code === 0, out: ps0.out.slice(-400) });
+        return json(res, 200, { ok: ps0.code === 0, steps, published: ps0.code === 0 });
+      }
       const msg = JSON.parse((await body(req)).toString('utf8') || '{}').message || 'Правки через CMS';
       // Сообщение передаём ФАЙЛОМ, а не аргументом: на Windows кириллица
       // в командной строке доезжает до git испорченной, и в истории
