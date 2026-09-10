@@ -571,8 +571,14 @@ const srv = createServer(async (req, res) => {
       const byId = Object.fromEntries(reg.cases.map((c) => [c.id, c]));
       const cases = reg.cases.slice().sort((a, b) => a.order - b.order).map((rc) => {
         const c = loadCase(rc.id);
+        // сколько заполненных русских полей осталось без английского — чтобы
+        // недопереведённый кейс было видно из списка, а не только зайдя внутрь
+        let needsEn = 0;
+        for (const k of EDITABLE) {
+          if (String(c.dict.ru[k] ?? '').trim() && !String(c.dict.en[k] ?? '').trim()) needsEn++;
+        }
         return { n: rc.id, title: c.dict.ru['p.title'], year: c.year, role: c.dict.ru['p.role'],
-                 status: rc.status, order: rc.order, cover: rc.cover, slug: rc.slug };
+                 status: rc.status, order: rc.order, cover: rc.cover, slug: rc.slug, needsEn };
       });
       return json(res, 200, { fields: FIELDS, cases, statuses: STATUSES, statusRu: STATUS_RU });
     }
@@ -762,6 +768,29 @@ const srv = createServer(async (req, res) => {
     }
 
     // ── история версий: последние публикации и откат ─────────────────────
+    // ── состояние сборки на GitHub после публикации ──────────────────────
+    // Кнопка говорит «отправлено», а сайт обновляется ещё пару минут.
+    // Спрашиваем GitHub, на каком шаге дело, и показываем это человеку.
+    if (path === '/api/deploy') {
+      const remote = (await git('remote', 'get-url', 'origin')).out.trim();
+      const m = remote.match(/github\.com[/:]([^/]+)\/([^/.\s]+)/);
+      if (!m) return json(res, 200, { unknown: true });
+      const local = (await git('rev-parse', 'HEAD')).out.trim().slice(0, 7);
+      try {
+        const r = await fetch(`https://api.github.com/repos/${m[1]}/${m[2]}/actions/runs?per_page=3`,
+          { headers: { 'accept': 'application/vnd.github+json' } });
+        if (!r.ok) return json(res, 200, { unknown: true, why: 'GitHub ответил ' + r.status });
+        const runs = (await r.json()).workflow_runs || [];
+        const mine = runs.find((x) => x.head_sha.slice(0, 7) === local) || runs[0];
+        if (!mine) return json(res, 200, { unknown: true });
+        return json(res, 200, {
+          sha: mine.head_sha.slice(0, 7), forThisVersion: mine.head_sha.slice(0, 7) === local,
+          status: mine.status, conclusion: mine.conclusion, url: mine.html_url,
+          site: `https://${m[1].toLowerCase()}.github.io/${m[2]}/`,
+        });
+      } catch (e) { return json(res, 200, { unknown: true, why: 'нет связи с GitHub' }); }
+    }
+
     if (path === '/api/history') {
       const g = await git('log', '-25', '--format=%h%ci%s');
       const items = g.out.split('\n').filter(Boolean).map((l) => {

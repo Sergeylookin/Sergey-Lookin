@@ -71,6 +71,30 @@ input:focus,textarea:focus{outline:0;border-color:#4a4a55}
 /* 4. подсветка блока, который правишь */
 .f.editing>label{color:var(--ink)}
 .savecount{font:10px var(--mono);opacity:.75;margin-left:5px}
+/* 8. поиск по кейсам */
+.findbox{padding:8px 10px 4px}
+.findbox input{font-size:12.5px;padding:6px 9px}
+/* 7. метка недопереведённого кейса */
+.entag{display:inline-block;margin-left:6px;padding:1px 5px;border-radius:4px;border:1px solid var(--warn);
+  color:var(--warn);font:9px var(--mono);letter-spacing:.06em;vertical-align:middle}
+/* 6. отмена отдельного поля */
+.f.dirty>label::after{content:'изменено';font:9px var(--mono);color:var(--warn);letter-spacing:.05em}
+.undo1{margin-left:auto;padding:1px 7px;border-radius:4px;border:1px solid var(--line);
+  color:var(--mute);font-size:11px}
+.undo1:hover{border-color:var(--accent);color:var(--accent)}
+/* 9. сортировка медиатеки */
+.mlbar .sortbtn{padding:5px 10px;border-radius:6px;border:1px solid var(--line);font-size:12px;color:var(--mute);background:#17171b}
+.mlbar .sortbtn.on{border-color:#4a4a55;color:var(--ink)}
+.mcard--heavy .mcard__m{color:var(--warn)}
+/* 10. полоса состояния публикации */
+.deploybar{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:12.5px;
+  background:#141418;border-bottom:1px solid var(--line);color:#c2c2c8}
+.deploybar .dot2{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none;animation:pulse 1.1s infinite}
+.deploybar.ok .dot2{background:var(--ok);animation:none}
+.deploybar.bad .dot2{background:var(--accent);animation:none}
+.deploybar a{color:var(--ink)}
+.deploybar .sp{flex:1}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .sec>h2{margin:0 0 12px;font:600 11px/1 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--mute)}
 .f{margin-bottom:13px}
 .f>label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mute);margin-bottom:5px}
@@ -211,6 +235,7 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
 <div class="app">
   <aside class="side">
     <div class="brand">CMS<small id="root">портфолио</small></div>
+    <div class="findbox"><input id="findCase" placeholder="поиск по кейсам" autocomplete="off"></div>
     <div class="cases" id="cases"></div>
     <div class="grouphead">Всё остальное</div>
     <div class="pages"><button class="pg" id="navMedia">Медиатека — все картинки</button>
@@ -230,6 +255,7 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
       <button class="btn" id="revert">Отменить</button>
       <button class="btn" id="save">Сохранить</button>
     </div>
+    <div class="deploybar" id="deployBar" hidden></div>
     <div class="draftbar" id="draftBar" hidden></div>
     <div class="secnav" id="secnav"></div>
     <div id="form"></div>
@@ -245,7 +271,7 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
 <script>
 const $ = (s,r=document)=>r.querySelector(s), api = (p,o)=>fetch(p,o).then(r=>r.json());
 let MODEL=null, CUR=null, DATA=null, ORIG=null, LANG='ru', DIRTY=false;
-let PAGES=[], MODE='case', PAGE=null, STAMP=Date.now();
+let PAGES=[], MODE='case', PAGE=null, STAMP=Date.now(), FIND='', MSORT='used';
 
 const RULES = {
   'Тексты': `
@@ -313,6 +339,7 @@ async function boot(){
   PAGES=(await api('/api/pages')).pages;
   $('#pages').innerHTML=PAGES.map(p=>`<button class="pg" data-f="${p.file}">${p.label}</button>`).join('');
   $('#pages').onclick = e=>{ const b=e.target.closest('.pg'); if(b) openPage(b.dataset.f); };
+  $('#findCase').oninput = e=>{ FIND=e.target.value; drawList(); markCur(); };
   $('#cases').onclick = e=>{ const b=e.target.closest('.case'); if(b) open(b.dataset.n); };
   open(CUR && MODEL.cases.some(c=>c.n===CUR) ? CUR : MODEL.cases[0].n);
 }
@@ -320,11 +347,19 @@ async function boot(){
 // Список кейсов: статус точкой, порядок — перетаскиванием строки.
 function drawList(){
   const dot={published:'var(--ok)',hidden:'var(--warn)'};
-  $('#cases').innerHTML = MODEL.cases.map(c=>
-    `<button class="case${c.status!=='published'?' case--off':''}" data-n="${c.n}" draggable="true">
-       <b><i class="dot" style="background:${dot[c.status]}" title="${MODEL.statusRu[c.status]}"></i>${c.n} · ${c.title||'без названия'}</b>
+  const q=(FIND||'').trim().toLowerCase();
+  const list=MODEL.cases.filter(c=>!q
+    || String(c.title||'').toLowerCase().includes(q)
+    || String(c.role||'').toLowerCase().includes(q)
+    || String(c.year||'').includes(q)
+    || String(c.n).includes(q));
+  $('#cases').innerHTML = list.map(c=>
+    `<button class="case${c.status!=='published'?' case--off':''}" data-n="${c.n}" draggable="${q?'false':'true'}">
+       <b><i class="dot" style="background:${dot[c.status]}" title="${MODEL.statusRu[c.status]}"></i>${c.n} · ${c.title||'без названия'}${c.needsEn?'<span class="entag" title="полей без английского: '+c.needsEn+'">EN '+c.needsEn+'</span>':''}</b>
        <span>${c.year||'—'} · ${c.role||'—'}${c.status!=='published'?' · '+MODEL.statusRu[c.status]:''}</span>
-     </button>`).join('');
+     </button>`).join('')
+    || '<div class="locked" style="padding:10px">Ничего не найдено.</div>';
+  if(q) return;   // при поиске порядок мышью не трогаем — он про полный список
   let drag=null;
   for(const el of $('#cases').querySelectorAll('.case')){
     el.ondragstart=e=>{ drag=el; el.style.opacity=.4; e.dataTransfer.effectAllowed='move'; };
@@ -692,8 +727,48 @@ const mark=()=>{
   b.classList.add('pri');
   b.innerHTML='Сохранить'+(n?'<span class="savecount">'+n+'</span>':'');
   b.title=n?('Изменено: '+changedFields().slice(0,12).join(', ')):'';
+  markFields();
   saveDraft();
 };
+/* Помечаем изменённые поля и даём вернуть каждое по отдельности:
+   раньше «Отменить» откатывало сразу всю страницу. */
+function markFields(){
+  if(!ORIG) return;
+  const box=$('#form'); if(!box) return;
+  for(const el of box.querySelectorAll('[data-k],[data-pk]')){
+    const key=el.dataset.k||el.dataset.pk, lang=el.dataset.l;
+    if(!key||!lang) continue;
+    const was = MODE==='case' ? (ORIG.dict[lang]||{})[key] : (ORIG[lang]||{})[key];
+    const now = MODE==='case' ? (DATA.dict[lang]||{})[key] : (PAGE.dict[lang]||{})[key];
+    const f=el.closest('.f'); if(!f) continue;
+    const changed = was!==now;
+    // метку и кнопку вешаем один раз на поле, а не на каждый язык
+    const label=f.querySelector('label'); if(!label) continue;
+    const already=label.querySelector('.undo1');
+    const anyChanged = [...f.querySelectorAll('[data-k],[data-pk]')].some(x=>{
+      const k2=x.dataset.k||x.dataset.pk, l2=x.dataset.l;
+      const w = MODE==='case' ? (ORIG.dict[l2]||{})[k2] : (ORIG[l2]||{})[k2];
+      const n = MODE==='case' ? (DATA.dict[l2]||{})[k2] : (PAGE.dict[l2]||{})[k2];
+      return w!==n;
+    });
+    f.classList.toggle('dirty', anyChanged);
+    if(anyChanged && !already){
+      const b=document.createElement('button');
+      b.className='undo1'; b.textContent='вернуть'; b.title='вернуть это поле как было';
+      b.onclick=ev=>{ ev.preventDefault();
+        for(const x of f.querySelectorAll('[data-k],[data-pk]')){
+          const k2=x.dataset.k||x.dataset.pk, l2=x.dataset.l;
+          const w = MODE==='case' ? (ORIG.dict[l2]||{})[k2] : (ORIG[l2]||{})[k2];
+          if(MODE==='case') DATA.dict[l2][k2]=w; else PAGE.dict[l2][k2]=w;
+          x.value=toEditor(w);
+        }
+        mark(); markFields(); };
+      label.appendChild(b);
+    }
+    if(!anyChanged && already) already.remove();
+  }
+}
+
 const unmark=()=>{ DIRTY=false; const b=$('#save'); b.classList.remove('pri'); b.textContent='Сохранить'; b.title=''; dropDraft(); };
 
 /* ── 3. Черновик в браузере ────────────────────────────────────────────
@@ -845,12 +920,18 @@ async function openMedia(){
 async function drawMedia_lib(){
   MEDIA=await api('/api/media');
   const q=MFILTER.trim().toLowerCase();
-  const list=MEDIA.items.filter(it=>(!q||it.name.toLowerCase().includes(q)) && (!MONLYFREE||!it.used.length));
+  let list=MEDIA.items.filter(it=>(!q||it.name.toLowerCase().includes(q)) && (!MONLYFREE||!it.used.length));
+  const sorters={
+    used:(a,b)=>(b.used.length-a.used.length)||a.name.localeCompare(b.name),
+    kb:(a,b)=>b.kb-a.kb,
+    name:(a,b)=>a.name.localeCompare(b.name),
+  };
+  list=list.slice().sort(sorters[MSORT]||sorters.used);
   const card=it=>{
     const u=it.used.length
       ? '<b>Где стоит:</b><br>'+it.used.map(x=>'· '+esc(x.where)).join('<br>')
       : '<span class="mcard__free">Нигде не используется</span>';
-    return '<div class="mcard" data-n="'+esc(it.name)+'">'
+    return '<div class="mcard'+(it.kb>1024?' mcard--heavy':'')+'" data-n="'+esc(it.name)+'">'
       + '<img class="mcard__img" src="/assets/img/'+it.name+'.webp?t='+STAMP+'" alt="" loading="lazy">'
       + '<div class="mcard__b"><div class="mcard__n">'+esc(it.name)+'.webp</div>'
       + '<div class="mcard__m">'+it.kb+' КБ · '+(it.variants.length?'копии '+it.variants.join('/'):'<span style="color:var(--warn)">нет копий</span>')+'</div>'
@@ -865,6 +946,9 @@ async function drawMedia_lib(){
     + '<p style="color:var(--mute);font-size:12.5px;margin:0 0 11px">Все картинки сайта. Заменяешь файл — он обновляется <b>везде</b>, где стоит: в кейсе, на карточке портфолио, в ховере на манифесте и в ленте на телефоне. Имя не меняется, поэтому ничего не рвётся.</p>'
     + '<div class="mlbar"><input id="mq" placeholder="поиск по имени" value="'+esc(MFILTER)+'">'
     + '<button class="btn" id="mfree">'+(MONLYFREE?'✓ ':'')+'только неиспользуемые</button>'
+    + '<span style="font:11px var(--mono);color:var(--mute);margin-left:4px">сортировка:</span>'
+    + [['used','по местам'],['kb','по весу'],['name','по имени']].map(([k,l])=>
+        '<button class="sortbtn'+(MSORT===k?' on':'')+'" data-sort="'+k+'">'+l+'</button>').join('')
     + '<span style="flex:1"></span>'
     + '<span style="font:11px var(--mono);color:var(--mute)">показано '+list.length+' из '+MEDIA.total+(MEDIA.unused?' · без применения '+MEDIA.unused:'')+'</span>'
     + '</div></div>'
@@ -874,6 +958,7 @@ async function drawMedia_lib(){
 
   $('#mq').oninput=e=>{ MFILTER=e.target.value; clearTimeout(window.__mq); window.__mq=setTimeout(drawMedia_lib,250); };
   $('#mfree').onclick=()=>{ MONLYFREE=!MONLYFREE; drawMedia_lib(); };
+  for(const b of $('#form').querySelectorAll('[data-sort]')) b.onclick=()=>{ MSORT=b.dataset.sort; drawMedia_lib(); };
 
   wireDrop($('#mAdd'),{multiple:true,onFiles:async files=>{
     const z=$('#mAdd'), lbl=z.innerHTML; z.textContent='загружаю…';
@@ -1129,6 +1214,34 @@ addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preve
 addEventListener('beforeunload',e=>{ if(DIRTY){ e.preventDefault(); e.returnValue=''; } });
 
 /* ── правила ── */
+/* После отправки сборка на GitHub идёт ещё пару минут. Показываем, где она,
+   и когда правки реально стали видны на сайте. */
+let deployTimer=null;
+function watchDeploy(){
+  const bar=$('#deployBar');
+  clearInterval(deployTimer);
+  let ticks=0;
+  const paint=(cls,html)=>{ bar.hidden=false; bar.className='deploybar'+(cls?' '+cls:''); bar.innerHTML=html; };
+  paint('', '<span class="dot2"></span><span>Отправлено. GitHub собирает сайт…</span><span class="sp"></span>');
+  const check=async()=>{
+    ticks++;
+    let d; try{ d=await api('/api/deploy'); }catch(e){ return; }
+    if(d.unknown){ paint('', '<span class="dot2"></span><span>Отправлено. Состояние сборки узнать не удалось'+(d.why?' ('+d.why+')':'')+'.</span><span class="sp"></span><button class="btn" onclick="this.closest(\'.deploybar\').hidden=true">Скрыть</button>'); clearInterval(deployTimer); return; }
+    if(d.status!=='completed'){
+      paint('', '<span class="dot2"></span><span>Собирается версия '+esc(d.sha)+'…</span><span class="sp"></span><a href="'+d.url+'" target="_blank">смотреть на GitHub ↗</a>');
+    } else if(d.conclusion==='success'){
+      paint('ok', '<span class="dot2"></span><span>Опубликовано. Правки на сайте.</span><span class="sp"></span><a href="'+d.site+'" target="_blank">открыть сайт ↗</a><button class="btn" onclick="this.closest(\'.deploybar\').hidden=true">Скрыть</button>');
+      clearInterval(deployTimer);
+    } else {
+      paint('bad', '<span class="dot2"></span><span>Сборка не прошла ('+esc(String(d.conclusion))+'). На сайте осталась прежняя версия.</span><span class="sp"></span><a href="'+d.url+'" target="_blank">посмотреть почему ↗</a>');
+      clearInterval(deployTimer);
+    }
+    if(ticks>24) clearInterval(deployTimer);   // около шести минут и хватит
+  };
+  check();
+  deployTimer=setInterval(check, 15000);
+}
+
 $('#navMedia').onclick=openMedia;
 $('#navHist').onclick=openHistory;
 
@@ -1176,6 +1289,7 @@ $('#pub').onclick=async()=>{
     $('#log',v).innerHTML='<div class="steps"><div>сборка…</div></div>';
     const r=await api('/api/publish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:$('#msg',v).value})});
     $('#log',v).innerHTML=`<div class="steps">${r.steps.map(s=>`<div><span class="${s.ok?'m':'b'}">${s.ok?'✓':'✕'}</span><span>${esc(s.name)}${s.out?' — '+esc(s.out.split('\n').slice(-1)[0].slice(0,90)):''}</span></div>`).join('')}</div>`;
+    if(r.published) watchDeploy();
     if(r.published){ go.textContent='Готово'; $('#log',v).insertAdjacentHTML('beforeend',
       '<p style="margin-top:10px">Отправлено. Сборка на GitHub идёт сама — сайт обновится за пару минут. Если правок не видно: Ctrl+Shift+R.</p>'); }
     else if(r.nothing){ go.textContent='Нечего публиковать'; }
