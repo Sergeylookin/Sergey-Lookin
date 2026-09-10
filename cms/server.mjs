@@ -25,6 +25,37 @@ const IMGDIR = resolve(ROOT, 'assets', 'img');
 const PORT = 8150;
 const VARIANTS = [480, 960, 1440];
 
+// Что за картинку принесли. Расширению в имени файла не верим — смотрим
+// первые байты: из Фигмы и Скетча файл нередко приезжает с чужим суффиксом.
+function imageKind(b) {
+  if (b.length < 12) return null;
+  if (b[0] === 0x89 && b.slice(1, 4).toString() === 'PNG') return 'png';
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'jpg';
+  if (b.slice(0, 4).toString() === 'RIFF' && b.slice(8, 12).toString() === 'WEBP') return 'webp';
+  return null;
+}
+
+// Приводим к webp: весь сайт на нём, и картинки грузятся через srcset.
+// «keep» — файл уже webp, кладём как есть, ни одного пикселя не трогаем.
+// «lossless» — пиксель в пиксель, просто другой контейнер.
+// «compress» — q90: на глаз неотличимо, вес обычно в 5–10 раз меньше.
+async function toWebp(buf, mode) {
+  if (mode === 'keep') return buf;
+  const s = sharpMod.default(buf);
+  return mode === 'lossless' ? s.webp({ lossless: true }).toBuffer() : s.webp({ quality: 90 }).toBuffer();
+}
+
+// Разбираем, что делать с присланным файлом, и заодно объясняем ошибку
+// человеческим языком, а не «unsupported image format».
+async function intake(buf, want) {
+  const kind = imageKind(buf);
+  if (!kind) return { error: 'Не похоже на картинку. Нужен PNG, JPG или WebP.' };
+  let mode = want && ['keep', 'compress', 'lossless'].includes(want) ? want : (kind === 'webp' ? 'keep' : 'compress');
+  if (kind !== 'webp' && mode === 'keep') mode = 'compress'; // png/jpg как есть на сайт не кладём
+  try { return { buf: await toWebp(buf, mode), kind, mode, was: buf.length }; }
+  catch { return { error: 'Не удалось прочитать картинку — файл повреждён или это не изображение.' }; }
+}
+
 // Ключи, которые редактируются в кейсе. Всё остальное (nav.*, ft.*, f.*, ui.all/next, skip)
 // принадлежит общему каркасу и переписывается tools/build-pages.mjs — руками не трогаем.
 const FIELDS = [
@@ -756,14 +787,17 @@ const srv = createServer(async (req, res) => {
       if (!/^[a-z0-9-]+$/.test(stem || '')) return json(res, 400, { error: 'Основа имени — только латиница, цифры и дефисы.' });
       let k = 1, name;
       do { name = `${stem}-${k++}`; } while (existsSync(resolve(IMGDIR, name + '.webp')));
-      const buf = await body(req);
-      if (!buf.length) return json(res, 400, { error: 'Пустой файл.' });
-      if (buf.slice(8, 12).toString() !== 'WEBP') return json(res, 400, { error: 'Это не webp. Экспортируй из Figma в webp.' });
-      writeFileSync(resolve(IMGDIR, name + '.webp'), buf);
+      const raw = await body(req);
+      if (!raw.length) return json(res, 400, { error: 'Пустой файл.' });
+      const got = await intake(raw, url.searchParams.get('mode'));
+      if (got.error) return json(res, 400, { error: got.error });
+      const buf = got.buf;
+      await writeFileSafe(resolve(IMGDIR, name + '.webp'), buf);
       const sharp = sharpMod.default;
       const meta = await sharp(resolve(IMGDIR, name + '.webp')).metadata();
       for (const w of VARIANTS) { if (w >= meta.width) continue; await sharp(resolve(IMGDIR, name + '.webp')).resize({ width: w }).webp({ quality: 82 }).toFile(resolve(IMGDIR, `${name}-${w}.webp`)); }
-      return json(res, 200, { ok: true, name, w: meta.width, h: meta.height, variants: variantsOf(name) });
+      return json(res, 200, { ok: true, name, w: meta.width, h: meta.height, variants: variantsOf(name),
+        kind: got.kind, mode: got.mode, wasKb: Math.round(got.was / 1024), kb: Math.round(buf.length / 1024) });
     }
     // ── видео-обложки кейсов ─────────────────────────────────────────────
     if (path === '/api/video' && req.method === 'POST') {
@@ -869,6 +903,39 @@ const srv = createServer(async (req, res) => {
       }
     }
 
+    // ── контакты: Telegram, почта, Behance ──────────────────────────────
+    // Одна и та же ссылка стоит в блоке «Давайте поговорим» на главной, в
+    // колонке контактов на «Обо мне» и в невидимой разметке для поисковиков.
+    // Держим их в content/contacts.json и разносим одной командой.
+    if (path === '/api/contacts') {
+      const F = resolve(ROOT, 'content', 'contacts.json');
+      if (req.method === 'GET') return json(res, 200, JSON.parse(readFileSync(F, 'utf8')));
+      if (req.method === 'POST') {
+        const inc = JSON.parse((await body(req)).toString('utf8'));
+        const d = JSON.parse(readFileSync(F, 'utf8'));
+        const bad = [];
+        for (const it of d.items) {
+          const g = (inc.items || []).find((x) => x.id === it.id);
+          if (!g) continue;
+          const url = String(g.url || '').trim();
+          const handle = String(g.handle || '').trim();
+          if (!url) { bad.push(`${it.name}: пустая ссылка`); continue; }
+          if (!/^(https?:\/\/|mailto:|tel:)/i.test(url)) { bad.push(`${it.name}: ссылка должна начинаться с https://, mailto: или tel:`); continue; }
+          if (/\s/.test(url)) { bad.push(`${it.name}: в ссылке пробел`); continue; }
+          if (/^mailto:/i.test(url) && !/^mailto:[^@\s]+@[^@\s]+\.[^@\s]+$/i.test(url)) { bad.push(`${it.name}: почта не похожа на адрес`); continue; }
+          it.url = url;
+          it.handle = handle || url.replace(/^https?:\/\/(www\.)?|^mailto:|\/$/g, '');
+          if (typeof g.public === 'boolean') it.public = g.public;
+        }
+        if (bad.length) return json(res, 400, { error: bad.join('\n') });
+        await writeFileSafe(F, Buffer.from(JSON.stringify(d, null, 2) + '\n', 'utf8'));
+        const b = await node('build-contacts.mjs');
+        if (b.code !== 0) return json(res, 500, { error: 'Не удалось разнести по страницам:\n' + b.out.slice(-400) });
+        await node('build-en.mjs');
+        return json(res, 200, { ok: true, changed: !/менять нечего/.test(b.out) });
+      }
+    }
+
     // ── блок «Где работал» и бегущая строка брендов на манифесте ────────
     // Годы и названия компаний лежат обычным текстом, а роль/описание/награда —
     // переводимыми ключами. Правим их вместе, иначе один блок пришлось бы
@@ -880,6 +947,28 @@ const srv = createServer(async (req, res) => {
         const b = await node('build-en.mjs');
         return json(res, 200, { ok: b.code === 0, ...r });
       }
+    }
+
+    // ── что будет, если сконвертировать: считаем ДО загрузки ─────────────
+    // Человек кидает PNG из Figma и должен видеть, во что это обойдётся,
+    // а не узнавать постфактум. Считаем оба варианта и отдаём числа.
+    if (path === '/api/probe' && req.method === 'POST') {
+      const buf = await body(req);
+      const kind = imageKind(buf);
+      if (!kind) return json(res, 400, { error: 'Не похоже на картинку. Нужен PNG, JPG или WebP.' });
+      try {
+        const meta = await sharpMod.default(buf).metadata();
+        const [q90, lossless] = await Promise.all([
+          sharpMod.default(buf).webp({ quality: 90 }).toBuffer(),
+          sharpMod.default(buf).webp({ lossless: true }).toBuffer(),
+        ]);
+        return json(res, 200, {
+          kind, w: meta.width, h: meta.height, hasAlpha: !!meta.hasAlpha,
+          origKb: Math.round(buf.length / 1024),
+          q90Kb: Math.round(q90.length / 1024),
+          losslessKb: Math.round(lossless.length / 1024),
+        });
+      } catch (e) { return json(res, 400, { error: 'Не удалось прочитать картинку.' }); }
     }
 
     // ── медиатека: все картинки сайта и где каждая используется ──────────
@@ -903,8 +992,11 @@ const srv = createServer(async (req, res) => {
     if (path === '/api/replace' && req.method === 'POST') {
       const name = url.searchParams.get('name');
       if (!/^[a-z0-9-]+$/.test(name || '')) return json(res, 400, { error: 'Неверное имя файла.' });
-      const buf = await body(req);
-      if (buf.slice(8, 12).toString() !== 'WEBP') return json(res, 400, { error: 'Это не webp. Экспортируй из Figma в webp.' });
+      const raw = await body(req);
+      if (!raw.length) return json(res, 400, { error: 'Пустой файл.' });
+      const got = await intake(raw, url.searchParams.get('mode'));
+      if (got.error) return json(res, 400, { error: got.error });
+      const buf = got.buf;
       const dst = resolve(IMGDIR, name + '.webp');
       await writeFileSafe(dst, buf);
       const sharp = sharpMod.default;
@@ -914,14 +1006,15 @@ const srv = createServer(async (req, res) => {
         if (w >= meta.width) { if (existsSync(v)) rmSync(v, { force: true }); continue; }
         await sharp(dst).resize({ width: w }).webp({ quality: 82 }).toFile(v);
       }
-      return json(res, 200, { ok: true, name, w: meta.width, h: meta.height, ...fileInfo(name) });
+      return json(res, 200, { ok: true, name, w: meta.width, h: meta.height, ...fileInfo(name),
+        kind: got.kind, mode: got.mode, wasKb: Math.round(got.was / 1024), kb: Math.round(buf.length / 1024) });
     }
 
     if (path === '/api/validate') return json(res, 200, { problems: validate() });
     if (path === '/api/changes') { const g = await git('status', '--short'); return json(res, 200, { files: g.out.split('\n').map((s) => s.trim()).filter(Boolean) }); }
     if (path === '/api/publish' && req.method === 'POST') {
       const steps = [];
-      for (const [name, script] of [['Сборка EN', 'build-en.mjs'], ['Каркас', 'build-pages.mjs']]) {
+      for (const [name, script] of [['Контакты', 'build-contacts.mjs'], ['Сборка EN', 'build-en.mjs'], ['Каркас', 'build-pages.mjs']]) {
         const r = await node(script); steps.push({ name, ok: r.code === 0, out: r.out.slice(-600) });
         if (r.code !== 0) return json(res, 200, { ok: false, steps });
       }

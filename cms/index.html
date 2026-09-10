@@ -14,7 +14,14 @@ body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);ov
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 input,textarea{font:inherit;color:var(--ink);background:#0e0e11;border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;resize:vertical}
 input:focus,textarea:focus{outline:0;border-color:#4a4a55}
-.app{display:grid;grid-template-columns:210px minmax(430px,1fr) minmax(380px,44%);height:100vh}
+.app{display:grid;grid-template-columns:210px minmax(340px,1fr) 6px minmax(320px,var(--prevw,44%));height:100vh}
+/* Граница между полями и превью двигается мышкой: иногда важнее видеть текст,
+   иногда — сайт целиком. Ширина запоминается. */
+.grip{cursor:col-resize;background:var(--line);position:relative}
+.grip::after{content:"";position:absolute;inset:0 -4px;}
+.grip:hover,.grip.drag{background:var(--ink)}
+body.resizing{cursor:col-resize;user-select:none}
+body.resizing iframe{pointer-events:none}
 
 /* ── левая колонка ── */
 .side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
@@ -170,6 +177,13 @@ input:focus,textarea:focus{outline:0;border-color:#4a4a55}
 .lb__wrap{display:grid;place-items:center;overflow:auto;padding:12px 0}
 .lb img{max-width:100%;max-height:100%;border-radius:8px;background:#000}
 .lb__bottom{display:flex;gap:9px;align-items:center;justify-content:center;font:11px var(--mono);color:var(--mute)}
+.fmt__box{max-width:520px;width:100%}
+.fmt__lead{color:var(--ink);font-size:14px;line-height:1.5;margin:0 0 16px}
+.fmt__opt{display:block;width:100%;text-align:left;margin:0 0 10px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);cursor:pointer;font:inherit}
+.fmt__opt:hover{border-color:var(--ink)}
+.fmt__opt b{display:block;font-size:14px;margin-bottom:3px}
+.fmt__opt i{display:block;font:12px var(--mono);font-style:normal;color:var(--ink);opacity:.85}
+.fmt__opt u{display:block;text-decoration:none;font-size:12px;color:var(--mute);margin-top:5px;line-height:1.45}
 .cvrow{display:grid;grid-template-columns:1fr auto;gap:9px 10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:11px;background:#0e0e11;margin-bottom:8px}
 .cvrow .cvdrop{grid-column:1/-1}
 a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
@@ -210,6 +224,15 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
 .prev{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--panel)}
 .prev .bar{border-bottom:1px solid var(--line);background:none;backdrop-filter:none}
 .prev iframe{flex:1;width:100%;border:0;background:#fff}
+/* Сцена превью. Рамке всегда даётся НАСТОЯЩАЯ ширина устройства — иначе сайт
+   не переключит медиазапросы и покажет не ту вёрстку. Колонка CMS узкая, и
+   без этого даже режим «Веб» уходил в мобильную раскладку. Поэтому кадр не
+   сплющиваем, а уменьшаем целиком, как «зум» в инструментах браузера:
+   пропорции и точки перелома остаются настоящими. */
+.stage{flex:1;min-height:0;display:flex;justify-content:center;overflow:hidden;background:var(--bg);padding:14px 0}
+.devbox{overflow:hidden}
+.stage iframe{flex:none;transform-origin:top left;border:1px solid var(--line);border-radius:10px;background:#fff}
+.devnote{font:11px var(--mono);color:var(--mute);margin-right:10px;white-space:nowrap}
 .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg button{padding:5px 11px;font:11px var(--mono);color:var(--mute)}
 .seg button.on{background:#1f1f24;color:var(--ink)}
@@ -257,6 +280,7 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
     <div class="grouphead">Всё остальное</div>
     <div class="pages"><button class="pg" id="navMedia">Медиатека — все картинки</button>
       <button class="pg" id="navShell">Шапка и подвал</button>
+      <button class="pg" id="navCont">Контакты и ссылки</button>
       <button class="pg" id="navHist">История и откат</button></div>
     <div class="grouphead">Страницы сайта</div>
     <div class="pages" id="pages"></div>
@@ -280,10 +304,13 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
     <div class="sec"><h2>Проверка</h2><div class="checks" id="checks"></div></div>
   </main>
 
+  <div class="grip" id="grip" title="потяни, чтобы расширить превью"></div>
+
   <aside class="prev">
     <div class="bar"><div class="seg" id="lang"><button data-l="ru" class="on">RU</button><button data-l="en">EN</button></div>
-      <div style="flex:1"></div><button class="btn" id="reload">Обновить</button></div>
-    <iframe id="frame" title="превью"></iframe>
+      <div class="seg" id="dev"><button data-d="web" class="on">Веб</button><button data-d="tab">Планшет</button><button data-d="mob">Мобилка</button></div>
+      <div style="flex:1"></div><span class="devnote" id="devnote"></span><button class="btn" id="reload">Обновить</button></div>
+    <div class="stage" id="stage"><div class="devbox" id="devbox"><iframe id="frame" title="превью"></iframe></div></div>
   </aside>
 </div>
 <script>
@@ -305,15 +332,37 @@ const RULES = {
 <p>«Выручку и конверсию компании показать не могу и выдумывать не буду. Вот что мерил сам: … Что на этом сделала компания — публично: …»</p>`,
   'Картинки': `
 <h4>Как добавить</h4>
-<p>Перетащи <code>.webp</code> в блок медиа. Имя задаётся автоматически по кейсу: <code>duft-5</code>, <code>duft-6</code>. Уменьшенные копии для телефонов (<code>-480</code>, <code>-960</code>, <code>-1440</code>) делаются тут же, ждать деплоя не надо.</p>
-<h4>Только webp</h4>
-<p>Другие форматы сайт не использует. Экспортируй из Figma сразу в webp, ширина оригинала 1920 для полноширинных и 940 для парных.</p>
+<p>Перетащи файл в блок медиа или нажми и выбери в окне Windows. Имя задаётся автоматически по кейсу: <code>duft-5</code>, <code>duft-6</code>. Уменьшенные копии для телефонов (<code>-480</code>, <code>-960</code>, <code>-1440</code>) делаются тут же, ждать деплоя не надо.</p>
+<h4>PNG и JPG тоже можно</h4>
+<p>Сайт работает на webp — он в разы легче при том же виде. Если кидаешь <code>.png</code> или <code>.jpg</code>, CMS спросит, как переводить, и покажет оба веса:</p>
+<p><b>Сжать</b> — качество 90. На глаз не отличить, вес обычно в 5–10 раз меньше. Берите это.<br>
+<b>Без потерь</b> — пиксель в пиксель, но тяжелее. Имеет смысл для скриншотов интерфейса с мелким текстом.</p>
+<p>Файл на компьютере при этом не трогается. Ширина оригинала — 1920 для полноширинных и 940 для парных.</p>
 <h4>Строка на две картинки</h4>
 <p>Кнопка «+ пара» ставит две картинки в ряд. На телефоне они всё равно встанут одна под другой.</p>
 <h4>Alt обязателен</h4>
 <p>Его читают поисковик и незрячие. Опиши, что на кадре, а не «картинка 3». Пустой alt подсветится в проверке.</p>
 <h4>Видео</h4>
 <p>Блоки с видео помечены замком и не редактируются — их разметка собрана руками, ломать её кнопкой нельзя. Нужно поменять — скажи.</p>`,
+  'Ссылки и контакты': `
+<h4>Одно поле — три места</h4>
+<p>Telegram, почта и Behance стоят на сайте трижды: экран «Давайте поговорим» на главной, колонка «Связаться» на «Обо мне» и невидимая разметка, по которой поисковики связывают профили с тобой. Раздел «Контакты и ссылки» правит все три сразу, включая английскую версию.</p>
+<h4>Два поля у каждой ссылки</h4>
+<p><b>Ссылка</b> — куда ведёт. Полный адрес со <code>https://</code>, для почты — со словом <code>mailto:</code> в начале.<br>
+<b>Как показывать</b> — что видит человек: <code>@Lookin_Sergey</code>, <code>behance.net/…</code>. Меняешь одно — не забудь второе, иначе подпись врёт.</p>
+<h4>Ещё профили</h4>
+<p>Нижнее поле — ссылки, которых на страницах не видно. Они уходят только в разметку для поисковиков. По одной в строке.</p>
+<h4>Почта в разметку не идёт</h4>
+<p>Специально: адрес из неё собирают спам-роботы. На странице он есть, в машинной разметке — нет.</p>`,
+  'Как смотреть превью': `
+<h4>Веб, планшет, мобилка</h4>
+<p>Три кнопки над превью. Внутри рамке даётся настоящая ширина устройства — 1440, 820 и 390 px, — поэтому сайт переключает вёрстку по-честному, как на живом экране.</p>
+<h4>Масштаб</h4>
+<p>Если колонка уже устройства, кадр уменьшается целиком и рядом пишется «масштаб 64%». Пропорции при этом верные: это зум, а не сжатие.</p>
+<h4>Колонку можно двигать</h4>
+<p>Тёмная полоска между полями и превью тянется мышкой — сайт станет шире. Двойной щелчок по ней возвращает как было. Ширина запоминается.</p>
+<h4>Мобильную версию проверяй всегда</h4>
+<p>Больше половины заходов — с телефона. Длинное название или метрика в две строки на десктопе смотрятся нормально, а на 390 px разъезжаются.</p>`,
   'Публикация': `
 <h4>Три шага</h4>
 <p><b>1.</b> «Сохранить» — правки ложатся в файлы на диске, сайт ещё прежний.<br>
@@ -326,8 +375,8 @@ const RULES = {
 <h4>Кэш</h4>
 <p>GitHub держит страницу до десяти минут. Если правки «не видно» — Ctrl+Shift+R.</p>`,
   'Чего не делать': `
-<h4>Манифест правится не здесь</h4>
-<p>Главная страница собрана уникальной вёрсткой, а не шаблоном. Через CMS её не открыть — это защита, а не недоделка.</p>
+<h4>Что заперто</h4>
+<p>Блоки с видео и уникальная вёрстка манифеста помечены замком: их разметка собрана руками, и кнопка её сломает. Текст внутри правится, структура — нет.</p>
 <h4>Не переименовывай кейсы</h4>
 <p>Номер кейса <code>01…10</code> — это адрес страницы и ссылки «следующий проект». Менять его должен я.</p>
 <h4>Не удаляй картинку, которая где-то стоит</h4>
@@ -400,7 +449,7 @@ const markCur=()=>document.querySelectorAll('.case').forEach(b=>b.classList.togg
 async function open(n){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='case'; PAGE=null; document.querySelectorAll('.pg').forEach(b=>b.classList.remove('on'));
-  $('#navMedia').classList.remove('on'); $('#navHist').classList.remove('on'); $('#navShell').classList.remove('on');
+  $('#navMedia').classList.remove('on'); $('#navHist').classList.remove('on'); $('#navShell').classList.remove('on'); $('#navCont').classList.remove('on');
   CUR=n; DATA=await api('/api/case/'+n); ORIG=JSON.parse(JSON.stringify(DATA)); DIRTY=false;
   markCur();
   $('#save').style.display=$('#revert').style.display='';
@@ -618,8 +667,9 @@ function wireCaseOps(){
   }
   wireDrop($('#dropCover'),{onFiles:async f=>{
     const dc=$('#dropCover'); const label=dc.textContent; dc.textContent='загружаю…';
-    const r=await fetch('/api/upload?stem='+encodeURIComponent(stemOfCase()+'-preview'),{method:'POST',body:f}).then(x=>x.json());
+    const r=await sendImage('/api/upload?stem='+encodeURIComponent(stemOfCase()+'-preview'), f);
     dc.textContent=label;
+    if(r.cancel) return;
     if(r.error) return toast(r.error,4000);
     await setCover(r.name);
   }});
@@ -739,9 +789,10 @@ function drawMedia(){
     const label=dn.innerHTML; dn.textContent='загружаю…';
     let n=0;
     for(const f of files){
-      const r=await fetch('/api/upload?stem='+encodeURIComponent(stemOfCase()),{method:'POST',body:f}).then(x=>x.json());
+      const r=await sendImage('/api/upload?stem='+encodeURIComponent(stemOfCase()), f);
+      if(r.cancel) continue;
       if(r.error){ toast(r.error,4000); break; }
-      DATA.media.push({type:'full',src:r.name,alt:'',w:r.w,h:r.h,exists:true,kb:0,variants:r.variants}); n++;
+      DATA.media.push({type:'full',src:r.name,alt:'',w:r.w,h:r.h,exists:true,kb:r.kb||0,variants:r.variants}); n++;
     }
     dn.innerHTML=label;
     if(n){ STAMP=Date.now(); mark(); drawMedia(); toast(n===1?'Картинка добавлена — впиши alt.':'Добавлено '+n+'. Впиши alt каждой.'); }
@@ -751,19 +802,80 @@ function drawMedia(){
 // Заменить файл в конкретном слоте. Если слот пустой — заливаем как новую
 // картинку; если занят — перезаписываем ТОТ ЖЕ файл, чтобы ссылки не порвались.
 async function putImage(f, it, i, j){
-  const busy=toast('Загружаю…', 60000);
-  const url = it.src ? '/api/replace?name='+encodeURIComponent(it.src)
-                     : '/api/upload?stem='+encodeURIComponent(stemOfCase());
-  const r=await fetch(url,{method:'POST',body:f}).then(x=>x.json());
-  busy.remove();
+  const was = it.src;
+  const url = was ? '/api/replace?name='+encodeURIComponent(was)
+                  : '/api/upload?stem='+encodeURIComponent(stemOfCase());
+  const r=await sendImage(url, f);
+  if(r.cancel) return;
   if(r.error) return toast(r.error, 4500);
   Object.assign(it,{src:r.name,w:r.w,h:r.h,exists:true,kb:r.kb||0,variants:r.variants||[]});
   STAMP=Date.now();
   mark(); drawMedia();
-  toast(it.src? 'Файл заменён. Копии для телефона пересозданы.' : 'Картинка загружена.');
+  toast(fmtNote(r, was? 'Файл заменён. Копии для телефона пересозданы.' : 'Картинка загружена.'), 4500);
 }
 
-function pickFile(cb,{accept='.webp,image/webp',multiple=false}={}){
+// ── приём картинок: PNG и JPG принимаем, но кладём на сайт webp ──────────
+// Сайт целиком на webp (srcset, копии для телефонов). Раньше CMS просто
+// отказывалась от PNG — приходилось идти пересохранять в Figma. Теперь
+// пересохраняем сами, но не молча: показываем оба веса и даём выбрать.
+const IMG_ACCEPT='.webp,.png,.jpg,.jpeg,image/webp,image/png,image/jpeg';
+const IMG_MATCH=/\.(webp|png|jpe?g)$/i;
+const IMG_REJECT='Нужна картинка: .webp, .png или .jpg.';
+
+function askFormat(f, p){
+  return new Promise(done=>{
+    const v=document.createElement('div'); v.className='lb fmt';
+    const save=Math.max(0, 100-Math.round(p.q90Kb/p.origKb*100));
+    v.innerHTML='<div class="lb__top"><b>'+esc(f.name)+'</b><span class="sp"></span>'
+      + '<button class="btn" data-a="cancel">Отмена</button></div>'
+      + '<div class="lb__wrap"><div class="fmt__box">'
+      + '<p class="fmt__lead">Это '+p.kind.toUpperCase()+', '+p.w+'×'+p.h+', '+p.origKb+' КБ.<br>'
+      + 'Сайт работает на webp — переведу в него. Как?</p>'
+      + '<button class="fmt__opt" data-a="compress"><b>Сжать</b>'
+      + '<i>'+p.q90Kb+' КБ — легче в '+(p.origKb/Math.max(1,p.q90Kb)).toFixed(1)+' раза'
+      + (save>0?', минус '+save+'% веса':'')+'</i>'
+      + '<u>Качество 90. На глаз от оригинала не отличить. Рекомендую.</u></button>'
+      + '<button class="fmt__opt" data-a="lossless"><b>Без потерь</b>'
+      + '<i>'+p.losslessKb+' КБ</i>'
+      + '<u>Пиксель в пиксель. Берите, если на картинке мелкий текст или скриншот интерфейса.</u></button>'
+      + '</div></div><div class="lb__bottom"><span>Оригинал на компьютере остаётся нетронутым.</span></div>';
+    const close=r=>{ v.remove(); document.removeEventListener('keydown',key); done(r); };
+    const key=e=>{ if(e.key==='Escape') close(null); };
+    v.onclick=e=>{ const b=e.target.closest('[data-a]');
+      if(b) return close(b.dataset.a==='cancel'?null:b.dataset.a);
+      if(e.target===v||e.target.classList.contains('lb__wrap')) close(null); };
+    document.addEventListener('keydown',key);
+    document.body.appendChild(v);
+  });
+}
+
+// Единственная дорога, по которой картинка попадает на сервер.
+// Возвращает ответ сервера либо {cancel:true}, если человек передумал.
+async function sendImage(url, f){
+  let mode='keep';
+  if(!/\.webp$/i.test(f.name)){
+    const busy=toast('Смотрю картинку…', 60000);
+    const p=await fetch('/api/probe',{method:'POST',body:f}).then(x=>x.json()).catch(()=>({error:'Сервер не ответил.'}));
+    busy.remove();
+    if(p.error) return p;
+    mode=await askFormat(f,p);
+    if(!mode) return {cancel:true};
+  }
+  const busy=toast(mode==='keep'?'Загружаю…':'Перевожу в webp…', 60000);
+  const r=await fetch(url+(url.includes('?')?'&':'?')+'mode='+mode,{method:'POST',body:f})
+    .then(x=>x.json()).catch(()=>({error:'Не удалось загрузить файл.'}));
+  busy.remove();
+  return r;
+}
+
+// Что сказать после загрузки: если формат меняли — назвать цифры.
+function fmtNote(r, base){
+  if(r.mode && r.mode!=='keep' && r.wasKb)
+    return base+' '+r.kind.toUpperCase()+' → webp: '+r.wasKb+' → '+r.kb+' КБ.';
+  return base;
+}
+
+function pickFile(cb,{accept=IMG_ACCEPT,multiple=false}={}){
   const inp=document.createElement('input');
   inp.type='file'; inp.accept=accept; inp.multiple=multiple;
   inp.onchange=()=>{ if(inp.files.length) cb(multiple?[...inp.files]:inp.files[0]); };
@@ -772,7 +884,7 @@ function pickFile(cb,{accept='.webp,image/webp',multiple=false}={}){
 
 // Любая зона загрузки работает двумя способами: перетащить файл ИЛИ кликнуть
 // и выбрать в окне Windows. Одно поведение на всю CMS.
-function wireDrop(el,{accept='.webp,image/webp',multiple=false,match=/\.webp$/i,reject='Только .webp — экспортируй из Figma в webp.',onFiles,guard}={}){
+function wireDrop(el,{accept=IMG_ACCEPT,multiple=false,match=IMG_MATCH,reject=IMG_REJECT,onFiles,guard}={}){
   const take=list=>{ const ok=[...list].filter(f=>match.test(f.name));
     if(!ok.length) return toast(reject,4000);
     onFiles(multiple?ok:ok[0]); };
@@ -979,7 +1091,7 @@ async function openHistory(){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='hist'; CUR=null; PAGE=null; DIRTY=false;
   document.querySelectorAll('.case,.pg').forEach(b=>b.classList.remove('on'));
-  $('#navHist').classList.add('on'); $('#navShell').classList.remove('on');
+  $('#navHist').classList.add('on'); $('#navShell').classList.remove('on'); $('#navCont').classList.remove('on');
   $('#ttl').textContent='История и откат';
   $('#chkBadge').classList.remove('on'); $('#secnav').innerHTML=''; $('#draftBar').hidden=true;
   $('#save').style.display=$('#revert').style.display='none';
@@ -1017,7 +1129,7 @@ async function openShell(){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='shell'; CUR=null; PAGE=null; DIRTY=false;
   document.querySelectorAll('.case,.pg').forEach(b=>b.classList.remove('on'));
-  $('#navShell').classList.add('on');
+  $('#navShell').classList.add('on'); $('#navCont').classList.remove('on');
   $('#chkBadge').classList.remove('on'); $('#secnav').innerHTML=''; $('#draftBar').hidden=true;
   $('#ttl').textContent='Шапка и подвал';
   $('#save').style.display=''; $('#revert').style.display='';
@@ -1048,6 +1160,55 @@ async function saveShell(){
   unmark(); ORIG=JSON.parse(JSON.stringify({ru:SHELL.ru,en:SHELL.en}));
   $('#frame').src='/?t='+Date.now();
   toast(r.changed? 'Шапка и подвал обновлены на всех страницах. На сайт — кнопкой «Опубликовать».' : 'Изменений нет.', 4200);
+}
+
+// ── контакты и ссылки ───────────────────────────────────────────────────
+// Одна ссылка стоит сразу в трёх местах: блок «Давайте поговорим» на главной,
+// колонка контактов на «Обо мне» и невидимая разметка для поисковиков.
+// Правится в одном поле, разъезжается по всем трём.
+let CONT=null;
+async function openContacts(){
+  if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
+  MODE='cont'; CUR=null; PAGE=null; DIRTY=false;
+  document.querySelectorAll('.case,.pg').forEach(b=>b.classList.remove('on'));
+  $('#navCont').classList.add('on'); $('#navShell').classList.remove('on');
+  $('#chkBadge').classList.remove('on'); $('#secnav').innerHTML=''; $('#draftBar').hidden=true;
+  $('#ttl').textContent='Контакты и ссылки';
+  $('#save').style.display=''; $('#revert').style.display='';
+  $('#checks').innerHTML='<div class="empty">Проверки считаются по кейсам.</div>';
+  CONT=await api('/api/contacts');
+  ORIG=JSON.parse(JSON.stringify(CONT.items));
+  renderContacts();
+  $('#frame').src='/about.html?t='+Date.now();
+}
+function renderContacts(){
+  $('#form').innerHTML='<div class="sec"><h2>Контакты и ссылки</h2>'
+    + '<p style="color:var(--mute);font-size:12.5px;margin:0 0 14px">Каждая ссылка стоит на сайте в трёх местах сразу: экран «Давайте поговорим» на главной, колонка «Связаться» на странице «Обо мне» и скрытая разметка для поисковиков. Правишь тут — меняется везде, включая английскую версию.</p>'
+    + CONT.items.map((it,i)=>'<div class="f"><label>'+esc(it.name)+'</label>'
+        + '<div class="pair">'
+        + '<div><div class="lang">Ссылка</div><input data-ci="'+i+'" data-k="url" value="'+esc(it.url)+'" spellcheck="false" placeholder="https://…"></div>'
+        + '<div><div class="lang">Как показывать</div><input data-ci="'+i+'" data-k="handle" value="'+esc(it.handle)+'" placeholder="@ник"></div>'
+        + '</div>'
+        + '<div class="hint">'+(it.id==='em'
+            ? 'Почта: пиши со словом <code>mailto:</code> в начале — <code>mailto:имя@почта.ru</code>. В поисковую разметку почта не идёт, чтобы её не собрали спам-роботы.'
+            : 'Полный адрес со <code>https://</code>. Вторым полем — то, что видно человеку на странице.')
+        + '</div></div>').join('')
+    + '</div>'
+    + '<div class="sec"><h2>Ещё профили</h2>'
+    + '<p style="color:var(--mute);font-size:12.5px;margin:0 0 10px">Ссылки, которых на страницах не видно: они уходят только в разметку для поисковиков, чтобы Google связал профили с тобой. По одной в строке.</p>'
+    + '<textarea id="cExtra" rows="'+Math.max(2,(CONT.extra||[]).length+1)+'" spellcheck="false">'+esc((CONT.extra||[]).join('\n'))+'</textarea></div>';
+  for(const el of $('#form').querySelectorAll('input[data-ci]'))
+    el.oninput=()=>{ CONT.items[+el.dataset.ci][el.dataset.k]=el.value; mark(); };
+  $('#cExtra').oninput=()=>{ CONT.extra=$('#cExtra').value.split('\n').map(s=>s.trim()).filter(Boolean); mark(); };
+}
+async function saveContacts(){
+  const r=await api('/api/contacts',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({items:CONT.items,extra:CONT.extra})});
+  if(r.error) return toast(r.error,6000);
+  unmark(); ORIG=JSON.parse(JSON.stringify(CONT.items));
+  CONT=await api('/api/contacts'); renderContacts();
+  $('#frame').src='/about.html?t='+Date.now();
+  toast(r.changed? 'Ссылки обновлены везде: главная, «Обо мне», разметка для поисковиков. На сайт — кнопкой «Опубликовать».' : 'Изменений нет.', 5000);
 }
 
 // ── медиатека: все картинки сайта в одном месте ──────────────────────────
@@ -1115,8 +1276,9 @@ async function drawMedia_lib(){
     const z=$('#mAdd'), lbl=z.innerHTML; z.textContent='загружаю…';
     let n=0;
     for(const f of files){
-      const stem=f.name.replace(/\.webp$/i,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'image';
-      const r=await fetch('/api/upload?stem='+encodeURIComponent(stem),{method:'POST',body:f}).then(x=>x.json());
+      const stem=f.name.replace(/\.(webp|png|jpe?g)$/i,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'image';
+      const r=await sendImage('/api/upload?stem='+encodeURIComponent(stem), f);
+      if(r.cancel) continue;
       if(r.error){ toast(r.error,4000); break; } n++;
     }
     z.innerHTML=lbl;
@@ -1145,16 +1307,15 @@ async function drawMedia_lib(){
 }
 
 async function replaceLib(f,it){
-  const busy=toast('Загружаю…',60000);
-  const r=await fetch('/api/replace?name='+encodeURIComponent(it.name),{method:'POST',body:f}).then(x=>x.json());
-  busy.remove();
+  const r=await sendImage('/api/replace?name='+encodeURIComponent(it.name), f);
+  if(r.cancel) return;
   if(r.error) return toast(r.error,4500);
   STAMP=Date.now();
   await drawMedia_lib();
   $('#frame').src=$('#frame').src.split('?')[0]+'?t='+Date.now();
-  toast(it.used.length
+  toast(fmtNote(r, it.used.length
     ? 'Заменено. Обновилось во всех местах: '+it.used.length+'.'
-    : 'Заменено.', 4200);
+    : 'Заменено.'), 4500);
 }
 
 function lightboxLib(it){
@@ -1175,7 +1336,7 @@ async function openPage(file){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='page'; CUR=null; DIRTY=false;
   document.querySelectorAll('.case').forEach(b=>b.classList.remove('on'));
-  $('#navMedia').classList.remove('on'); $('#navHist').classList.remove('on'); $('#navShell').classList.remove('on');
+  $('#navMedia').classList.remove('on'); $('#navHist').classList.remove('on'); $('#navShell').classList.remove('on'); $('#navCont').classList.remove('on');
   document.querySelectorAll('.pg').forEach(b=>b.classList.toggle('on', b.dataset.f===file));
   MANIFEST=null;
   PAGE=await api('/api/page/'+encodeURIComponent(file));
@@ -1347,21 +1508,70 @@ function refreshPreview(){
   if(MODE==='media'){ $('#frame').src='/portfolio.html?t='+Date.now(); return; }
   if(MODE==='hist') return;
   if(MODE==='shell'){ $('#frame').src='/?t='+Date.now(); return; }
+  if(MODE==='cont'){ $('#frame').src=(LANG==='en'?'/en':'')+'/about.html?t='+Date.now(); return; }
   const path = MODE==='page' ? (PAGE.file==='index.html'?'/':'/'+PAGE.file) : `/projects/${CUR}.html`;
   $('#frame').src=(LANG==='en'?'/en':'')+path+'?t='+Date.now();
 }
 $('#lang').onclick=e=>{ const b=e.target.closest('button'); if(!b) return;
   LANG=b.dataset.l; $('#lang').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); refreshPreview(); };
+
+// ── как смотреть: веб, планшет, телефон ─────────────────────────────────
+// Рамку именно СУЖАЕМ до настоящей ширины устройства, а не масштабируем
+// картинку: сайт должен сам переключить медиазапросы, иначе проверка врёт.
+// Выбор запоминается — обычно смотришь то в одном режиме, то в другом.
+const DEVS={ web:{w:1440,name:'десктоп'}, tab:{w:820,name:'планшет'}, mob:{w:390,name:'телефон'} };
+let DEV=localStorage.getItem('cms.dev')||'web';
+function fitDev(){
+  const box=$('#devbox'), fr=$('#frame'), st=$('#stage');
+  const W=DEVS[DEV].w;
+  const availW=Math.max(120, st.clientWidth-28), availH=Math.max(120, st.clientHeight-28);
+  const k=Math.min(1, availW/W);
+  box.style.width=Math.round(W*k)+'px'; box.style.height=availH+'px';
+  fr.style.width=W+'px'; fr.style.height=Math.round(availH/k)+'px';
+  fr.style.transform=k<1?'scale('+k+')':'none';
+  $('#devnote').textContent=W+' px · '+DEVS[DEV].name+(k<1?' · масштаб '+Math.round(k*100)+'%':'');
+}
+function setDev(d){
+  DEV=DEVS[d]?d:'web'; localStorage.setItem('cms.dev',DEV);
+  $('#stage').className='stage '+DEV;
+  $('#dev').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.d===DEV));
+  fitDev();
+}
+$('#dev').onclick=e=>{ const b=e.target.closest('button'); if(b) setDev(b.dataset.d); };
+addEventListener('resize',fitDev);
+
+// ── подвижная граница между полями и превью ─────────────────────────────
+// Тянем мышкой; двойной щелчок возвращает исходное. Ширину держим в
+// процентах, чтобы она пережила смену размера окна.
+(function(){
+  const g=$('#grip'), app=document.querySelector('.app');
+  const put=pc=>{ app.style.setProperty('--prevw', pc.toFixed(2)+'%'); localStorage.setItem('cms.prevw',pc.toFixed(2)); fitDev(); };
+  const saved=parseFloat(localStorage.getItem('cms.prevw'));
+  if(saved>15 && saved<85) put(saved);
+  let on=false;
+  const move=e=>{ if(!on) return;
+    const pc=(innerWidth-e.clientX)/innerWidth*100;
+    put(Math.min(82, Math.max(18, pc))); };
+  const up=()=>{ if(!on) return; on=false; g.classList.remove('drag');
+    document.body.classList.remove('resizing'); fitDev(); };
+  g.onmousedown=e=>{ e.preventDefault(); on=true; g.classList.add('drag'); document.body.classList.add('resizing'); };
+  addEventListener('mousemove',move); addEventListener('mouseup',up);
+  g.ondblclick=()=>{ localStorage.removeItem('cms.prevw'); app.style.removeProperty('--prevw'); fitDev(); };
+})();
+
+setDev(DEV);
 $('#reload').onclick=refreshPreview;
 $('#save').onclick=()=>{ if(MODE==='media'||MODE==='hist') return toast('Здесь сохранять нечего.');
   if(MODE==='shell') return saveShell();
+  if(MODE==='cont') return saveContacts();
   MODE==='page'?savePage():save(); };
 $('#revert').onclick=()=>{ if(!confirm('Вернуть поля к последнему сохранению?')) return;
   if(MODE==='shell'){ SHELL.ru=JSON.parse(JSON.stringify(ORIG.ru)); SHELL.en=JSON.parse(JSON.stringify(ORIG.en)); DIRTY=false; renderShell(); return; }
+  if(MODE==='cont'){ CONT.items=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; renderContacts(); return; }
   if(MODE==='page'){ PAGE.dict=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; renderPage(); }
   else { DATA=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; render(); } };
 addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault();
-  if(MODE==='media'||MODE==='hist') return; if(MODE==='shell') return saveShell(); MODE==='page'?savePage():save(); } });
+  if(MODE==='media'||MODE==='hist') return; if(MODE==='shell') return saveShell(); if(MODE==='cont') return saveContacts(); MODE==='page'?savePage():save(); } });
 addEventListener('beforeunload',e=>{ if(DIRTY){ e.preventDefault(); e.returnValue=''; } });
 
 /* ── правила ── */
@@ -1396,6 +1606,7 @@ function watchDeploy(){
 $('#navMedia').onclick=openMedia;
 $('#navHist').onclick=openHistory;
 $('#navShell').onclick=openShell;
+$('#navCont').onclick=openContacts;
 
 $('#addCase').onclick=async()=>{
   const title=prompt('Название нового кейса:\n\nОн создастся скрытым — на сайт не попадёт, пока сам не переключишь.');

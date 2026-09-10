@@ -1,0 +1,29 @@
+{
+  "_": "Контакты и внешние ссылки. Правятся в CMS → «Контакты и ссылки». Отсюда их разносит tools/build-contacts.mjs по index.html и about.html, включая разметку для поисковиков (sameAs). Английские страницы пересобираются следом сами.",
+  "items": [
+    {
+      "id": "tg",
+      "name": "Telegram",
+      "url": "https://t.me/Lookin_Sergey",
+      "handle": "@Lookin_Sergey",
+      "public": true
+    },
+    {
+      "id": "em",
+      "name": "Email",
+      "url": "mailto:lookindn@gmail.com",
+      "handle": "lookindn@gmail.com",
+      "public": false
+    },
+    {
+      "id": "pf",
+      "name": "Behance",
+      "url": "https://www.behance.net/lookin_sergey",
+      "handle": "behance.net/lookin_sergey",
+      "public": true
+    }
+  ],
+  "extra": [
+    "https://sergeylookin.framer.website/"
+  ]
+}
