@@ -156,6 +156,17 @@ function writeDict(html, dict) {
   return html.replace(m[0], m[1] + '{' + body + '}' + m[3]);
 }
 
+// Windows какое-то время держит файл после записи (и sharp, и просмотрщик),
+// поэтому удаление сразу после загрузки падало с EPERM. Пробуем несколько раз.
+async function rmRetry(path, tries = 6) {
+  for (let i = 0; i < tries; i++) {
+    try { rmSync(path, { force: true }); if (!existsSync(path)) return true; }
+    catch {}
+    await new Promise((r) => setTimeout(r, 120 * (i + 1)));
+  }
+  return !existsSync(path);
+}
+
 // ── Медиатека ───────────────────────────────────────────────────────────────
 // Собирает ВСЕ оригиналы из assets/img и для каждого ищет, где он используется.
 // Это главное: заменить файл можно везде одинаково, а понять последствия —
@@ -643,8 +654,11 @@ const srv = createServer(async (req, res) => {
       const it = lib.items.find((x) => x.name === name);
       if (!it) return json(res, 404, { error: 'нет такого файла' });
       if (it.used.length) return json(res, 400, { error: 'Файл используется: ' + it.used.map((u) => u.where).join('; ') + '. Сначала убери его оттуда.' });
-      rmSync(resolve(IMGDIR, name + '.webp'), { force: true });
-      for (const w of VARIANTS) rmSync(resolve(IMGDIR, `${name}-${w}.webp`), { force: true });
+      const failed = [];
+      for (const f of [`${name}.webp`, ...VARIANTS.map((w) => `${name}-${w}.webp`)]) {
+        if (!(await rmRetry(resolve(IMGDIR, f)))) failed.push(f);
+      }
+      if (failed.length) return json(res, 500, { error: 'Не удалось удалить: ' + failed.join(', ') + '. Файл занят другой программой — закрой просмотрщик и попробуй ещё раз.' });
       return json(res, 200, { ok: true });
     }
 

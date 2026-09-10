@@ -20,15 +20,15 @@ input:focus,textarea:focus{outline:0;border-color:#4a4a55}
 .side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
 .brand{padding:14px 16px;border-bottom:1px solid var(--line);font:600 13px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase}
 .brand small{display:block;color:var(--mute);font-weight:400;letter-spacing:.04em;text-transform:none;margin-top:3px}
-.cases{overflow:auto;flex:1;padding:6px}
+.cases{overflow:auto;flex:1 1 auto;min-height:180px;padding:6px}
 .case{display:block;width:100%;text-align:left;padding:9px 10px;border-radius:6px;color:var(--mute);line-height:1.3}
 .case:hover{background:#1b1b1f;color:var(--ink)}
 .case.on{background:#1f1f24;color:var(--ink)}
 .case b{display:block;font-weight:600;font-size:13px}
 .case span{font:11px var(--mono);opacity:.65}
 .sidefoot{border-top:1px solid var(--line);padding:10px;display:grid;gap:6px}
-.grouphead{padding:9px 16px 5px;border-top:1px solid var(--line);font:600 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:#5c5c66}
-.pages{padding:4px 6px 8px;flex:none;max-height:31vh;overflow:auto}
+.grouphead{flex:none;padding:9px 16px 5px;border-top:1px solid var(--line);font:600 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:#5c5c66}
+.pages{padding:4px 6px 8px;flex:none;overflow:auto}
 .pg{display:block;width:100%;text-align:left;padding:7px 10px;border-radius:6px;color:var(--mute);font-size:13px}
 .pg:hover{background:#1b1b1f;color:var(--ink)}
 .pg.on{background:#1f1f24;color:var(--ink)}
@@ -107,6 +107,22 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
 .cvrow b{font-size:13px}
 .cvmeta{font:11px var(--mono);color:var(--mute);margin-top:3px}
 .cvdrop{padding:10px;font-size:11.5px;margin:0}
+/* медиатека */
+.mlbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mlbar input{max-width:230px}
+.mlgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px}
+.mcard{border:1px solid var(--line);border-radius:9px;background:#0e0e11;overflow:hidden;display:flex;flex-direction:column}
+.mcard.hot{outline:2px solid var(--accent);outline-offset:-2px}
+.mcard__img{width:100%;aspect-ratio:16/10;object-fit:cover;background:#000;cursor:zoom-in;display:block}
+.mcard__b{padding:8px 9px;display:flex;flex-direction:column;gap:5px;flex:1}
+.mcard__n{font:11px var(--mono);color:#d2d2d8;word-break:break-all}
+.mcard__m{font:10.5px var(--mono);color:var(--mute)}
+.mcard__u{font-size:11.5px;line-height:1.45;color:var(--mute);border-top:1px solid var(--line);padding-top:6px;margin-top:auto}
+.mcard__u b{color:#b9b9c2;font-weight:500}
+.mcard__free{color:var(--warn)}
+.mcard__acts{display:flex;gap:5px;padding:0 9px 9px}
+.mcard__acts button{flex:1;padding:5px 6px;border:1px solid var(--line);border-radius:5px;font-size:11.5px;color:var(--mute);background:#17171b}
+.mcard__acts button:hover{border-color:var(--accent);color:var(--accent)}
 
 /* ── превью ── */
 .prev{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--panel)}
@@ -155,6 +171,8 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
   <aside class="side">
     <div class="brand">CMS<small id="root">портфолио</small></div>
     <div class="cases" id="cases"></div>
+    <div class="grouphead">Всё остальное</div>
+    <div class="pages"><button class="pg" id="navMedia">Медиатека — все картинки</button></div>
     <div class="grouphead">Страницы сайта</div>
     <div class="pages" id="pages"></div>
     <div class="sidefoot">
@@ -284,8 +302,10 @@ const markCur=()=>document.querySelectorAll('.case').forEach(b=>b.classList.togg
 async function open(n){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='case'; PAGE=null; document.querySelectorAll('.pg').forEach(b=>b.classList.remove('on'));
+  $('#navMedia').classList.remove('on');
   CUR=n; DATA=await api('/api/case/'+n); ORIG=JSON.parse(JSON.stringify(DATA)); DIRTY=false;
   markCur();
+  $('#save').style.display=$('#revert').style.display='';
   const meta=MODEL.cases.find(c=>c.n===n)||{};
   $('#ttl').innerHTML = `${n} · ${esc(DATA.dict.ru['p.title']||'без названия')}`
     + ` <span class="badge badge--${meta.status}">${MODEL.statusRu[meta.status]||''}</span>`;
@@ -587,15 +607,126 @@ function stemOfCase(){
 
 const mark=()=>{ DIRTY=true; $('#save').classList.add('pri'); };
 
+// ── медиатека: все картинки сайта в одном месте ──────────────────────────
+// Смысл в колонке «где стоит»: заменить файл можно одним движением, а понять
+// последствия — только если видно, в скольких местах он используется.
+let MEDIA=null, MFILTER='', MONLYFREE=false;
+
+async function openMedia(){
+  if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
+  MODE='media'; CUR=null; PAGE=null; DIRTY=false;
+  document.querySelectorAll('.case,.pg').forEach(b=>b.classList.remove('on'));
+  $('#navMedia').classList.add('on');
+  $('#ttl').textContent='Медиатека';
+  $('#save').style.display=$('#revert').style.display='none';
+  $('#checks').innerHTML='<div class="empty">Проверки считаются по кейсам.</div>';
+  $('#frame').src='/portfolio.html?t='+Date.now();
+  await drawMedia_lib();
+}
+
+async function drawMedia_lib(){
+  MEDIA=await api('/api/media');
+  const q=MFILTER.trim().toLowerCase();
+  const list=MEDIA.items.filter(it=>(!q||it.name.toLowerCase().includes(q)) && (!MONLYFREE||!it.used.length));
+  const card=it=>{
+    const u=it.used.length
+      ? '<b>Где стоит:</b><br>'+it.used.map(x=>'· '+esc(x.where)).join('<br>')
+      : '<span class="mcard__free">Нигде не используется</span>';
+    return '<div class="mcard" data-n="'+esc(it.name)+'">'
+      + '<img class="mcard__img" src="/assets/img/'+it.name+'.webp?t='+STAMP+'" alt="" loading="lazy">'
+      + '<div class="mcard__b"><div class="mcard__n">'+esc(it.name)+'.webp</div>'
+      + '<div class="mcard__m">'+it.kb+' КБ · '+(it.variants.length?'копии '+it.variants.join('/'):'<span style="color:var(--warn)">нет копий</span>')+'</div>'
+      + '<div class="mcard__u">'+u+'</div></div>'
+      + '<div class="mcard__acts"><button data-a="open">Открыть</button>'
+      + '<button data-a="repl">Заменить</button>'
+      + (it.used.length?'':'<button data-a="del">Удалить</button>')
+      + '</div></div>';
+  };
+  $('#form').innerHTML=
+    '<div class="sec"><h2>Медиатека</h2>'
+    + '<p style="color:var(--mute);font-size:12.5px;margin:0 0 11px">Все картинки сайта. Заменяешь файл — он обновляется <b>везде</b>, где стоит: в кейсе, на карточке портфолио, в ховере на манифесте и в ленте на телефоне. Имя не меняется, поэтому ничего не рвётся.</p>'
+    + '<div class="mlbar"><input id="mq" placeholder="поиск по имени" value="'+esc(MFILTER)+'">'
+    + '<button class="btn" id="mfree">'+(MONLYFREE?'✓ ':'')+'только неиспользуемые</button>'
+    + '<span style="flex:1"></span>'
+    + '<span style="font:11px var(--mono);color:var(--mute)">показано '+list.length+' из '+MEDIA.total+(MEDIA.unused?' · без применения '+MEDIA.unused:'')+'</span>'
+    + '</div></div>'
+    + '<div class="sec"><div class="drop drop--new" id="mAdd"><b>Загрузить картинки</b><br>'
+    + '<span style="opacity:.7">перетащи сюда или нажми, чтобы выбрать — можно сразу несколько</span></div></div>'
+    + '<div class="sec"><div class="mlgrid">'+(list.map(card).join('')||'<div class="locked">Ничего не найдено.</div>')+'</div></div>';
+
+  $('#mq').oninput=e=>{ MFILTER=e.target.value; clearTimeout(window.__mq); window.__mq=setTimeout(drawMedia_lib,250); };
+  $('#mfree').onclick=()=>{ MONLYFREE=!MONLYFREE; drawMedia_lib(); };
+
+  wireDrop($('#mAdd'),{multiple:true,onFiles:async files=>{
+    const z=$('#mAdd'), lbl=z.innerHTML; z.textContent='загружаю…';
+    let n=0;
+    for(const f of files){
+      const stem=f.name.replace(/\.webp$/i,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'image';
+      const r=await fetch('/api/upload?stem='+encodeURIComponent(stem),{method:'POST',body:f}).then(x=>x.json());
+      if(r.error){ toast(r.error,4000); break; } n++;
+    }
+    z.innerHTML=lbl;
+    if(n){ STAMP=Date.now(); toast('Загружено: '+n+'. Теперь поставь картинку в кейс или как обложку.',4200); await drawMedia_lib(); }
+  }});
+
+  $('#form').querySelector('.mlgrid').onclick=async e=>{
+    const c=e.target.closest('.mcard'); if(!c) return;
+    const name=c.dataset.n;
+    const it=MEDIA.items.find(x=>x.name===name);
+    const a=(e.target.dataset||{}).a;
+    if(a==='open'||e.target.classList.contains('mcard__img')) return lightboxLib(it);
+    if(a==='repl') return pickFile(f=>replaceLib(f,it));
+    if(a==='del'){
+      if(!confirm('Удалить '+name+'.webp навсегда? Файл нигде не используется.')) return;
+      const r=await api('/api/media/delete',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name})});
+      if(r.error) return toast(r.error,5000);
+      toast('Удалено.'); await drawMedia_lib();
+    }
+  };
+
+  for(const c of $('#form').querySelectorAll('.mcard')){
+    const it=MEDIA.items.find(x=>x.name===c.dataset.n);
+    wireDrop(c,{onFiles:f=>replaceLib(f,it)});
+  }
+}
+
+async function replaceLib(f,it){
+  const busy=toast('Загружаю…',60000);
+  const r=await fetch('/api/replace?name='+encodeURIComponent(it.name),{method:'POST',body:f}).then(x=>x.json());
+  busy.remove();
+  if(r.error) return toast(r.error,4500);
+  STAMP=Date.now();
+  await drawMedia_lib();
+  $('#frame').src=$('#frame').src.split('?')[0]+'?t='+Date.now();
+  toast(it.used.length
+    ? 'Заменено. Обновилось во всех местах: '+it.used.length+'.'
+    : 'Заменено.', 4200);
+}
+
+function lightboxLib(it){
+  const v=document.createElement('div'); v.className='lb';
+  v.innerHTML='<div class="lb__top"><b>'+esc(it.name)+'.webp</b><span class="sp"></span>'
+    + '<button class="btn" data-a="replace">Заменить файл</button><button class="btn" data-a="close">Закрыть</button></div>'
+    + '<div class="lb__wrap"><img src="/assets/img/'+it.name+'.webp?t='+STAMP+'" alt=""></div>'
+    + '<div class="lb__bottom"><span>'+it.kb+' КБ</span><span>копии: '+(it.variants.length?it.variants.join(' / '):'нет')+'</span>'
+    + '<span>'+(it.used.length?'стоит в '+it.used.length+' местах':'нигде не используется')+'</span></div>';
+  v.onclick=e=>{ const a=(e.target.dataset||{}).a;
+    if(a==='close'||e.target===v||e.target.className==='lb__wrap') v.remove();
+    if(a==='replace'){ v.remove(); pickFile(f=>replaceLib(f,it)); } };
+  document.body.appendChild(v);
+}
+
 // ── редактор обычной страницы (манифест, «Обо мне», шапка портфолио, 404) ──
 async function openPage(file){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='page'; CUR=null; DIRTY=false;
   document.querySelectorAll('.case').forEach(b=>b.classList.remove('on'));
+  $('#navMedia').classList.remove('on');
   document.querySelectorAll('.pg').forEach(b=>b.classList.toggle('on', b.dataset.f===file));
   PAGE=await api('/api/page/'+encodeURIComponent(file));
   ORIG=JSON.parse(JSON.stringify(PAGE.dict));
   $('#ttl').textContent=PAGE.label;
+  $('#save').style.display=$('#revert').style.display='';
   await renderPage();
   $('#frame').src='/'+(file==='index.html'?'':file)+'?t='+Date.now();
   $('#checks').innerHTML='<div class="empty">Проверки считаются по кейсам.</div>';
@@ -683,13 +814,14 @@ function drawChecks(ps){
 }
 
 function refreshPreview(){
+  if(MODE==='media'){ $('#frame').src='/portfolio.html?t='+Date.now(); return; }
   const path = MODE==='page' ? (PAGE.file==='index.html'?'/':'/'+PAGE.file) : `/projects/${CUR}.html`;
   $('#frame').src=(LANG==='en'?'/en':'')+path+'?t='+Date.now();
 }
 $('#lang').onclick=e=>{ const b=e.target.closest('button'); if(!b) return;
   LANG=b.dataset.l; $('#lang').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); refreshPreview(); };
 $('#reload').onclick=refreshPreview;
-$('#save').onclick=()=>MODE==='page'?savePage():save();
+$('#save').onclick=()=>{ if(MODE==='media') return toast('В медиатеке сохранять нечего — файлы пишутся сразу.'); MODE==='page'?savePage():save(); };
 $('#revert').onclick=()=>{ if(!confirm('Вернуть поля к последнему сохранению?')) return;
   if(MODE==='page'){ PAGE.dict=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; renderPage(); }
   else { DATA=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; render(); } };
@@ -697,6 +829,8 @@ addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preve
 addEventListener('beforeunload',e=>{ if(DIRTY){ e.preventDefault(); e.returnValue=''; } });
 
 /* ── правила ── */
+$('#navMedia').onclick=openMedia;
+
 $('#addCase').onclick=async()=>{
   const title=prompt('Название нового кейса:\n\nОн создастся скрытым — на сайт не попадёт, пока сам не переключишь.');
   if(!title) return;
