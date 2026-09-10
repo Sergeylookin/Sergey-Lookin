@@ -60,6 +60,7 @@ input:focus,textarea:focus{outline:0;border-color:#4a4a55}
 .locked{opacity:.55;font:11px var(--mono);color:var(--mute)}
 .drop{border:1px dashed #3a3a44;border-radius:8px;padding:16px;text-align:center;color:var(--mute);font-size:12px}
 .drop.hot{border-color:var(--accent);color:var(--accent)}
+.drop--new{margin-top:9px;padding:22px;border-style:dashed;border-width:2px;line-height:1.5}
 
 /* ── превью ── */
 .prev{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--panel)}
@@ -268,25 +269,47 @@ function drawMedia(){
     if(b.dataset.act==='up') DATA.media.splice(i-1,0,DATA.media.splice(i,1)[0]);
     if(b.dataset.act==='down') DATA.media.splice(i+1,0,DATA.media.splice(i,1)[0]);
     mark(); drawMedia(); };
-  box.querySelectorAll('.drop').forEach(d=>{
+  // общая зона внизу: перетащил пачку — блоки создались сами, в конец кейса
+  box.insertAdjacentHTML('beforeend',
+    `<div class="drop drop--new" id="dropNew">Перетащи сюда новые webp — добавятся в конец кейса.<br>
+     <span style="opacity:.65">Можно сразу несколько.</span></div>`);
+
+  for (const d of box.querySelectorAll('.drop')) {
     d.ondragover=e=>{e.preventDefault(); d.classList.add('hot');};
     d.ondragleave=()=>d.classList.remove('hot');
-    d.ondrop=async e=>{ e.preventDefault(); d.classList.remove('hot');
-      const f=e.dataTransfer.files[0]; if(!f) return;
-      if(!/\.webp$/i.test(f.name)) return toast('Только .webp — экспортируй из Figma в webp.');
-      const slug=(DATA.media.find(m=>m.src)||{}).src||`case-${CUR}`;
-      const stem=slug.replace(/-\d+$/,''); let k=1;
-      const used=new Set(DATA.media.flatMap(m=>m.type==='row'?m.items.map(x=>x.src):[m.src]));
-      while(used.has(`${stem}-${k}`)) k++;
-      const name=`${stem}-${k}`;
+    d.ondrop=async e=>{
+      e.preventDefault(); d.classList.remove('hot');
+      const files=[...e.dataTransfer.files].filter(f=>/\.webp$/i.test(f.name));
+      if(!files.length) return toast('Только .webp — экспортируй из Figma в webp.');
+      const isNew = d.id==='dropNew';
+      const target = isNew ? null : DATA.media[+d.dataset.i];
+      const label = d.innerHTML;
       d.textContent='загружаю…';
-      const r=await fetch('/api/upload?name='+name,{method:'POST',body:f}).then(x=>x.json());
-      if(r.error){ toast(r.error); d.textContent='перетащи webp сюда'; return; }
-      const m=DATA.media[+d.dataset.i];
-      if(m.type==='row'){ const slot=m.items.find(x=>!x.src)||m.items[0]; Object.assign(slot,{src:name,w:r.w,h:r.h}); } else Object.assign(m,{src:name,w:r.w,h:r.h});
-      mark(); drawMedia(); toast(`${name}.webp добавлена, копии: ${r.variants.join(', ')||'не нужны'}`);
+      let added=0;
+      for(const f of files){
+        const r=await fetch('/api/upload?stem='+encodeURIComponent(stemOfCase()),{method:'POST',body:f}).then(x=>x.json());
+        if(r.error){ toast(r.error); break; }
+        const it={src:r.name,alt:'',w:r.w,h:r.h};
+        if(isNew) DATA.media.push({type:'full',...it});
+        else if(target.type==='row'){ const slot=target.items.find(x=>!x.src)||target.items[0]; Object.assign(slot,it); }
+        else Object.assign(target,it);
+        added++;
+        if(!isNew && target.type!=='row') break;          // в одиночный блок влезает одна
+      }
+      d.innerHTML=label;
+      if(added){ mark(); drawMedia(); toast(added===1?'Картинка добавлена. Не забудь alt.':`Добавлено ${added} — впиши alt каждой.`); }
     };
-  });
+  }
+}
+
+// Основа имени файлов кейса: берём из уже стоящих картинок, включая те, что внутри пар.
+// Свободный номер подбирает сервер по диску — так новый файл не затрёт чужой.
+function stemOfCase(){
+  const names=DATA.media.flatMap(m=>m.type==='row'?m.items.map(x=>x.src):[m.src]).filter(Boolean);
+  if(names.length) return names[0].replace(/-\d+$/,'');
+  const t=(DATA.dict.en['p.title']||DATA.dict.ru['p.title']||'case').toLowerCase()
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  return t||('case-'+CUR);
 }
 
 const mark=()=>{ DIRTY=true; $('#save').classList.add('pri'); };

@@ -274,7 +274,7 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=u
 
 const body = (req) => new Promise((ok) => { const c = []; req.on('data', (d) => c.push(d)); req.on('end', () => ok(Buffer.concat(c))); });
 
-createServer(async (req, res) => {
+const srv = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const path = decodeURIComponent(url.pathname);
   try {
@@ -295,9 +295,15 @@ createServer(async (req, res) => {
     }
     if (path === '/api/images') return json(res, 200, { images: readdirSync(IMGDIR).filter((f) => f.endsWith('.webp') && !/-(480|960|1440)\.webp$/.test(f)).map((f) => f.replace(/\.webp$/, '')).sort() });
     if (path === '/api/upload' && req.method === 'POST') {
-      const name = url.searchParams.get('name');
-      if (!/^[a-z0-9-]+$/.test(name || '')) return json(res, 400, { error: 'Имя только из латиницы, цифр и дефисов.' });
+      // Имя подбирает СЕРВЕР, сверяясь с диском: клиент видит только картинки
+      // текущего кейса и мог бы затереть чужой файл с тем же номером.
+      const stem = url.searchParams.get('stem');
+      if (!/^[a-z0-9-]+$/.test(stem || '')) return json(res, 400, { error: 'Основа имени — только латиница, цифры и дефисы.' });
+      let k = 1, name;
+      do { name = `${stem}-${k++}`; } while (existsSync(resolve(IMGDIR, name + '.webp')));
       const buf = await body(req);
+      if (!buf.length) return json(res, 400, { error: 'Пустой файл.' });
+      if (buf.slice(8, 12).toString() !== 'WEBP') return json(res, 400, { error: 'Это не webp. Экспортируй из Figma в webp.' });
       writeFileSync(resolve(IMGDIR, name + '.webp'), buf);
       const sharp = (await import('sharp')).default;
       const meta = await sharp(resolve(IMGDIR, name + '.webp')).metadata();
@@ -337,6 +343,27 @@ createServer(async (req, res) => {
   } catch (e) {
     json(res, 500, { error: String(e && e.stack || e) });
   }
-}).listen(PORT, () => {
-  console.log(`\n  CMS открыта:  http://localhost:${PORT}\n  Проект:       ${ROOT}\n\n  Закрыть — просто закрой это окно.\n`);
 });
+
+const URL_LOCAL = `http://localhost:${PORT}`;
+
+srv.on('error', (e) => {
+  if (e.code === 'EADDRINUSE') {
+    console.log(`\n  Порт ${PORT} уже занят — похоже, CMS уже запущена.\n  Открой ${URL_LOCAL} или закрой прошлое окно и запусти снова.\n`);
+    openBrowser(URL_LOCAL);
+  } else {
+    console.log('\n  Не удалось запустить: ' + e.message + '\n');
+  }
+  process.exitCode = 1;
+});
+
+srv.listen(PORT, () => {
+  console.log(`\n  CMS открыта:  ${URL_LOCAL}\n  Проект:       ${ROOT}\n\n  Закрыть — просто закрой это окно.\n`);
+  // Браузер открываем САМИ и только когда порт уже слушает: иначе он успевает
+  // постучаться раньше и показывает «не удаётся получить доступ к сайту».
+  if (!process.argv.includes('--no-open')) openBrowser(URL_LOCAL);
+});
+
+function openBrowser(url) {
+  execFile('rundll32', ['url.dll,FileProtocolHandler', url], () => {});
+}
