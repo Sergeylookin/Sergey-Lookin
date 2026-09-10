@@ -71,6 +71,23 @@ input:focus,textarea:focus{outline:0;border-color:#4a4a55}
 /* 4. подсветка блока, который правишь */
 .f.editing>label{color:var(--ink)}
 .savecount{font:10px var(--mono);opacity:.75;margin-left:5px}
+/* Поле с оформлением: человек видит текст, а не теги. Жирное — жирным,
+   подсвеченное число — подсвеченным. Разметка живёт под капотом. */
+.rf{font:inherit;color:var(--ink);background:#0e0e11;border:1px solid var(--line);border-radius:6px;
+  padding:8px 10px;width:100%;min-height:38px;white-space:pre-wrap;word-break:break-word;line-height:1.5;outline:0}
+.rf:focus{border-color:#4a4a55;background:#121216}
+.rf:empty::before{content:attr(data-ph);color:#4d4d57}
+.rf b,.rf strong{font-weight:700;color:#fff}
+.rf em{font-style:italic}
+.rf span.num{color:var(--accent);font-weight:600;background:rgba(226,84,58,.1);border-radius:3px;padding:0 3px}
+.rf--one{min-height:0;white-space:pre;overflow-x:auto}
+.rtool{position:fixed;z-index:110;display:flex;gap:2px;padding:3px;border-radius:8px;
+  background:#22222a;border:1px solid #3a3a44;box-shadow:0 8px 26px rgba(0,0,0,.5)}
+.rtool button{padding:4px 9px;border-radius:5px;font-size:12px;color:#dcdce2;white-space:nowrap}
+.rtool button:hover{background:#32323c}
+.rtool b{font-weight:700}
+.rtool .nm{color:var(--accent);font-weight:600}
+.rhint{font-size:11px;color:#5c5c66;margin-top:4px}
 /* 8. поиск по кейсам */
 .findbox{padding:8px 10px 4px}
 .findbox input{font-size:12.5px;padding:6px 9px}
@@ -239,6 +256,7 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
     <div class="cases" id="cases"></div>
     <div class="grouphead">Всё остальное</div>
     <div class="pages"><button class="pg" id="navMedia">Медиатека — все картинки</button>
+      <button class="pg" id="navShell">Шапка и подвал</button>
       <button class="pg" id="navHist">История и откат</button></div>
     <div class="grouphead">Страницы сайта</div>
     <div class="pages" id="pages"></div>
@@ -382,7 +400,7 @@ const markCur=()=>document.querySelectorAll('.case').forEach(b=>b.classList.togg
 async function open(n){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='case'; PAGE=null; document.querySelectorAll('.pg').forEach(b=>b.classList.remove('on'));
-  $('#navMedia').classList.remove('on'); $('#navHist').classList.remove('on');
+  $('#navMedia').classList.remove('on'); $('#navHist').classList.remove('on'); $('#navShell').classList.remove('on');
   CUR=n; DATA=await api('/api/case/'+n); ORIG=JSON.parse(JSON.stringify(DATA)); DIRTY=false;
   markCur();
   $('#save').style.display=$('#revert').style.display='';
@@ -394,9 +412,8 @@ async function open(n){
 
 function field(f){
   const ru=DATA.dict.ru[f.k]??'', en=DATA.dict.en[f.k]??'';
-  const tag=f.kind==='text'?'textarea':'input';
-  const rows=f.kind==='text'?(f.k.startsWith('p.f')||f.k==='p.lead'?2:5):'';
-  const mk=(lang,val)=>`<div><div class="lang">${lang.toUpperCase()}</div><${tag} data-k="${f.k}" data-l="${lang}" ${rows?`rows="${rows}"`:''}>${tag==='textarea'?esc(toEditor(val)):''}</${tag}></div>`;
+  const one=f.kind!=='text';
+  const mk=(lang,val)=>`<div><div class="lang">${lang.toUpperCase()}</div><div class="rf${one?' rf--one':''}" contenteditable="true" spellcheck="true" data-k="${f.k}" data-l="${lang}" data-ph="пусто">${htmlToRich(val)}</div></div>`;
   return `<div class="f"><label>${f.label}${f.optional?' <span class="opt">· необязательно</span>':''}
       <button class="i" data-hint="${esc(f.hint)}">i</button></label>
     <div class="pair">${mk('ru',ru)}${mk('en',en)}</div></div>`;
@@ -409,6 +426,96 @@ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'
    (выглядит обычным пробелом), а при сохранении возвращается в разметку.
    Переносы <br> в поле показываем переводом строки — так же честно. */
 const NB='\u00a0';
+
+/* ── Поле с оформлением ────────────────────────────────────────────────────
+   В текстах сайта встречается ровно четыре вещи: <b> жирное, <em> курсив,
+   <span class="num"> подсветка числа и <br> перенос строки. Показывать их
+   тегами нельзя — писать в таком поле невозможно. Поэтому поле показывает
+   готовый вид, а при чтении собирается обратно в чистую разметку.
+   Всё, чего нет в этом списке, при вставке отбрасывается. */
+const RICH_OK = { B:'b', STRONG:'b', I:'em', EM:'em' };
+
+function richToHtml(node){
+  let out='';
+  for(const n of node.childNodes){
+    if(n.nodeType===3){                       // текст
+      out += n.nodeValue.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      continue;
+    }
+    if(n.nodeType!==1) continue;
+    const tag=n.tagName;
+    if(tag==='BR'){ out+='<br>'; continue; }
+    if(tag==='SPAN' && n.classList.contains('num')){ out+='<span class="num">'+richToHtml(n)+'</span>'; continue; }
+    const keep=RICH_OK[tag];
+    const inner=richToHtml(n);
+    if(!inner.trim() && tag!=='BR') continue;
+    out += keep ? '<'+keep+'>'+inner+'</'+keep+'>' : inner;   // чужое — разворачиваем
+    if(tag==='DIV'||tag==='P') out+='<br>';                   // блок из вставки — переносом
+  }
+  return out;
+}
+const htmlToRich = (v) => String(v??'').replace(/&nbsp;/g, NB);
+const richToStore = (el) => richToHtml(el).replace(new RegExp(NB,'g'),'&nbsp;').replace(/(<br>)+$/,'');
+
+let RTOOL=null;
+function hideTool(){ if(RTOOL){ RTOOL.remove(); RTOOL=null; } }
+function showTool(field){
+  const sel=window.getSelection();
+  if(!sel.rangeCount || sel.isCollapsed || !field.contains(sel.anchorNode)) { hideTool(); return; }
+  const r=sel.getRangeAt(0).getBoundingClientRect();
+  if(!r.width){ hideTool(); return; }
+  if(!RTOOL){
+    RTOOL=document.createElement('div'); RTOOL.className='rtool';
+    RTOOL.innerHTML='<button data-r="b" title="жирный (Ctrl+B)"><b>Ж</b></button>'
+      + '<button data-r="em" title="курсив (Ctrl+I)"><i>К</i></button>'
+      + '<button data-r="num" title="подсветить число"><span class="nm">12</span></button>'
+      + '<button data-r="clear" title="убрать оформление">убрать</button>';
+    RTOOL.onmousedown=e=>e.preventDefault();
+    RTOOL.onclick=e=>{ const b=e.target.closest('[data-r]'); if(b) applyRich(b.dataset.r, field); };
+    document.body.appendChild(RTOOL);
+  }
+  RTOOL.style.left=Math.max(8, Math.min(r.left, innerWidth-190))+'px';
+  RTOOL.style.top=Math.max(8, r.top-38)+'px';
+}
+function applyRich(what, field){
+  const sel=window.getSelection(); if(!sel.rangeCount || sel.isCollapsed) return;
+  const range=sel.getRangeAt(0);
+  if(what==='clear'){
+    const txt=range.toString(); range.deleteContents(); range.insertNode(document.createTextNode(txt));
+  } else if(what==='num'){
+    const sp=document.createElement('span'); sp.className='num'; sp.textContent=range.toString();
+    range.deleteContents(); range.insertNode(sp);
+  } else {
+    const el=document.createElement(what==='b'?'b':'em'); el.textContent=range.toString();
+    range.deleteContents(); range.insertNode(el);
+  }
+  sel.removeAllRanges();
+  field.dispatchEvent(new Event('input',{bubbles:true}));
+  hideTool();
+}
+document.addEventListener('selectionchange',()=>{
+  const a=document.activeElement;
+  if(a && a.classList && a.classList.contains('rf')) showTool(a); else hideTool();
+});
+
+// одно место, где поле оживает: вставка без мусора, Enter переносом, горячие клавиши
+function wireRich(el, onChange){
+  el.addEventListener('paste', e=>{
+    e.preventDefault();
+    const t=(e.clipboardData||window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, t);
+  });
+  el.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){
+      if(el.classList.contains('rf--one')){ e.preventDefault(); return; }
+      e.preventDefault(); document.execCommand('insertLineBreak');
+    }
+    if((e.ctrlKey||e.metaKey) && (e.key==='b'||e.key==='B')){ e.preventDefault(); applyRich('b', el); }
+    if((e.ctrlKey||e.metaKey) && (e.key==='i'||e.key==='I')){ e.preventDefault(); applyRich('em', el); }
+  });
+  el.addEventListener('input', ()=>onChange(richToStore(el)));
+  el.addEventListener('blur', hideTool);
+}
 const toEditor=v=>String(v??'').replace(/&nbsp;/g,NB).replace(/<br\s*\/?>/gi,'\n');
 const fromEditor=v=>String(v??'').replace(new RegExp(NB,'g'),'&nbsp;').replace(/\r?\n/g,'<br>');
 
@@ -428,7 +535,8 @@ function render(){
     ['Поиск и превью в мессенджерах',['meta.title','meta.description']]];
   const meta=MODEL.cases.find(c=>c.n===CUR)||{status:'published',cover:{}};
   let h=`<div class="sec"><h2>Кейс</h2>
-    <div class="f"><label>Где показывается <button class="i" data-hint="«На сайте» — кейс в сетке портфолио, в таблице манифеста и в карте сайта. «Скрыт» — исчезает из сетки, таблицы и поиска, но страница остаётся на своём адресе и содержимое цело. Вернуть можно в любой момент одним кликом, ничего заново заполнять не надо.">i</button></label>
+    <div class="rhint">Выдели текст — появится панель: <b>Ж</b> жирный, <i>К</i> курсив, <span style="color:var(--accent);font-weight:600">12</span> подсветить число. Теги писать не надо.</div>
+    <div class="f"><label>Где показывается<button class="i" data-hint="«На сайте» — кейс в сетке портфолио, в таблице манифеста и в карте сайта. «Скрыт» — исчезает из сетки, таблицы и поиска, но страница остаётся на своём адресе и содержимое цело. Вернуть можно в любой момент одним кликом, ничего заново заполнять не надо.">i</button></label>
       <div class="seg seg--wide" id="statusSeg">
         ${MODEL.statuses.map(s=>`<button data-s="${s}" class="${s===meta.status?'on':''}">${MODEL.statusRu[s]}</button>`).join('')}
       </div></div>
@@ -454,11 +562,12 @@ function render(){
       <div style="display:flex;gap:7px;margin-top:9px"><button class="btn" id="addFull">+ во всю ширину</button><button class="btn" id="addRow">+ пара</button></div></div>`;
   $('#form').innerHTML=h;
 
-  for(const el of $('#form').querySelectorAll('input[data-k]')) el.value = toEditor(DATA.dict[el.dataset.l][el.dataset.k]);
+  for(const el of $('#form').querySelectorAll('.rf[data-k]')){
+    wireRich(el, v=>{ DATA.dict[el.dataset.l][el.dataset.k]=v; mark(); syncPreview(el.dataset.k); });
+  }
   $('#form').addEventListener('input',e=>{
     const t=e.target;
-    if(t.id==='year'){ DATA.year=t.value; mark(); return; }
-    if(t.dataset.k){ DATA.dict[t.dataset.l][t.dataset.k]=fromEditor(t.value); mark(); syncPreview(t.dataset.k); }
+    if(t.id==='year'){ DATA.year=t.value; mark(); }
   });
   $('#form').addEventListener('click',e=>{
     const i=e.target.closest('.i'); if(i){ tip(i,i.dataset.hint); e.stopPropagation(); }
@@ -735,7 +844,7 @@ const mark=()=>{
 function markFields(){
   if(!ORIG) return;
   const box=$('#form'); if(!box) return;
-  for(const el of box.querySelectorAll('[data-k],[data-pk]')){
+  for(const el of box.querySelectorAll('.rf[data-k],.rf[data-pk]')){
     const key=el.dataset.k||el.dataset.pk, lang=el.dataset.l;
     if(!key||!lang) continue;
     const was = MODE==='case' ? (ORIG.dict[lang]||{})[key] : (ORIG[lang]||{})[key];
@@ -745,7 +854,7 @@ function markFields(){
     // метку и кнопку вешаем один раз на поле, а не на каждый язык
     const label=f.querySelector('label'); if(!label) continue;
     const already=label.querySelector('.undo1');
-    const anyChanged = [...f.querySelectorAll('[data-k],[data-pk]')].some(x=>{
+    const anyChanged = [...f.querySelectorAll('.rf[data-k],.rf[data-pk]')].some(x=>{
       const k2=x.dataset.k||x.dataset.pk, l2=x.dataset.l;
       const w = MODE==='case' ? (ORIG.dict[l2]||{})[k2] : (ORIG[l2]||{})[k2];
       const n = MODE==='case' ? (DATA.dict[l2]||{})[k2] : (PAGE.dict[l2]||{})[k2];
@@ -756,11 +865,11 @@ function markFields(){
       const b=document.createElement('button');
       b.className='undo1'; b.textContent='вернуть'; b.title='вернуть это поле как было';
       b.onclick=ev=>{ ev.preventDefault();
-        for(const x of f.querySelectorAll('[data-k],[data-pk]')){
+        for(const x of f.querySelectorAll('.rf[data-k],.rf[data-pk]')){
           const k2=x.dataset.k||x.dataset.pk, l2=x.dataset.l;
           const w = MODE==='case' ? (ORIG.dict[l2]||{})[k2] : (ORIG[l2]||{})[k2];
           if(MODE==='case') DATA.dict[l2][k2]=w; else PAGE.dict[l2][k2]=w;
-          x.value=toEditor(w);
+          x.innerHTML=htmlToRich(w);
         }
         mark(); markFields(); };
       label.appendChild(b);
@@ -818,7 +927,7 @@ function buildSecNav(){
   if(secs.length<2){ nav.innerHTML=''; nav.style.display='none'; return; }
   nav.style.display='';
   nav.innerHTML=secs.map((s,i)=>{
-    const n=s.querySelectorAll('input,textarea').length;
+    const n=s.querySelectorAll('.rf,input,textarea').length;
     return '<button data-s="'+i+'">'+esc(s.querySelector('h2').textContent)+(n?'<span class="n">'+n+'</span>':'')+'</button>';
   }).join('');
   nav.onclick=e=>{ const b=e.target.closest('[data-s]'); if(!b) return;
@@ -870,7 +979,7 @@ async function openHistory(){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='hist'; CUR=null; PAGE=null; DIRTY=false;
   document.querySelectorAll('.case,.pg').forEach(b=>b.classList.remove('on'));
-  $('#navHist').classList.add('on');
+  $('#navHist').classList.add('on'); $('#navShell').classList.remove('on');
   $('#ttl').textContent='История и откат';
   $('#chkBadge').classList.remove('on'); $('#secnav').innerHTML=''; $('#draftBar').hidden=true;
   $('#save').style.display=$('#revert').style.display='none';
@@ -899,6 +1008,48 @@ async function drawHistory(){
   };
 }
 
+// ── шапка и подвал ──────────────────────────────────────────────────────
+// Эти надписи одни на всех страницах, поэтому правятся отдельно, а не
+// внутри каждой. Текст лежит в content/shell.json, оттуда его берёт сборка —
+// раньше он был зашит в скрипте, и правка на странице затиралась.
+let SHELL=null;
+async function openShell(){
+  if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
+  MODE='shell'; CUR=null; PAGE=null; DIRTY=false;
+  document.querySelectorAll('.case,.pg').forEach(b=>b.classList.remove('on'));
+  $('#navShell').classList.add('on');
+  $('#chkBadge').classList.remove('on'); $('#secnav').innerHTML=''; $('#draftBar').hidden=true;
+  $('#ttl').textContent='Шапка и подвал';
+  $('#save').style.display=''; $('#revert').style.display='';
+  $('#checks').innerHTML='<div class="empty">Проверки считаются по кейсам.</div>';
+  SHELL=await api('/api/shell');
+  ORIG=JSON.parse(JSON.stringify({ru:SHELL.ru,en:SHELL.en}));
+  renderShell();
+  $('#frame').src='/?t='+Date.now();
+}
+function renderShell(){
+  const keys=Object.keys(SHELL.ru);
+  $('#form').innerHTML='<div class="sec"><h2>Шапка и подвал</h2>'
+    + '<p style="color:var(--mute);font-size:12.5px;margin:0 0 12px">Эти надписи одинаковы на всех страницах сайта. Меняешь здесь — меняется везде разом, включая английскую версию.</p>'
+    + '<div class="rhint">Выдели текст — появится панель оформления. Теги писать не надо.</div>'
+    + keys.map(k=>'<div class="f"><label>'+esc(SHELL.labels[k]||k)+'</label><div class="pair">'
+        + ['ru','en'].map(l=>'<div><div class="lang">'+l.toUpperCase()+'</div>'
+            + '<div class="rf rf--one" contenteditable="true" spellcheck="true" data-sh="'+k+'" data-l="'+l+'" data-ph="пусто">'
+            + htmlToRich(SHELL[l][k]) + '</div></div>').join('')
+        + '</div></div>').join('')
+    + '</div>';
+  for(const el of $('#form').querySelectorAll('.rf[data-sh]')){
+    wireRich(el, v=>{ SHELL[el.dataset.l][el.dataset.sh]=v; mark(); });
+  }
+}
+async function saveShell(){
+  const r=await api('/api/shell',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({ru:SHELL.ru,en:SHELL.en})});
+  unmark(); ORIG=JSON.parse(JSON.stringify({ru:SHELL.ru,en:SHELL.en}));
+  $('#frame').src='/?t='+Date.now();
+  toast(r.changed? 'Шапка и подвал обновлены на всех страницах. На сайт — кнопкой «Опубликовать».' : 'Изменений нет.', 4200);
+}
+
 // ── медиатека: все картинки сайта в одном месте ──────────────────────────
 // Смысл в колонке «где стоит»: заменить файл можно одним движением, а понять
 // последствия — только если видно, в скольких местах он используется.
@@ -908,7 +1059,7 @@ async function openMedia(){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='media'; CUR=null; PAGE=null; DIRTY=false;
   document.querySelectorAll('.case,.pg').forEach(b=>b.classList.remove('on'));
-  $('#navMedia').classList.add('on'); $('#navHist').classList.remove('on');
+  $('#navMedia').classList.add('on'); $('#navHist').classList.remove('on'); $('#navShell').classList.remove('on');
   $('#ttl').textContent='Медиатека';
   $('#chkBadge').classList.remove('on'); $('#secnav').innerHTML=''; $('#draftBar').hidden=true;
   $('#save').style.display=$('#revert').style.display='none';
@@ -1024,7 +1175,7 @@ async function openPage(file){
   if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
   MODE='page'; CUR=null; DIRTY=false;
   document.querySelectorAll('.case').forEach(b=>b.classList.remove('on'));
-  $('#navMedia').classList.remove('on'); $('#navHist').classList.remove('on');
+  $('#navMedia').classList.remove('on'); $('#navHist').classList.remove('on'); $('#navShell').classList.remove('on');
   document.querySelectorAll('.pg').forEach(b=>b.classList.toggle('on', b.dataset.f===file));
   MANIFEST=null;
   PAGE=await api('/api/page/'+encodeURIComponent(file));
@@ -1042,7 +1193,7 @@ async function renderPage(){
   if(PAGE.file==='index.html'){
     const mf=await api('/api/manifest');
     MANIFEST=mf;
-    const fld=(path,val,long)=>'<'+(long?'textarea rows="3"':'input')+' data-mf="'+path+'">'+(long?esc(toEditor(val)):'')+'</'+(long?'textarea':'input')+'>';
+    const fld=(path,val,long)=>'<div class="rf'+(long?'':' rf--one')+'" contenteditable="true" spellcheck="true" data-mf="'+path+'" data-ph="пусто">'+htmlToRich(val)+'</div>';
     h+='<div class="sec"><h2>Где работал</h2>'
       + '<p style="color:var(--mute);font-size:12.5px;margin:0 0 11px">Годы и названия компаний — обычный текст, одинаковый в обоих языках. Роль, описание и награда переводятся.<br><b style="color:#b9b9c2">&lt;span class=&quot;num&quot;&gt;…&lt;/span&gt;</b> вокруг чисел — это подсветка цифр на сайте. Текст внутри меняй свободно, сами скобки не удаляй.</p>'
       + mf.companies.map(c=>'<div class="co-ed">'
@@ -1078,28 +1229,24 @@ async function renderPage(){
   for(const g of PAGE.groups){
     h+='<div class="sec"><h2>'+esc(g.label)+'</h2>'+g.keys.map(k=>{
       const ru=PAGE.dict.ru[k]??'', en=PAGE.dict.en[k]??'';
-      const long=String(toEditor(ru)).length>60||String(ru).includes('<br>');
-      const tag=long?'textarea':'input';
-      const fld=(lang,val)=>'<div><div class="lang">'+lang.toUpperCase()+'</div><'+tag+' data-pk="'+esc(k)+'" data-l="'+lang+'"'
-        +(long?' rows="'+(String(val).length>200?4:2)+'"':'')+'>'+(tag==='textarea'?esc(toEditor(val)):'')+'</'+tag+'></div>';
+      const long=String(htmlToRich(ru)).length>60||String(ru).includes('<br>');
+      const fld=(lang,val)=>'<div><div class="lang">'+lang.toUpperCase()+'</div>'
+        +'<div class="rf'+(long?'':' rf--one')+'" contenteditable="true" spellcheck="true" data-pk="'+esc(k)+'" data-l="'+lang+'" data-ph="пусто">'+htmlToRich(val)+'</div></div>';
       return '<div class="f"><label><code style="font-size:11px;opacity:.7">'+esc(k)+'</code>'
         + (String(en).trim()===''&&String(ru).trim()!==''? ' <span style="color:var(--warn)">· нет перевода</span>':'')
         + '</label><div class="pair">'+fld('ru',ru)+fld('en',en)+'</div></div>';
     }).join('')+'</div>';
   }
   $('#form').innerHTML=h;
-  for(const el of $('#form').querySelectorAll('input[data-pk]')) el.value=toEditor(PAGE.dict[el.dataset.l][el.dataset.pk]);
+  for(const el of $('#form').querySelectorAll('.rf[data-pk]')){
+    wireRich(el, v=>{ PAGE.dict[el.dataset.l][el.dataset.pk]=v; mark(); syncPreview(el.dataset.pk); });
+  }
   if(MANIFEST){
-    for(const el of $('#form').querySelectorAll('[data-mf]')){
+    for(const el of $('#form').querySelectorAll('.rf[data-mf]')){
       const [,n,f,lang]=el.dataset.mf.split('.');
       const c=MANIFEST.companies.find(x=>String(x.n)===n);
-      el.value=toEditor(lang? c[f][lang] : c[f]);
+      wireRich(el, v=>{ if(lang) c[f][lang]=v; else c[f]=v; mark(); });
     }
-    $('#form').addEventListener('input',e=>{ const t=e.target; if(!t.dataset.mf) return;
-      const [,n,f,lang]=t.dataset.mf.split('.');
-      const c=MANIFEST.companies.find(x=>String(x.n)===n);
-      if(lang) c[f][lang]=fromEditor(t.value); else c[f]=fromEditor(t.value);
-      mark(); });
     drawChips();
   }
   // CV: заменить можно тремя способами — кнопкой, кликом по зоне и перетаскиванием
@@ -1113,8 +1260,7 @@ async function renderPage(){
     wireDrop(dz,{accept:'.pdf,application/pdf',match:/\.pdf$/i,reject:'Нужен файл .pdf',
       onFiles:f=>uploadCv(f, dz.dataset.lang, dz)});
   }
-  $('#form').addEventListener('input',e=>{ const t=e.target;
-    if(t.dataset.pk){ PAGE.dict[t.dataset.l][t.dataset.pk]=fromEditor(t.value); mark(); syncPreview(t.dataset.pk); } });
+  /* правки полей идут через wireRich */
 }
 // Загрузка CV: одна функция на кнопку, клик по зоне и перетаскивание
 async function uploadCv(f, lang, zone){
@@ -1200,17 +1346,22 @@ function drawBadge(){
 function refreshPreview(){
   if(MODE==='media'){ $('#frame').src='/portfolio.html?t='+Date.now(); return; }
   if(MODE==='hist') return;
+  if(MODE==='shell'){ $('#frame').src='/?t='+Date.now(); return; }
   const path = MODE==='page' ? (PAGE.file==='index.html'?'/':'/'+PAGE.file) : `/projects/${CUR}.html`;
   $('#frame').src=(LANG==='en'?'/en':'')+path+'?t='+Date.now();
 }
 $('#lang').onclick=e=>{ const b=e.target.closest('button'); if(!b) return;
   LANG=b.dataset.l; $('#lang').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); refreshPreview(); };
 $('#reload').onclick=refreshPreview;
-$('#save').onclick=()=>{ if(MODE==='media'||MODE==='hist') return toast('Здесь сохранять нечего.'); MODE==='page'?savePage():save(); };
+$('#save').onclick=()=>{ if(MODE==='media'||MODE==='hist') return toast('Здесь сохранять нечего.');
+  if(MODE==='shell') return saveShell();
+  MODE==='page'?savePage():save(); };
 $('#revert').onclick=()=>{ if(!confirm('Вернуть поля к последнему сохранению?')) return;
+  if(MODE==='shell'){ SHELL.ru=JSON.parse(JSON.stringify(ORIG.ru)); SHELL.en=JSON.parse(JSON.stringify(ORIG.en)); DIRTY=false; renderShell(); return; }
   if(MODE==='page'){ PAGE.dict=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; renderPage(); }
   else { DATA=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; render(); } };
-addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); MODE==='page'?savePage():save(); } });
+addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault();
+  if(MODE==='media'||MODE==='hist') return; if(MODE==='shell') return saveShell(); MODE==='page'?savePage():save(); } });
 addEventListener('beforeunload',e=>{ if(DIRTY){ e.preventDefault(); e.returnValue=''; } });
 
 /* ── правила ── */
@@ -1244,6 +1395,7 @@ function watchDeploy(){
 
 $('#navMedia').onclick=openMedia;
 $('#navHist').onclick=openHistory;
+$('#navShell').onclick=openShell;
 
 $('#addCase').onclick=async()=>{
   const title=prompt('Название нового кейса:\n\nОн создастся скрытым — на сайт не попадёт, пока сам не переключишь.');

@@ -29,18 +29,11 @@ export const VERSION = 188;
 // Shared i18n keys that MUST be identical on every site page. The build validates
 // each page's dict against these (values only) and reports drift — it does not rewrite
 // the dicts, so page-specific keys stay untouched.
-const SHARED_I18N = {
-  ru: {
-    'nav.brand': 'Сергей Лукин <b>·</b> <span>Head of Design</span>',
-    'nav.manifesto': 'Манифест', 'nav.about': 'Обо мне', 'nav.pf': 'Портфолио',
-    'ft.copy': '© 2026 Сергей Лукин', 'ft.top': 'Наверх <span class="arr">↑</span>',
-  },
-  en: {
-    'nav.brand': 'Sergey Lukin <b>·</b> <span>Head of Design</span>',
-    'nav.manifesto': 'Manifesto', 'nav.about': 'About', 'nav.pf': 'Portfolio',
-    'ft.copy': '© 2026 Sergey Lukin', 'ft.top': 'Top <span class="arr">↑</span>',
-  },
-};
+// Тексты шапки и подвала лежат в content/shell.json — их правят через CMS.
+// Раньше они были зашиты прямо здесь, и правка на странице затиралась сборкой.
+const SHELL_TEXT = JSON.parse(readFileSync(resolve(ROOT, 'content', 'shell.json'), 'utf8'));
+const SHARED_I18N = { ru: SHELL_TEXT.ru, en: SHELL_TEXT.en };
+const T = (k) => SHARED_I18N.ru[k];
 
 // active: which top-nav link is current.
 // ftRu: the footer's right-hand tag (RU default text; JS swaps it via data-i18n).
@@ -78,13 +71,13 @@ const navLink = (href, key, label, on) =>
 const nav = (c) => {
   const p = c.prefix;
   return `<nav class="top on-dark" id="nav">` +
-    `<a class="brand" href="${p}index.html" id="navHome" data-i18n="nav.brand">Сергей Лукин <b>·</b> <span>Head of Design</span></a>` +
+    `<a class="brand" href="${p}index.html" id="navHome" data-i18n="nav.brand">${T('nav.brand')}</a>` +
     `<div class="nav-center">` +
-      navLink(`${p}index.html`, 'nav.manifesto', 'Манифест', c.active === 'manifesto') +
+      navLink(`${p}index.html`, 'nav.manifesto', T('nav.manifesto'), c.active === 'manifesto') +
       `<span class="nav-sep" aria-hidden="true">·</span>` +
-      navLink(`${p}about.html`, 'nav.about', 'Обо мне', c.active === 'about') +
+      navLink(`${p}about.html`, 'nav.about', T('nav.about'), c.active === 'about') +
       `<span class="nav-sep" aria-hidden="true">·</span>` +
-      navLink(`${p}portfolio.html`, 'nav.pf', 'Портфолио', c.active === 'portfolio') +
+      navLink(`${p}portfolio.html`, 'nav.pf', T('nav.pf'), c.active === 'portfolio') +
     `</div>` +
     `<div class="nav-right">` +
       `<div class="lang-switch" id="langSwitch" role="group" aria-label="Язык" data-aria-ru="Язык" data-aria-en="Language">` +
@@ -96,8 +89,8 @@ const nav = (c) => {
 };
 
 const footer = (c) =>
-  `<footer class="foot"><div data-i18n="ft.copy">© 2026 Сергей Лукин</div>` +
-  `<button class="ft-top" type="button" id="footTop" data-i18n="ft.top">Наверх <span class="arr">↑</span></button>` +
+  `<footer class="foot"><div data-i18n="ft.copy">${T('ft.copy')}</div>` +
+  `<button class="ft-top" type="button" id="footTop" data-i18n="ft.top">${T('ft.top')}</button>` +
   `<div data-i18n="ft.tag">${c.ftRu}</div></footer>`;
 
 const scripts = (p) =>

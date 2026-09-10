@@ -79,6 +79,17 @@ const PAGES = [
   { file: '404.html', label: 'Страница 404' },
 ];
 const SHELL = /^(nav\.|ft\.|skip$|f\.(client|year|role)$|ui\.(all|next|nextTitle)$)/;
+// Человеческие подписи для шапки и подвала — они одни на все страницы
+// и правятся отдельным разделом, а не внутри каждой страницы.
+const SHELL_LABELS = {
+  'nav.brand': 'Имя и должность в шапке',
+  'nav.manifesto': 'Пункт меню: Манифест',
+  'nav.about': 'Пункт меню: Обо мне',
+  'nav.pf': 'Пункт меню: Портфолио',
+  'ft.copy': 'Копирайт в подвале',
+  'ft.top': 'Кнопка «Наверх»',
+  'skip': 'Ссылка для незрячих: перейти к содержанию',
+};
 const GENERATED = /^(?:c\d+\.|wk\.\d+\.)/;
 const editableKey = (k) => !SHELL.test(k) && !GENERATED.test(k);
 
@@ -814,6 +825,48 @@ const srv = createServer(async (req, res) => {
       }
       const b = await rebuild();
       return json(res, 200, { ok: b.ok, out: r.out.slice(-300) });
+    }
+
+    // ── шапка и подвал: одни на все страницы ─────────────────────────────
+    // Текст лежит в content/shell.json, оттуда его берёт build-pages.mjs.
+    // Раньше он был зашит в скрипте сборки, и правка на странице затиралась.
+    if (path === '/api/shell') {
+      const F = resolve(ROOT, 'content', 'shell.json');
+      if (req.method === 'GET') {
+        const d = JSON.parse(readFileSync(F, 'utf8'));
+        return json(res, 200, { ru: d.ru, en: d.en, labels: SHELL_LABELS });
+      }
+      if (req.method === 'POST') {
+        const inc = JSON.parse((await body(req)).toString('utf8'));
+        const d = JSON.parse(readFileSync(F, 'utf8'));
+        let changed = 0;
+        for (const lang of ['ru', 'en'])
+          for (const k of Object.keys(d[lang]))
+            if (inc[lang] && inc[lang][k] != null && inc[lang][k] !== d[lang][k]) { d[lang][k] = inc[lang][k]; changed++; }
+        if (changed) {
+          await writeFileSafe(F, Buffer.from(JSON.stringify(d, null, 2) + '\n', 'utf8'));
+          // build-pages переписывает шапку и подвал во всех страницах,
+          // а словари подтягиваем сами — иначе смена языка вернёт старый текст
+          for (const f of [...PAGES.map((x) => x.file), ...caseIds().map((n) => `projects/${n}.html`)]) {
+            const abs = resolve(ROOT, f);
+            if (!existsSync(abs)) continue;
+            const orig = readFileSync(abs, 'utf8');
+            const bom = orig.charCodeAt(0) === 0xfeff;
+            let html = orig.replace(/^﻿/, '');
+            const dict = JSON.parse(load(html, { decodeEntities: false })('#i18n-data').html() || '{}');
+            let touched = false;
+            for (const lang of ['ru', 'en'])
+              for (const [k, v] of Object.entries(d[lang]))
+                if (k in (dict[lang] || {}) && dict[lang][k] !== v) { dict[lang][k] = v; touched = true; }
+            if (!touched) continue;
+            html = writeDict(html, dict);
+            await writeFileSafe(abs, Buffer.from((bom ? '﻿' : '') + html, 'utf8'));
+          }
+          await node('build-pages.mjs');
+          await node('build-en.mjs');
+        }
+        return json(res, 200, { ok: true, changed });
+      }
     }
 
     // ── блок «Где работал» и бегущая строка брендов на манифесте ────────

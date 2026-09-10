@@ -1,0 +1,21 @@
+{
+  "_": "Тексты шапки и подвала — они одинаковы на всех страницах. Правятся в CMS, раздел «Шапка и подвал». Отсюда их берёт tools/build-pages.mjs, поэтому правка не затирается при сборке.",
+  "ru": {
+    "nav.brand": "Сергей Лукин <b>·</b> <span>Head of Design</span>",
+    "nav.manifesto": "Манифест",
+    "nav.about": "Обо мне",
+    "nav.pf": "Портфолио",
+    "ft.copy": "© 2026 Сергей Лукин",
+    "ft.top": "Наверх <span class=\"arr\">↑</span>",
+    "skip": "Перейти к&nbsp;содержанию"
+  },
+  "en": {
+    "nav.brand": "Sergey Lukin <b>·</b> <span>Head of Design</span>",
+    "nav.manifesto": "Manifesto",
+    "nav.about": "About",
+    "nav.pf": "Portfolio",
+    "ft.copy": "© 2026 Sergey Lukin",
+    "ft.top": "Top <span class=\"arr\">↑</span>",
+    "skip": "Skip to content"
+  }
+}
