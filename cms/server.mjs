@@ -1011,10 +1011,22 @@ const srv = createServer(async (req, res) => {
     }
 
     if (path === '/api/validate') return json(res, 200, { problems: validate() });
-    if (path === '/api/changes') { const g = await git('status', '--short'); return json(res, 200, { files: g.out.split('\n').map((s) => s.trim()).filter(Boolean) }); }
+    // Что ждёт публикации. Кроме правок в файлах бывают ГОТОВЫЕ версии, которые
+    // ещё не уехали: откат сам создаёт версию и оставляет папку чистой. Без этой
+    // цифры кнопка «Опубликовать» гасла, и откат было невозможно довезти до сайта.
+    if (path === '/api/changes') {
+      const g = await git('status', '--short');
+      let ahead = 0;
+      const a = await git('log', 'origin/main..HEAD', '--format=%h');
+      if (a.code === 0) ahead = a.out.split('\n').filter(Boolean).length;
+      return json(res, 200, { files: g.out.split('\n').map((s) => s.trim()).filter(Boolean), ahead });
+    }
     if (path === '/api/publish' && req.method === 'POST') {
       const steps = [];
-      for (const [name, script] of [['Контакты', 'build-contacts.mjs'], ['Сборка EN', 'build-en.mjs'], ['Каркас', 'build-pages.mjs']]) {
+      // Порядок важен и он ровно такой же, как в npm run build: build-en ЧИТАЕТ
+      // русские страницы, а build-pages их ПИШЕТ. Если собрать EN раньше каркаса,
+      // английская версия уедет собранной из предыдущего состояния.
+      for (const [name, script] of [['Контакты', 'build-contacts.mjs'], ['Каркас', 'build-pages.mjs'], ['Сборка EN', 'build-en.mjs']]) {
         const r = await node(script); steps.push({ name, ok: r.code === 0, out: r.out.slice(-600) });
         if (r.code !== 0) return json(res, 200, { ok: false, steps });
       }

@@ -343,7 +343,7 @@ const RULES = {
 <h4>Alt обязателен</h4>
 <p>Его читают поисковик и незрячие. Опиши, что на кадре, а не «картинка 3». Пустой alt подсветится в проверке.</p>
 <h4>Видео</h4>
-<p>Блоки с видео помечены замком и не редактируются — их разметка собрана руками, ломать её кнопкой нельзя. Нужно поменять — скажи.</p>`,
+<p>Разметка видео-блока заперта — её кнопкой не сломать. А сам файл меняется: в кейсе с видео есть зона «Видео-обложка», туда кидаешь <code>.mp4</code> или выбираешь кнопкой. Больше 40 МБ не берёт — тяжело для посетителя.</p>`,
   'Ссылки и контакты': `
 <h4>Одно поле — три места</h4>
 <p>Telegram, почта и Behance стоят на сайте трижды: экран «Давайте поговорим» на главной, колонка «Связаться» на «Обо мне» и невидимая разметка, по которой поисковики связывают профили с тобой. Раздел «Контакты и ссылки» правит все три сразу, включая английскую версию.</p>
@@ -371,18 +371,61 @@ const RULES = {
 <h4>Ничего вводить не надо</h4>
 <p>Логин берётся из твоего GitHub Desktop. Паролей и токенов CMS не хранит.</p>
 <h4>Если что-то пошло не так</h4>
-<p>При ошибке на любом шаге публикация останавливается и файлы не отправляются. Откатить уже опубликованное — в GitHub Desktop: History, правой кнопкой по коммиту, Revert.</p>
+<p>При ошибке на любом шаге публикация останавливается и файлы не отправляются — сайт остаётся прежним.</p>
+<h4>Откат — в разделе «История и откат»</h4>
+<p>Список всех публикаций с датами. Выбираешь версию, «Откатить» — файлы возвращаются как были. Это создаёт новую версию, поэтому после отката ещё раз нажми «Опубликовать»: окно так и скажет — «правок в файлах нет, но готовых версий без публикации: 1».</p>
+<p>Откатывай <b>с конца, по одной</b>. Если перескочить через несколько версий, правки поверх помешают и CMS честно об этом скажет.</p>
 <h4>Кэш</h4>
 <p>GitHub держит страницу до десяти минут. Если правки «не видно» — Ctrl+Shift+R.</p>`,
+  'Кейсы: создать, скрыть, порядок': `
+<h4>Новый кейс</h4>
+<p>Кнопка «+ Новый кейс» внизу боковой колонки. Он появляется <b>скрытым</b>: на сайт не попадает, в карте сайта его нет, поисковикам закрыт. Спокойно наполняй сколько нужно — снаружи его не видно.</p>
+<p>Когда готов: точка у названия в списке, «Опубликован». Тогда он встаёт в сетку портфолио, в таблицу на манифесте, в цепочку «следующий проект» и в карту сайта — всё разом, руками ничего связывать не надо.</p>
+<h4>Скрыть старый</h4>
+<p>Тот же переключатель обратно в «Скрыт». Ссылки соседей пересобираются, нумерация идёт без дыр, из карты сайта он уходит. 404 не появится: страница остаётся на месте, просто на неё больше ниоткуда не ведёт.</p>
+<h4>Удалить совсем</h4>
+<p>Нужно ввести название кейса — это защита от случайного щелчка. Удаление необратимо. Обычно правильнее скрыть.</p>
+<h4>Порядок</h4>
+<p>Тяни кейс за карточку в списке. Номер <code>01…10</code> — это адрес страницы, он НЕ меняется; меняется только позиция. Поэтому старые ссылки на кейс продолжают работать.</p>
+<h4>Копия кейса</h4>
+<p>«Сделать копию» — быстрый способ начать похожий проект: копия приходит скрытой, со своими файлами.</p>`,
+  'Остальные разделы': `
+<h4>Шапка и подвал</h4>
+<p>Имя в шапке, пункты меню, копирайт, кнопка «Наверх». Эти надписи одни на всех 14 страницах — правишь тут, меняется везде и сразу в двух языках.</p>
+<p>Одно предупреждение: в имени «Сергей Лукин · Head of Design» должность обёрнута отдельно — на узких телефонах она специально скрывается, иначе строка переносится. Оформление не сбивай, текст меняй свободно.</p>
+<h4>Медиатека</h4>
+<p>Все картинки сайта в одном месте, с весом и колонкой «где стоит». Сортировка по весу находит самые тяжёлые. Заменить файл можно прямо оттуда — он обновится во всех местах разом, потому что имя остаётся тем же. Удалять даёт только те, что нигде не используются.</p>
+<h4>Резюме PDF</h4>
+<p>На странице «Обо мне», раздел контактов: два файла — русский и английский. Кидаешь новый PDF или выбираешь кнопкой, имя подставится само.</p>
+<h4>Где работал</h4>
+<p>Блок на манифесте: годы, компании, роль, описание, награда. Годы и названия — обычный текст, роль и описание переводятся.</p>
+<h4>Черновик</h4>
+<p>Правки пишутся в браузер сами каждые несколько секунд. Если браузер закрылся, свет мигнул или нажал F5 — при возврате появится полоска «есть несохранённый черновик от 14:32, восстановить?».</p>`,
+  'Если что-то сломалось': `
+<h4>Две команды, которые всё проверяют</h4>
+<p>Открой папку проекта, в адресной строке проводника набери <code>cmd</code>, Enter — откроется чёрное окно. Дальше:</p>
+<p><code>node cms/selftest.mjs</code> — прогоняет CMS целиком, больше восьмидесяти проверок, и печатает, что работает, а что нет. CMS при этом должна быть запущена.</p>
+<p><code>node tools/audit.mjs</code> — проверяет сам сайт: битые ссылки, пропавшие картинки, незаполненные переводы, расхождения между страницей и словарём. Должно быть «Чисто».</p>
+<p>Если обе зелёные — сайт цел, что бы ни казалось. Если нет — покажи мне вывод, там написано где.</p>
+<h4>Селф-тест отказался запускаться</h4>
+<p>Он не работает, пока есть несохранённые правки: он откатывает файлы и стёр бы их. Сначала «Опубликовать» или «Отменить».</p>
+<h4>CMS не открывается</h4>
+<p>Файл запуска — <code>cms\\CMS.bat</code>, двойной щелчок. Он сам ищет Node на компьютере и сам открывает браузер. Если пишет, что Node не найден — поставь его заново с nodejs.org, папку проекта трогать не надо.</p>
+<h4>Правки не видно на сайте</h4>
+<p>Сначала <code>Ctrl+Shift+R</code> — почти всегда это кэш. Если не помогло, посмотри полоску состояния сборки под заголовком: она пишет, собирается ещё или уже опубликовано.</p>
+<h4>Картинка не заменяется</h4>
+<p>Скорее всего файл открыт в просмотрщике Windows — закрой его и повтори. CMS так и напишет.</p>`,
   'Чего не делать': `
 <h4>Что заперто</h4>
 <p>Блоки с видео и уникальная вёрстка манифеста помечены замком: их разметка собрана руками, и кнопка её сломает. Текст внутри правится, структура — нет.</p>
-<h4>Не переименовывай кейсы</h4>
-<p>Номер кейса <code>01…10</code> — это адрес страницы и ссылки «следующий проект». Менять его должен я.</p>
+<h4>Номер кейса не переименовывается</h4>
+<p><code>01…10</code> — это адрес страницы, на который могут вести ссылки со стороны. Поэтому его нельзя менять, и CMS такой кнопки не даёт. Если нужно передвинуть кейс — тяни его в списке, номер останется, позиция изменится.</p>
 <h4>Не удаляй картинку, которая где-то стоит</h4>
 <p>Удаление из блока убирает её со страницы, но файл остаётся на диске. Так и надо: он может использоваться в превью портфолио.</p>
-<h4>Папка cms</h4>
-<p>На сайт она не попадает: исключена в сборке и проверяется отдельно. Ничего из неё посетитель не увидит.</p>`,
+<h4>Папки cms, tools, content</h4>
+<p>На сайт они не попадают: исключены в сборке, и на каждой публикации это проверяется отдельным шагом. Посетитель не увидит ни CMS, ни инструменты, ни реестр кейсов.</p>
+<h4>Не правь папку en руками</h4>
+<p>Английские страницы собираются из русских автоматически. Всё, что впишешь туда напрямую, затрётся при следующей публикации. Английский текст правится в поле EN рядом с русским.</p>`,
 };
 
 /* ── подсказки ── */
@@ -482,7 +525,22 @@ const NB='\u00a0';
    тегами нельзя — писать в таком поле невозможно. Поэтому поле показывает
    готовый вид, а при чтении собирается обратно в чистую разметку.
    Всё, чего нет в этом списке, при вставке отбрасывается. */
-const RICH_OK = { B:'b', STRONG:'b', I:'em', EM:'em' };
+// Тег сохраняем ТОТ ЖЕ, что был в файле: <b> и <strong> выглядят одинаково,
+// но подменять один на другой нельзя — тогда холостое сохранение переписывает
+// страницу, и в истории появляется правка, которой человек не делал.
+const RICH_OK = { B:'b', STRONG:'strong', I:'em', EM:'em' };
+
+// Классы span, на которых держится вёрстка: подсветка числа, стрелка «наверх»,
+// разделитель между фактами. Плюс <span> совсем без атрибутов — им в шапке
+// обёрнуто «Head of Design», и на экранах до 420 px CSS его скрывает, иначе
+// строка переносится на две. Потеряем обёртку — шапка сломается на телефонах.
+const SPAN_OK = ['num', 'arr', 'sep'];
+function spanAttrs(n){
+  const cls=[...n.classList].filter(c=>SPAN_OK.includes(c));
+  if(cls.length) return ' class="'+cls.join(' ')+'"';
+  if(!n.attributes.length) return '';
+  return null;                              // чужой span из буфера — развернуть
+}
 
 function richToHtml(node){
   let out='';
@@ -494,7 +552,14 @@ function richToHtml(node){
     if(n.nodeType!==1) continue;
     const tag=n.tagName;
     if(tag==='BR'){ out+='<br>'; continue; }
-    if(tag==='SPAN' && n.classList.contains('num')){ out+='<span class="num">'+richToHtml(n)+'</span>'; continue; }
+    if(tag==='SPAN'){
+      const at=spanAttrs(n);
+      if(at!==null){
+        const inner=richToHtml(n);
+        if(inner.trim()) out+='<span'+at+'>'+inner+'</span>';   // пустые из буфера — мимо
+        continue;
+      }
+    }
     const keep=RICH_OK[tag];
     const inner=richToHtml(n);
     if(!inner.trim() && tag!=='BR') continue;
@@ -858,8 +923,12 @@ async function sendImage(url, f){
     const p=await fetch('/api/probe',{method:'POST',body:f}).then(x=>x.json()).catch(()=>({error:'Сервер не ответил.'}));
     busy.remove();
     if(p.error) return p;
-    mode=await askFormat(f,p);
-    if(!mode) return {cancel:true};
+    // Расширению в имени не верим. Из Фигмы файл иногда приезжает как .png,
+    // а внутри уже webp — тогда спрашивать не о чем и пережимать нечего.
+    if(p.kind!=='webp'){
+      mode=await askFormat(f,p);
+      if(!mode) return {cancel:true};
+    }
   }
   const busy=toast(mode==='keep'?'Загружаю…':'Перевожу в webp…', 60000);
   const r=await fetch(url+(url.includes('?')?'&':'?')+'mode='+mode,{method:'POST',body:f})
@@ -938,6 +1007,16 @@ function changedFields(){
     for(const lang of ['ru','en'])
       for(const k of Object.keys(PAGE.dict[lang]||{}))
         if(PAGE.dict[lang][k]!==(ORIG[lang]||{})[k]) out.push(lang.toUpperCase()+' '+k);
+  } else if(MODE==='shell'&&SHELL){
+    for(const lang of ['ru','en'])
+      for(const k of Object.keys(SHELL[lang]||{}))
+        if(SHELL[lang][k]!==(ORIG[lang]||{})[k]) out.push(lang.toUpperCase()+' '+k);
+  } else if(MODE==='cont'&&CONT){
+    CONT.items.forEach((it,i)=>{ const o=ORIG[i]||{};
+      if(it.url!==o.url) out.push(it.name+': ссылка');
+      if(it.handle!==o.handle) out.push(it.name+': подпись'); });
+    const wasExtra=(CONT.__extra0||[]).join('\n');
+    if(wasExtra!==(CONT.extra||[]).join('\n') && CONT.__extra0) out.push('ещё профили');
   }
   return out;
 }
@@ -951,37 +1030,77 @@ const mark=()=>{
   markFields();
   saveDraft();
 };
+/* Одно место, где решается, откуда у поля брать «было» и «стало».
+   Разделы хранят данные по-разному: у кейса это DATA.dict, у страницы
+   PAGE.dict, у шапки SHELL. Разводить это по каждой функции — верный способ
+   получить раздел, в котором счётчик правок молчит. */
+const FSEL='.rf[data-k],.rf[data-pk],.rf[data-sh]';
+function fieldWasNow(el){
+  const lang=el.dataset.l; if(!lang) return null;
+  if(el.dataset.sh){
+    if(!SHELL||!ORIG) return null;
+    return [(ORIG[lang]||{})[el.dataset.sh], (SHELL[lang]||{})[el.dataset.sh]];
+  }
+  const key=el.dataset.k||el.dataset.pk; if(!key) return null;
+  if(MODE==='case') return DATA&&ORIG&&ORIG.dict ? [(ORIG.dict[lang]||{})[key], (DATA.dict[lang]||{})[key]] : null;
+  return PAGE&&ORIG ? [(ORIG[lang]||{})[key], (PAGE.dict[lang]||{})[key]] : null;
+}
+function fieldPut(el, v){
+  const lang=el.dataset.l;
+  if(el.dataset.sh){ SHELL[lang][el.dataset.sh]=v; return; }
+  const key=el.dataset.k||el.dataset.pk;
+  if(MODE==='case') DATA.dict[lang][key]=v; else PAGE.dict[lang][key]=v;
+}
+
 /* Помечаем изменённые поля и даём вернуть каждое по отдельности:
    раньше «Отменить» откатывало сразу всю страницу. */
 function markFields(){
   if(!ORIG) return;
   const box=$('#form'); if(!box) return;
-  for(const el of box.querySelectorAll('.rf[data-k],.rf[data-pk]')){
-    const key=el.dataset.k||el.dataset.pk, lang=el.dataset.l;
-    if(!key||!lang) continue;
-    const was = MODE==='case' ? (ORIG.dict[lang]||{})[key] : (ORIG[lang]||{})[key];
-    const now = MODE==='case' ? (DATA.dict[lang]||{})[key] : (PAGE.dict[lang]||{})[key];
+  // Контакты — обычные поля ввода, у них своя разметка: подсвечиваем строку
+  // и даём вернуть ссылку и подпись вместе, они всегда меняются в паре.
+  if(MODE==='cont'&&CONT){
+    for(const el of box.querySelectorAll('input[data-ci]')){
+      const i=+el.dataset.ci, o=ORIG[i]||{}, it=CONT.items[i]||{};
+      const f=el.closest('.f'); if(!f) continue;
+      const changed = it.url!==o.url || it.handle!==o.handle;
+      f.classList.toggle('dirty', changed);
+      const label=f.querySelector('label'); if(!label) continue;
+      const already=label.querySelector('.undo1');
+      if(changed && !already){
+        const b=document.createElement('button');
+        b.className='undo1'; b.textContent='вернуть'; b.title='вернуть эту ссылку как была';
+        b.onclick=ev=>{ ev.preventDefault();
+          CONT.items[i].url=o.url; CONT.items[i].handle=o.handle;
+          for(const x of f.querySelectorAll('input[data-ci]')) x.value=o[x.dataset.k]??'';
+          mark(); };
+        label.appendChild(b);
+      }
+      if(!changed && already) already.remove();
+    }
+    return;
+  }
+  for(const el of box.querySelectorAll(FSEL)){
+    const wn=fieldWasNow(el); if(!wn) continue;
+    const [was, now]=wn;
     const f=el.closest('.f'); if(!f) continue;
     const changed = was!==now;
     // метку и кнопку вешаем один раз на поле, а не на каждый язык
     const label=f.querySelector('label'); if(!label) continue;
     const already=label.querySelector('.undo1');
-    const anyChanged = [...f.querySelectorAll('.rf[data-k],.rf[data-pk]')].some(x=>{
-      const k2=x.dataset.k||x.dataset.pk, l2=x.dataset.l;
-      const w = MODE==='case' ? (ORIG.dict[l2]||{})[k2] : (ORIG[l2]||{})[k2];
-      const n = MODE==='case' ? (DATA.dict[l2]||{})[k2] : (PAGE.dict[l2]||{})[k2];
-      return w!==n;
+    const anyChanged = [...f.querySelectorAll(FSEL)].some(x=>{
+      const p=fieldWasNow(x); if(!p) return false;
+      return p[0]!==p[1];
     });
     f.classList.toggle('dirty', anyChanged);
     if(anyChanged && !already){
       const b=document.createElement('button');
       b.className='undo1'; b.textContent='вернуть'; b.title='вернуть это поле как было';
       b.onclick=ev=>{ ev.preventDefault();
-        for(const x of f.querySelectorAll('.rf[data-k],.rf[data-pk]')){
-          const k2=x.dataset.k||x.dataset.pk, l2=x.dataset.l;
-          const w = MODE==='case' ? (ORIG.dict[l2]||{})[k2] : (ORIG[l2]||{})[k2];
-          if(MODE==='case') DATA.dict[l2][k2]=w; else PAGE.dict[l2][k2]=w;
-          x.innerHTML=htmlToRich(w);
+        for(const x of f.querySelectorAll(FSEL)){
+          const p=fieldWasNow(x); if(!p) continue;
+          fieldPut(x, p[0]);
+          x.innerHTML=htmlToRich(p[0]);
         }
         mark(); markFields(); };
       label.appendChild(b);
@@ -1177,6 +1296,7 @@ async function openContacts(){
   $('#save').style.display=''; $('#revert').style.display='';
   $('#checks').innerHTML='<div class="empty">Проверки считаются по кейсам.</div>';
   CONT=await api('/api/contacts');
+  CONT.__extra0=[...(CONT.extra||[])];
   ORIG=JSON.parse(JSON.stringify(CONT.items));
   renderContacts();
   $('#frame').src='/about.html?t='+Date.now();
@@ -1206,7 +1326,7 @@ async function saveContacts(){
     body:JSON.stringify({items:CONT.items,extra:CONT.extra})});
   if(r.error) return toast(r.error,6000);
   unmark(); ORIG=JSON.parse(JSON.stringify(CONT.items));
-  CONT=await api('/api/contacts'); renderContacts();
+  CONT=await api('/api/contacts'); CONT.__extra0=[...(CONT.extra||[])]; renderContacts();
   $('#frame').src='/about.html?t='+Date.now();
   toast(r.changed? 'Ссылки обновлены везде: главная, «Обо мне», разметка для поисковиков. На сайт — кнопкой «Опубликовать».' : 'Изменений нет.', 5000);
 }
@@ -1638,13 +1758,15 @@ $('#pub').onclick=async()=>{
   v.innerHTML=`<div class="modal"><header><h3>Опубликовать на сайт</h3><button class="btn" data-close>Отмена</button></header>
     <div class="body">
       <h4>Что уйдёт — ${ch.files.length} файл(ов)</h4>
-      ${ch.files.length? `<div class="steps">${ch.files.map(f=>`<div>${esc(f)}</div>`).join('')}</div>` : '<p>Изменений нет — на сайте уже актуальная версия.</p>'}
+      ${ch.files.length? `<div class="steps">${ch.files.map(f=>`<div>${esc(f)}</div>`).join('')}</div>`
+        : ch.ahead? `<p>Правок в файлах нет, но готовых версий без публикации: <b>${ch.ahead}</b>. Так бывает после отката — его тоже надо довезти до сайта.</p>`
+        : '<p>Изменений нет — на сайте уже актуальная версия.</p>'}
       ${errs.length? `<h4 style="color:var(--accent)">Ошибки — публикация не пойдёт</h4>${errs.map(p=>`<p>${p.n}: ${p.msg}</p>`).join('')}`:''}
       ${warns.length? `<h4>Замечания — ${warns.length}, публиковать можно</h4>${warns.slice(0,8).map(p=>`<p>${p.n}: ${p.msg}</p>`).join('')}${warns.length>8?`<p>…и ещё ${warns.length-8}</p>`:''}`:''}
       <h4>Подпись к правке</h4><input id="msg" value="Правки через CMS">
       <div id="log" style="margin-top:14px"></div>
     </div>
-    <footer><button class="btn" data-close>Отмена</button><button class="btn pri" id="go" ${errs.length||!ch.files.length?'disabled':''}>Опубликовать</button></footer></div>`;
+    <footer><button class="btn" data-close>Отмена</button><button class="btn pri" id="go" ${errs.length||(!ch.files.length&&!ch.ahead)?'disabled':''}>Опубликовать</button></footer></div>`;
   v.onclick=e=>{ if(e.target===v||e.target.dataset.close!==undefined) v.remove(); };
   document.body.appendChild(v);
   $('#go',v).onclick=async()=>{
