@@ -757,8 +757,9 @@ const srv = createServer(async (req, res) => {
       const { hash } = JSON.parse((await body(req)).toString('utf8'));
       if (!/^[0-9a-f]{6,40}$/.test(hash || '')) return json(res, 400, { error: 'Неверная версия.' });
       const dirty = await git('status', '--porcelain');
-      if (dirty.out.split('\n').filter((l) => l.trim() && !l.startsWith('??')).length)
-        return json(res, 400, { error: 'Есть несохранённые правки. Сначала сохрани или отмени их.' });
+      const pend = dirty.out.split('\n').filter((l) => l.trim() && !l.startsWith('??')).map((l) => l.slice(3).trim());
+      if (pend.length)
+        return json(res, 400, { error: 'Сначала сохрани или отмени правки в: ' + pend.slice(0, 4).join(', ') + (pend.length > 4 ? ` и ещё ${pend.length - 4}` : '') + '.' });
       const r = await git('revert', '--no-edit', hash);
       if (r.code !== 0) {
         await git('revert', '--abort');
@@ -829,7 +830,14 @@ const srv = createServer(async (req, res) => {
       const p = validate();
       if (p.some((x) => x.lvl === 'err')) { steps.push({ name: 'Проверка', ok: false, out: p.filter((x) => x.lvl === 'err').map((x) => x.msg).join('\n') }); return json(res, 200, { ok: false, steps, problems: p }); }
       steps.push({ name: 'Проверка', ok: true, out: `замечаний: ${p.length}` });
-      const add = await git('add', '--', 'index.html', 'portfolio.html', 'about.html', 'projects', 'en', 'assets/img', 'sitemap.xml');
+      // Отправляем ВСЁ, что CMS умеет менять. Раньше здесь не было 404.html,
+      // резюме, видео и реестра кейсов — правка этих мест молча не публиковалась,
+      // кнопка отвечала «менять нечего».
+      const add = await git('add', '--',
+        'index.html', 'portfolio.html', 'about.html', '404.html',
+        'projects', 'en', 'content',
+        'assets/img', 'assets/cv', 'assets/vid',
+        'sitemap.xml');
       steps.push({ name: 'Отбор файлов', ok: add.code === 0, out: add.out.slice(-300) });
       const staged = await git('diff', '--cached', '--name-only');
       if (!staged.out.trim()) { steps.push({ name: 'Публикация', ok: true, out: 'Менять нечего — на сайте уже актуальная версия.' }); return json(res, 200, { ok: true, steps, nothing: true }); }
