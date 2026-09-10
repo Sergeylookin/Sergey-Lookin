@@ -34,9 +34,12 @@ jobs:
           mkdir -p _site
           rsync -a \
             --exclude='.git' --exclude='.github' --exclude='node_modules' \
-            --exclude='_site' --exclude='tools' \
+            --exclude='_site' --exclude='tools' --exclude='cms' \
             --exclude='package.json' --exclude='package-lock.json' --exclude='.gitignore' \
             ./ _site/
+      - name: Убедиться, что CMS не попала в публикацию
+        run: |
+          test ! -e _site/cms || { echo 'ОШИБКА: cms/ оказалась в публикуемой папке'; exit 1; }
       - uses: actions/configure-pages@v5
         with:
           enablement: true          # auto-switch Pages source to "GitHub Actions"

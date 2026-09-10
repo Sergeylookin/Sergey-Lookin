@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CMS · Портфолио</title>
+<style>
+:root{
+  --bg:#0b0b0d; --panel:#131316; --line:#26262b; --ink:#e8e8ea; --mute:#8a8a93;
+  --accent:#e2543a; --ok:#4a9d6a; --warn:#c9973f;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --sans:"Inter Tight",Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,textarea{font:inherit;color:var(--ink);background:#0e0e11;border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;resize:vertical}
+input:focus,textarea:focus{outline:0;border-color:#4a4a55}
+.app{display:grid;grid-template-columns:210px minmax(430px,1fr) minmax(380px,44%);height:100vh}
+
+/* ── левая колонка ── */
+.side{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.brand{padding:14px 16px;border-bottom:1px solid var(--line);font:600 13px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.brand small{display:block;color:var(--mute);font-weight:400;letter-spacing:.04em;text-transform:none;margin-top:3px}
+.cases{overflow:auto;flex:1;padding:6px}
+.case{display:block;width:100%;text-align:left;padding:9px 10px;border-radius:6px;color:var(--mute);line-height:1.3}
+.case:hover{background:#1b1b1f;color:var(--ink)}
+.case.on{background:#1f1f24;color:var(--ink)}
+.case b{display:block;font-weight:600;font-size:13px}
+.case span{font:11px var(--mono);opacity:.65}
+.sidefoot{border-top:1px solid var(--line);padding:10px;display:grid;gap:6px}
+
+/* ── центр ── */
+.main{overflow:auto;min-height:0;padding:0 0 80px}
+.bar{position:sticky;top:0;z-index:5;background:rgba(11,11,13,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:11px 20px;display:flex;gap:10px;align-items:center}
+.bar h1{margin:0;font-size:15px;font-weight:600;flex:1}
+.btn{padding:7px 14px;border-radius:6px;border:1px solid var(--line);background:#17171b;font-size:13px}
+.btn:hover{border-color:#43434e}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.pri:hover{filter:brightness(1.1)}
+.btn:disabled{opacity:.4;cursor:default}
+.sec{padding:18px 20px;border-bottom:1px solid var(--line)}
+.sec>h2{margin:0 0 12px;font:600 11px/1 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--mute)}
+.f{margin-bottom:13px}
+.f>label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mute);margin-bottom:5px}
+.i{width:15px;height:15px;border-radius:50%;border:1px solid #3a3a44;color:var(--mute);font:600 10px/13px var(--mono);text-align:center;flex:none}
+.i:hover{border-color:var(--accent);color:var(--accent)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pair .lang{font:10px var(--mono);color:#5c5c66;letter-spacing:.1em;margin-bottom:3px}
+.opt{color:#5c5c66}
+
+/* ── медиа ── */
+.media{display:grid;gap:8px}
+.row-m{border:1px solid var(--line);border-radius:8px;padding:9px;background:#0e0e11}
+.row-m .head{display:flex;gap:8px;align-items:center;margin-bottom:7px;font:11px var(--mono);color:var(--mute)}
+.row-m .head b{color:var(--ink);font-weight:600}
+.row-m .head .sp{flex:1}
+.mi{display:grid;grid-template-columns:64px 1fr;gap:9px;align-items:start;margin-top:7px}
+.mi img{width:64px;height:44px;object-fit:cover;border-radius:4px;background:#000;border:1px solid var(--line)}
+.x{padding:2px 7px;border-radius:4px;border:1px solid var(--line);font-size:11px;color:var(--mute)}
+.x:hover{border-color:var(--accent);color:var(--accent)}
+.locked{opacity:.55;font:11px var(--mono);color:var(--mute)}
+.drop{border:1px dashed #3a3a44;border-radius:8px;padding:16px;text-align:center;color:var(--mute);font-size:12px}
+.drop.hot{border-color:var(--accent);color:var(--accent)}
+
+/* ── превью ── */
+.prev{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--panel)}
+.prev .bar{border-bottom:1px solid var(--line);background:none;backdrop-filter:none}
+.prev iframe{flex:1;width:100%;border:0;background:#fff}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{padding:5px 11px;font:11px var(--mono);color:var(--mute)}
+.seg button.on{background:#1f1f24;color:var(--ink)}
+
+/* ── проверки ── */
+.checks{padding:12px 20px;display:grid;gap:6px}
+.chk{display:flex;gap:8px;padding:8px 10px;border-radius:6px;font-size:12.5px;line-height:1.45;background:#141418;border-left:2px solid var(--line)}
+.chk.err{border-left-color:var(--accent)} .chk.warn{border-left-color:var(--warn)} .chk.info{border-left-color:#3d5a80}
+.chk .n{font:11px var(--mono);color:var(--mute);flex:none}
+.empty{color:var(--ok);font-size:12.5px;padding:8px 10px}
+
+/* ── модалки ── */
+.veil{position:fixed;inset:0;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:28px;z-index:50}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:760px;width:100%;max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
+.modal header{padding:15px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.modal header h3{margin:0;font-size:15px;flex:1}
+.tabs{display:flex;gap:2px;padding:10px 20px 0}
+.tabs button{padding:7px 13px;border-radius:6px 6px 0 0;font-size:13px;color:var(--mute)}
+.tabs button.on{background:#1b1b20;color:var(--ink)}
+.modal .body{padding:16px 20px 22px;overflow:auto;background:#1b1b20}
+.modal .body h4{margin:16px 0 7px;font-size:13px}
+.modal .body h4:first-child{margin-top:0}
+.modal .body p,.modal .body li{color:#c2c2c8;font-size:13px;line-height:1.62;margin:5px 0}
+.modal .body code{font:12px var(--mono);background:#0e0e11;padding:1px 5px;border-radius:3px}
+.modal footer{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
+.tip{position:fixed;z-index:99;max-width:330px;background:#22222a;border:1px solid #383842;border-radius:7px;padding:9px 11px;font-size:12.5px;line-height:1.5;color:#dcdce2;box-shadow:0 8px 26px rgba(0,0,0,.5)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#22222a;border:1px solid #383842;border-radius:8px;padding:10px 16px;font-size:13px;z-index:80}
+.steps{display:grid;gap:5px;font:12px var(--mono)}
+.steps div{display:flex;gap:8px}
+.steps .m{color:var(--ok)} .steps .b{color:var(--accent)}
+</style></head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">CMS<small id="root">портфолио</small></div>
+    <div class="cases" id="cases"></div>
+    <div class="sidefoot">
+      <button class="btn" id="rules">Правила ↗</button>
+      <button class="btn pri" id="pub">Опубликовать</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="bar"><h1 id="ttl">Загрузка…</h1>
+      <button class="btn" id="revert">Отменить</button>
+      <button class="btn" id="save">Сохранить</button>
+    </div>
+    <div id="form"></div>
+    <div class="sec"><h2>Проверка</h2><div class="checks" id="checks"></div></div>
+  </main>
+
+  <aside class="prev">
+    <div class="bar"><div class="seg" id="lang"><button data-l="ru" class="on">RU</button><button data-l="en">EN</button></div>
+      <div style="flex:1"></div><button class="btn" id="reload">Обновить</button></div>
+    <iframe id="frame" title="превью"></iframe>
+  </aside>
+</div>
+<script>
+const $ = (s,r=document)=>r.querySelector(s), api = (p,o)=>fetch(p,o).then(r=>r.json());
+let MODEL=null, CUR=null, DATA=null, ORIG=null, LANG='ru', DIRTY=false;
+
+const RULES = {
+  'Тексты': `
+<h4>Цифра, за которую отвечаешь</h4>
+<p>Число производства — то, что ты видел сам, — сильнее бизнес-метрики. «Макет шёл 8 итераций, стал 2» защищается одним предложением. «+45% результативности» не защищается ничем.</p>
+<h4>Второй вопрос</h4>
+<p>Перед каждым числом спроси себя: <b>«а как мерил?»</b> Если ответа нет — процент убить. Одна выдуманная цифра обнуляет доверие ко всем остальным на странице, включая настоящие.</p>
+<h4>Чужое подписывать</h4>
+<p>Аудитория продукта, выручка компании, награда фирмы — это не твой результат. Пиши прямо: «компания на этом отрезке…». Разделение «вот моё, вот компании» звучит сильнее, чем присвоение.</p>
+<h4>Факт закрывает боль</h4>
+<p>Сколько болей назвал в «Задаче» — столько исходов от тебя ждут в фактах. Факт, который пересказывает «Решение», — не доказательство, а повтор.</p>
+<h4>Когда спросят «а где цифры?»</h4>
+<p>«Выручку и конверсию компании показать не могу и выдумывать не буду. Вот что мерил сам: … Что на этом сделала компания — публично: …»</p>`,
+  'Картинки': `
+<h4>Как добавить</h4>
+<p>Перетащи <code>.webp</code> в блок медиа. Имя задаётся автоматически по кейсу: <code>duft-5</code>, <code>duft-6</code>. Уменьшенные копии для телефонов (<code>-480</code>, <code>-960</code>, <code>-1440</code>) делаются тут же, ждать деплоя не надо.</p>
+<h4>Только webp</h4>
+<p>Другие форматы сайт не использует. Экспортируй из Figma сразу в webp, ширина оригинала 1920 для полноширинных и 940 для парных.</p>
+<h4>Строка на две картинки</h4>
+<p>Кнопка «+ пара» ставит две картинки в ряд. На телефоне они всё равно встанут одна под другой.</p>
+<h4>Alt обязателен</h4>
+<p>Его читают поисковик и незрячие. Опиши, что на кадре, а не «картинка 3». Пустой alt подсветится в проверке.</p>
+<h4>Видео</h4>
+<p>Блоки с видео помечены замком и не редактируются — их разметка собрана руками, ломать её кнопкой нельзя. Нужно поменять — скажи.</p>`,
+  'Публикация': `
+<h4>Три шага</h4>
+<p><b>1.</b> «Сохранить» — правки ложатся в файлы на диске, сайт ещё прежний.<br>
+<b>2.</b> «Опубликовать» — показывает, что именно уйдёт, и ждёт подтверждения.<br>
+<b>3.</b> Подтверждаешь — уходит на GitHub, сборка идёт сама, через пару минут сайт обновлён.</p>
+<h4>Ничего вводить не надо</h4>
+<p>Логин берётся из твоего GitHub Desktop. Паролей и токенов CMS не хранит.</p>
+<h4>Если что-то пошло не так</h4>
+<p>При ошибке на любом шаге публикация останавливается и файлы не отправляются. Откатить уже опубликованное — в GitHub Desktop: History, правой кнопкой по коммиту, Revert.</p>
+<h4>Кэш</h4>
+<p>GitHub держит страницу до десяти минут. Если правки «не видно» — Ctrl+Shift+R.</p>`,
+  'Чего не делать': `
+<h4>Манифест правится не здесь</h4>
+<p>Главная страница собрана уникальной вёрсткой, а не шаблоном. Через CMS её не открыть — это защита, а не недоделка.</p>
+<h4>Не переименовывай кейсы</h4>
+<p>Номер кейса <code>01…10</code> — это адрес страницы и ссылки «следующий проект». Менять его должен я.</p>
+<h4>Не удаляй картинку, которая где-то стоит</h4>
+<p>Удаление из блока убирает её со страницы, но файл остаётся на диске. Так и надо: он может использоваться в превью портфолио.</p>
+<h4>Папка cms</h4>
+<p>На сайт она не попадает: исключена в сборке и проверяется отдельно. Ничего из неё посетитель не увидит.</p>`,
+};
+
+/* ── подсказки ── */
+let tipEl=null;
+function tip(el,text){
+  hideTip(); tipEl=document.createElement('div'); tipEl.className='tip'; tipEl.innerHTML=text;
+  document.body.appendChild(tipEl);
+  const r=el.getBoundingClientRect(), t=tipEl.getBoundingClientRect();
+  tipEl.style.left=Math.min(r.left, innerWidth-t.width-14)+'px';
+  tipEl.style.top=(r.bottom+7+t.height>innerHeight? r.top-t.height-7 : r.bottom+7)+'px';
+}
+const hideTip=()=>{ if(tipEl){tipEl.remove(); tipEl=null;} };
+addEventListener('scroll',hideTip,true);
+
+function toast(msg,ms=2600){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),ms); }
+
+/* ── список кейсов ── */
+async function boot(){
+  MODEL = await api('/api/model');
+  $('#cases').innerHTML = MODEL.cases.map(c=>
+    `<button class="case" data-n="${c.n}"><b>${c.n} · ${c.title||'—'}</b><span>${c.year||''} · ${c.role||''}</span></button>`).join('');
+  $('#cases').onclick = e=>{ const b=e.target.closest('.case'); if(b) open(b.dataset.n); };
+  open(MODEL.cases[0].n);
+}
+
+async function open(n){
+  if(DIRTY && !confirm('Есть несохранённые правки. Уйти и потерять их?')) return;
+  CUR=n; DATA=await api('/api/case/'+n); ORIG=JSON.parse(JSON.stringify(DATA)); DIRTY=false;
+  document.querySelectorAll('.case').forEach(b=>b.classList.toggle('on',b.dataset.n===n));
+  $('#ttl').textContent = `${n} · ${DATA.dict.ru['p.title']||''}`;
+  render(); refreshPreview(); check();
+}
+
+function field(f){
+  const ru=DATA.dict.ru[f.k]??'', en=DATA.dict.en[f.k]??'';
+  const tag=f.kind==='text'?'textarea':'input';
+  const rows=f.kind==='text'?(f.k.startsWith('p.f')||f.k==='p.lead'?2:5):'';
+  const mk=(lang,val)=>`<div><div class="lang">${lang.toUpperCase()}</div><${tag} data-k="${f.k}" data-l="${lang}" ${rows?`rows="${rows}"`:''}>${tag==='textarea'?esc(val):''}</${tag}></div>`;
+  return `<div class="f"><label>${f.label}${f.optional?' <span class="opt">· необязательно</span>':''}
+      <button class="i" data-hint="${esc(f.hint)}">i</button></label>
+    <div class="pair">${mk('ru',ru)}${mk('en',en)}</div></div>`;
+}
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function render(){
+  const groups=[['Шапка',['p.title','p.client','p.role','p.lead']],
+    ['Метрики',['p.m1.v','p.m1.l','p.m2.v','p.m2.l','p.m3.v','p.m3.l']],
+    ['Текст',['p.ov','p.ta','p.so','p.re']],
+    ['Факты',['p.f1','p.f2','p.f3','p.f4','p.f5']],
+    ['Поиск и превью в мессенджерах',['meta.title','meta.description']]];
+  let h=`<div class="sec"><h2>Год</h2><div class="f"><label>Год <button class="i" data-hint="Показывается в трёх местах: шапка кейса, карточка портфолио, таблица на манифесте. Можно диапазон: 2023—2026.">i</button></label><input id="year" value="${esc(DATA.year)}" style="max-width:200px"></div></div>`;
+  for(const [name,keys] of groups){
+    h+=`<div class="sec"><h2>${name}</h2>`+keys.map(k=>{const f=MODEL.fields.find(x=>x.k===k); return f?field(f):'';}).join('')+`</div>`;
+  }
+  h+=`<div class="sec"><h2>Картинки</h2><div class="media" id="media"></div>
+      <div style="display:flex;gap:7px;margin-top:9px"><button class="btn" id="addFull">+ во всю ширину</button><button class="btn" id="addRow">+ пара</button></div></div>`;
+  $('#form').innerHTML=h;
+
+  for(const el of $('#form').querySelectorAll('input[data-k]')) el.value = DATA.dict[el.dataset.l][el.dataset.k] ?? '';
+  $('#form').addEventListener('input',e=>{
+    const t=e.target;
+    if(t.id==='year'){ DATA.year=t.value; mark(); return; }
+    if(t.dataset.k){ DATA.dict[t.dataset.l][t.dataset.k]=t.value; mark(); }
+  });
+  $('#form').addEventListener('click',e=>{
+    const i=e.target.closest('.i'); if(i){ tip(i,i.dataset.hint); e.stopPropagation(); }
+  });
+  $('#addFull').onclick=()=>{ DATA.media.push({type:'full',src:'',alt:''}); mark(); drawMedia(); };
+  $('#addRow').onclick=()=>{ DATA.media.push({type:'row',items:[{src:'',alt:''},{src:'',alt:''}]}); mark(); drawMedia(); };
+  drawMedia();
+}
+document.addEventListener('click',e=>{ if(!e.target.closest('.i')&&!e.target.closest('.tip')) hideTip(); });
+
+function drawMedia(){
+  const box=$('#media');
+  box.innerHTML=DATA.media.map((m,i)=>{
+    if(m.type==='raw') return `<div class="row-m"><div class="head"><b>🔒 видео или особый блок</b><div class="sp"></div><span>не редактируется</span></div><div class="locked">${esc(m.html.slice(0,110))}…</div></div>`;
+    const items=m.type==='row'?m.items:[m];
+    return `<div class="row-m" data-i="${i}">
+      <div class="head"><b>${m.type==='row'?'Пара':'Во всю ширину'}</b><div class="sp"></div>
+        <button class="x" data-act="up" ${i===0?'disabled':''}>↑</button>
+        <button class="x" data-act="down" ${i===DATA.media.length-1?'disabled':''}>↓</button>
+        <button class="x" data-act="del">удалить</button></div>
+      ${items.map((it,j)=>`<div class="mi">
+        <img src="${it.src?'/assets/img/'+it.src+'.webp':''}" alt="">
+        <div><input data-i="${i}" data-j="${j}" data-p="src" value="${esc(it.src)}" placeholder="имя файла без .webp" style="margin-bottom:5px">
+        <input data-i="${i}" data-j="${j}" data-p="alt" value="${esc(it.alt)}" placeholder="alt — что на кадре"></div></div>`).join('')}
+      <div class="drop" data-i="${i}">перетащи webp сюда</div></div>`;
+  }).join('') || '<div class="locked">Картинок нет.</div>';
+
+  box.oninput=e=>{ const t=e.target; if(!t.dataset.p) return;
+    const m=DATA.media[+t.dataset.i]; const it=m.type==='row'?m.items[+t.dataset.j]:m;
+    it[t.dataset.p]=t.value; mark(); };
+  box.onclick=e=>{ const b=e.target.closest('.x'); if(!b) return;
+    const i=+b.closest('.row-m').dataset.i;
+    if(b.dataset.act==='del'){ if(confirm('Убрать этот блок со страницы? Файл картинки останется на диске.')) DATA.media.splice(i,1); }
+    if(b.dataset.act==='up') DATA.media.splice(i-1,0,DATA.media.splice(i,1)[0]);
+    if(b.dataset.act==='down') DATA.media.splice(i+1,0,DATA.media.splice(i,1)[0]);
+    mark(); drawMedia(); };
+  box.querySelectorAll('.drop').forEach(d=>{
+    d.ondragover=e=>{e.preventDefault(); d.classList.add('hot');};
+    d.ondragleave=()=>d.classList.remove('hot');
+    d.ondrop=async e=>{ e.preventDefault(); d.classList.remove('hot');
+      const f=e.dataTransfer.files[0]; if(!f) return;
+      if(!/\.webp$/i.test(f.name)) return toast('Только .webp — экспортируй из Figma в webp.');
+      const slug=(DATA.media.find(m=>m.src)||{}).src||`case-${CUR}`;
+      const stem=slug.replace(/-\d+$/,''); let k=1;
+      const used=new Set(DATA.media.flatMap(m=>m.type==='row'?m.items.map(x=>x.src):[m.src]));
+      while(used.has(`${stem}-${k}`)) k++;
+      const name=`${stem}-${k}`;
+      d.textContent='загружаю…';
+      const r=await fetch('/api/upload?name='+name,{method:'POST',body:f}).then(x=>x.json());
+      if(r.error){ toast(r.error); d.textContent='перетащи webp сюда'; return; }
+      const m=DATA.media[+d.dataset.i];
+      if(m.type==='row'){ const slot=m.items.find(x=>!x.src)||m.items[0]; Object.assign(slot,{src:name,w:r.w,h:r.h}); } else Object.assign(m,{src:name,w:r.w,h:r.h});
+      mark(); drawMedia(); toast(`${name}.webp добавлена, копии: ${r.variants.join(', ')||'не нужны'}`);
+    };
+  });
+}
+
+const mark=()=>{ DIRTY=true; $('#save').classList.add('pri'); };
+
+async function save(){
+  const r=await api('/api/case/'+CUR,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(DATA)});
+  DIRTY=false; $('#save').classList.remove('pri'); ORIG=JSON.parse(JSON.stringify(DATA));
+  drawChecks(r.problems); refreshPreview(); toast('Сохранено на диск. На сайт — кнопкой «Опубликовать».');
+  MODEL=await api('/api/model');
+  document.querySelectorAll('.case').forEach(b=>{ const c=MODEL.cases.find(x=>x.n===b.dataset.n);
+    b.querySelector('b').textContent=`${c.n} · ${c.title||'—'}`; b.querySelector('span').textContent=`${c.year||''} · ${c.role||''}`; });
+}
+async function check(){ drawChecks((await api('/api/validate')).problems); }
+function drawChecks(ps){
+  const mine=(ps||[]).filter(p=>p.n===CUR), other=(ps||[]).length-mine.length;
+  $('#checks').innerHTML = (mine.length? mine.map(p=>`<div class="chk ${p.lvl}"><span class="n">${p.n}</span><span>${p.msg}</span></div>`).join('')
+    : '<div class="empty">В этом кейсе замечаний нет.</div>')
+    + (other? `<div class="chk info"><span class="n">···</span><span>Ещё ${other} замечани${other%10===1&&other%100!==11?'е':'й'} в других кейсах — покажутся при публикации.</span></div>`:'');
+}
+
+function refreshPreview(){ const u=(LANG==='en'?'/en':'')+`/projects/${CUR}.html?t=`+Date.now(); $('#frame').src=u; }
+$('#lang').onclick=e=>{ const b=e.target.closest('button'); if(!b) return;
+  LANG=b.dataset.l; $('#lang').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); refreshPreview(); };
+$('#reload').onclick=refreshPreview;
+$('#save').onclick=save;
+$('#revert').onclick=()=>{ if(confirm('Вернуть поля к последнему сохранению?')){ DATA=JSON.parse(JSON.stringify(ORIG)); DIRTY=false; render(); } };
+addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='s'){ e.preventDefault(); save(); } });
+addEventListener('beforeunload',e=>{ if(DIRTY){ e.preventDefault(); e.returnValue=''; } });
+
+/* ── правила ── */
+$('#rules').onclick=()=>{
+  const names=Object.keys(RULES);
+  const v=document.createElement('div'); v.className='veil';
+  v.innerHTML=`<div class="modal"><header><h3>Правила</h3><button class="btn" data-close>Закрыть</button></header>
+    <div class="tabs">${names.map((n,i)=>`<button data-t="${i}" class="${i?'':'on'}">${n}</button>`).join('')}</div>
+    <div class="body" id="rbody">${RULES[names[0]]}</div></div>`;
+  v.onclick=e=>{ if(e.target===v||e.target.dataset.close!==undefined) v.remove();
+    const t=e.target.closest('[data-t]'); if(t){ v.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===t)); $('#rbody',v).innerHTML=RULES[names[+t.dataset.t]]; } };
+  document.body.appendChild(v);
+};
+
+/* ── публикация ── */
+$('#pub').onclick=async()=>{
+  if(DIRTY && !confirm('Есть несохранённые правки — они не уйдут. Сначала «Сохранить»?\n\nOK — публиковать без них.')) return;
+  const [ch,val]=await Promise.all([api('/api/changes'),api('/api/validate')]);
+  const errs=val.problems.filter(p=>p.lvl==='err'), warns=val.problems.filter(p=>p.lvl!=='err');
+  const v=document.createElement('div'); v.className='veil';
+  v.innerHTML=`<div class="modal"><header><h3>Опубликовать на сайт</h3><button class="btn" data-close>Отмена</button></header>
+    <div class="body">
+      <h4>Что уйдёт — ${ch.files.length} файл(ов)</h4>
+      ${ch.files.length? `<div class="steps">${ch.files.map(f=>`<div>${esc(f)}</div>`).join('')}</div>` : '<p>Изменений нет — на сайте уже актуальная версия.</p>'}
+      ${errs.length? `<h4 style="color:var(--accent)">Ошибки — публикация не пойдёт</h4>${errs.map(p=>`<p>${p.n}: ${p.msg}</p>`).join('')}`:''}
+      ${warns.length? `<h4>Замечания — ${warns.length}, публиковать можно</h4>${warns.slice(0,8).map(p=>`<p>${p.n}: ${p.msg}</p>`).join('')}${warns.length>8?`<p>…и ещё ${warns.length-8}</p>`:''}`:''}
+      <h4>Подпись к правке</h4><input id="msg" value="Правки через CMS">
+      <div id="log" style="margin-top:14px"></div>
+    </div>
+    <footer><button class="btn" data-close>Отмена</button><button class="btn pri" id="go" ${errs.length||!ch.files.length?'disabled':''}>Опубликовать</button></footer></div>`;
+  v.onclick=e=>{ if(e.target===v||e.target.dataset.close!==undefined) v.remove(); };
+  document.body.appendChild(v);
+  $('#go',v).onclick=async()=>{
+    const go=$('#go',v); go.disabled=true; go.textContent='публикую…';
+    $('#log',v).innerHTML='<div class="steps"><div>сборка…</div></div>';
+    const r=await api('/api/publish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:$('#msg',v).value})});
+    $('#log',v).innerHTML=`<div class="steps">${r.steps.map(s=>`<div><span class="${s.ok?'m':'b'}">${s.ok?'✓':'✕'}</span><span>${esc(s.name)}${s.out?' — '+esc(s.out.split('\n').slice(-1)[0].slice(0,90)):''}</span></div>`).join('')}</div>`;
+    if(r.published){ go.textContent='Готово'; $('#log',v).insertAdjacentHTML('beforeend',
+      '<p style="margin-top:10px">Отправлено. Сборка на GitHub идёт сама — сайт обновится за пару минут. Если правок не видно: Ctrl+Shift+R.</p>'); }
+    else if(r.nothing){ go.textContent='Нечего публиковать'; }
+    else { go.disabled=false; go.textContent='Повторить'; }
+    api('/api/changes');
+  };
+};
+
+boot();
+</script></body></html>
