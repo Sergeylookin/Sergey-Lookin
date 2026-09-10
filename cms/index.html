@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CMS · Портфолио</title>
+<!-- Иконка вкладки. Без неё браузер просил /favicon.ico и получал 404 —
+     мусор в консоли, среди которого потом не видно настоящих ошибок. -->
+<link rel="icon" href="/assets/favicon-dark.svg" type="image/svg+xml">
 <style>
 :root{
   --bg:#0b0b0d; --panel:#131316; --line:#26262b; --ink:#e8e8ea; --mute:#8a8a93;
@@ -1114,14 +1117,27 @@ const unmark=()=>{ DIRTY=false; const b=$('#save'); b.classList.remove('pri'); b
 /* ── 3. Черновик в браузере ────────────────────────────────────────────
    Правки живут в памяти вкладки: перезагрузил или закрыл — потерял.
    Пишем их себе в браузер и предлагаем вернуть при следующем открытии. */
-const draftKey=()=> MODE==='case' ? 'draft:case:'+CUR : MODE==='page' ? 'draft:page:'+PAGE.file : null;
+const draftKey=()=> MODE==='case' ? 'draft:case:'+CUR
+  : MODE==='page' ? 'draft:page:'+PAGE.file
+  : MODE==='shell' ? 'draft:shell'
+  : MODE==='cont' ? 'draft:contacts' : null;
+// Что именно записываем в черновик — по разделу. Раньше здесь были только
+// кейсы и страницы, поэтому правки шапки и контактов при обрыве терялись
+// молча: восстанавливать было нечего.
+function draftPayload(){
+  if(MODE==='case') return {dict:DATA.dict,year:DATA.year,media:DATA.media};
+  if(MODE==='page') return {dict:PAGE.dict};
+  if(MODE==='shell') return {ru:SHELL.ru,en:SHELL.en};
+  if(MODE==='cont') return {items:CONT.items,extra:CONT.extra};
+  return null;
+}
 let draftTimer=null;
 function saveDraft(){
   const k=draftKey(); if(!k) return;
   clearTimeout(draftTimer);
   draftTimer=setTimeout(()=>{
     try{
-      const payload = MODE==='case' ? {dict:DATA.dict,year:DATA.year,media:DATA.media} : {dict:PAGE.dict};
+      const payload = draftPayload(); if(!payload) return;
       localStorage.setItem(k, JSON.stringify({at:Date.now(), payload}));
     }catch(e){}
   }, 1200);
@@ -1134,8 +1150,7 @@ function readDraft(){
 function offerDraft(){
   const bar=$('#draftBar'); bar.hidden=true;
   const d=readDraft(); if(!d) return;
-  const cur = MODE==='case' ? JSON.stringify({dict:DATA.dict,year:DATA.year,media:DATA.media}) : JSON.stringify({dict:PAGE.dict});
-  if(JSON.stringify(d.payload)===cur){ dropDraft(); return; }   // черновик совпал с файлом
+  if(JSON.stringify(d.payload)===JSON.stringify(draftPayload())){ dropDraft(); return; }   // черновик совпал с файлом
   const when=new Date(d.at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   bar.hidden=false;
   bar.innerHTML='<b>Есть несохранённый черновик от '+when+'.</b> Правки не попали в файлы.'
@@ -1144,7 +1159,9 @@ function offerDraft(){
     const a=(e.target.dataset||{}).d; if(!a) return;
     if(a==='use'){
       if(MODE==='case'){ DATA.dict=d.payload.dict; DATA.year=d.payload.year; DATA.media=d.payload.media; render(); }
-      else { PAGE.dict=d.payload.dict; renderPage(); }
+      else if(MODE==='page'){ PAGE.dict=d.payload.dict; renderPage(); }
+      else if(MODE==='shell'){ SHELL.ru=d.payload.ru; SHELL.en=d.payload.en; renderShell(); }
+      else if(MODE==='cont'){ CONT.items=d.payload.items; CONT.extra=d.payload.extra; renderContacts(); }
       mark(); toast('Черновик восстановлен. Проверь и нажми «Сохранить».',4000);
     } else { dropDraft(); }
     bar.hidden=true;
@@ -1256,6 +1273,7 @@ async function openShell(){
   SHELL=await api('/api/shell');
   ORIG=JSON.parse(JSON.stringify({ru:SHELL.ru,en:SHELL.en}));
   renderShell();
+  offerDraft();
   $('#frame').src='/?t='+Date.now();
 }
 function renderShell(){
@@ -1299,6 +1317,7 @@ async function openContacts(){
   CONT.__extra0=[...(CONT.extra||[])];
   ORIG=JSON.parse(JSON.stringify(CONT.items));
   renderContacts();
+  offerDraft();
   $('#frame').src='/about.html?t='+Date.now();
 }
 function renderContacts(){
