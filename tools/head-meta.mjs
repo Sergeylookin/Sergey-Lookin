@@ -5,6 +5,10 @@
 //
 // Пустое или отсутствующее значение — тег не трогаем (так ведёт себя и CMS).
 
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+
 const attr = (v) => String(v).replace(/"/g, '&quot;');
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -24,6 +28,21 @@ export function syncHeadMeta(html, { title, description } = {}) {
     for (const sel of DESC_TAGS) html = setContent(html, sel, description);
   }
   return html;
+}
+
+// Картинка превью. Telegram и соцсети кэшируют её по адресу: замени файл под тем же
+// именем, и старая картинка будет висеть в превью неделями. Поэтому к адресу дописывается
+// отпечаток содержимого (?v=<8 hex sha1>): новая картинка = новый адрес, старая = тот же.
+// Внешние адреса и файлы, которых нет на диске, не трогаем.
+const IMG_RE = /(<meta (?:property="og:image"|name="twitter:image") content="[^"]*?\/?(assets\/[^"?]+))(?:\?v=[^"]*)?(")/g;
+
+export function bustPreviewImages(html, root) {
+  return html.replace(IMG_RE, (m, head, rel, tail) => {
+    const file = resolve(root, rel);
+    if (!existsSync(file)) return m;
+    const v = createHash('sha1').update(readFileSync(file)).digest('hex').slice(0, 8);
+    return `${head}?v=${v}${tail}`;
+  });
 }
 
 // То же, но значения берутся из ru-словаря самой страницы (<script id="i18n-data">).

@@ -21,7 +21,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { syncHeadFromDict } from './head-meta.mjs';
+import { syncHeadFromDict, bustPreviewImages } from './head-meta.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = process.argv.includes('--check');
@@ -177,7 +177,7 @@ for (const [file, cfg] of Object.entries(PAGES)) {
   const path = resolve(ROOT, file);
   const src = readFileSync(path, 'utf8');
   const r = regenerate(src, cfg);
-  const html = syncHeadFromDict(bustVideos(r.html));
+  const html = bustPreviewImages(syncHeadFromDict(bustVideos(r.html)), ROOT);
   const changed = html !== src;
   const warnings = r.warnings;
   allWarnings.push(...warnings.map((w) => `${file}: ${w}`), ...checkSharedI18n(html, file), ...checkI18nCoverage(html, file));
@@ -192,7 +192,7 @@ for (const [file, cfg] of Object.entries(PAGES)) {
 for (const file of ['index.html', '404.html']) {
   const path = resolve(ROOT, file);
   const src = readFileSync(path, 'utf8');
-  const html = syncHeadFromDict(bustVideos(src.replace(/\?v=\d+/g, `?v=${VERSION}`)));
+  const html = bustPreviewImages(syncHeadFromDict(bustVideos(src.replace(/\?v=\d+/g, `?v=${VERSION}`))), ROOT);
   allWarnings.push(...checkSharedI18n(html, file).filter((w) => !w.includes('no i18n dict')), ...checkI18nCoverage(html, file));
   if (html !== src) { anyChange = true; if (!CHECK) { writeFileSync(path, html); console.log('written ', file, '(version + head)'); } else console.log('DRIFT   ', file); }
   else console.log('ok      ', file);
