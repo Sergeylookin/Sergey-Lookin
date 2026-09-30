@@ -204,7 +204,8 @@ const queue = (rel, next) => {
 // ── portfolio.html: сетка + ключи cN.* ──────────────────────────────────────
 {
   let html = strip(rd('portfolio.html'));
-  const version = (html.match(/\?v=(\d+)/) || [, '188'])[1];
+  // версия — у ассетов сайта; у картинки превью в <head> свой ?v= (отпечаток файла)
+  const version = (html.match(/\.min\.css\?v=(\d+)/) || [, '188'])[1];
   const grid = '\n  ' + live.map((c, i) => card(c, i + 1, data[c.id]).replace('?v=VERSION', '?v=' + version)).join('\n  ') + '\n';
   // комментарий-инструкцию в начале сетки сохраняем: он объясняет, как поставить видео
   const lead = (html.match(/<main class="cases wrap">\s*(<!--[\s\S]*?-->)/) || [])[1];
