@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve, join, extname } from 'node:path';
 import { execFile } from 'node:child_process';
 import { load } from 'cheerio';
+import { syncHeadMeta } from '../tools/head-meta.mjs';
 
 // sharp кэширует открытые файлы, и на Windows из-за этого не удаётся ни
 // переименовать, ни перезаписать картинку, которую он недавно читал.
@@ -179,10 +180,11 @@ function savePage(page, payload) {
     html = html.replace(new RegExp(`(data-i18n-aria="${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*aria-label=")[^"]*(")`),
       (_m, a, b) => a + String(dict.ru[k]).replace(/"/g, '&quot;') + b);
   }
-  if (changed.ru.includes('meta.title')) html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${dict.ru['meta.title']}</title>`);
-  if (changed.ru.includes('meta.description')) {
-    html = html.replace(/(<meta name="description" content=")[^"]*(")/, `$1${String(dict.ru['meta.description']).replace(/"/g, '&quot;')}$2`);
-  }
+  // превью ссылки: <title>, description, og:*, twitter:* — одним текстом (tools/head-meta.mjs)
+  html = syncHeadMeta(html, {
+    title: changed.ru.includes('meta.title') ? dict.ru['meta.title'] : null,
+    description: changed.ru.includes('meta.description') ? dict.ru['meta.description'] : null,
+  });
   html = writeDict(html, dict);
 
   const tmp = p + '.tmp';
@@ -501,11 +503,8 @@ function saveCase(n, payload) {
     if (next) html = next;
   }
 
-  // <title> и <meta name="description"> — из meta.* ru
-  if (dict.ru['meta.title']) html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${dict.ru['meta.title']}</title>`);
-  if (dict.ru['meta.description']) {
-    html = html.replace(/(<meta name="description" content=")[^"]*(")/, `$1${dict.ru['meta.description'].replace(/"/g, '&quot;')}$2`);
-  }
+  // превью ссылки: <title>, description, og:*, twitter:* — из meta.* ru (tools/head-meta.mjs)
+  html = syncHeadMeta(html, { title: dict.ru['meta.title'], description: dict.ru['meta.description'] });
 
   // год — обычный текст, ключа i18n у него нет
   html = html.replace(/(data-i18n="f\.year">[^<]*<\/div><div class="v">)[^<]*(<\/div>)/, `$1${payload.year}$2`);
@@ -644,7 +643,7 @@ const srv = createServer(async (req, res) => {
         d[lang]['meta.title'] = title + ' · Сергей Лукин';
       }
       for (const k of EDITABLE) { const nx = replaceInner(html, k, d.ru[k] ?? ''); if (nx) html = nx; }
-      html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${d.ru['meta.title']}</title>`);
+      html = syncHeadMeta(html, { title: d.ru['meta.title'] });
       html = html.replace(/(data-i18n="f\.year">[^<]*<\/div><div class="v">)[^<]*(<\/div>)/, `$1$2`);
       const md = replaceRegion(html, '<section class="pcase__full pcase__media"', '\n');
       if (md) html = md;

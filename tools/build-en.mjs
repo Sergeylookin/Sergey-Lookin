@@ -87,9 +87,12 @@ function makeEn(ruHtml, dict, ruUrl, enUrl, isProject) {
     $('meta[property="og:description"]').attr('content', desc);
     $('meta[name="twitter:description"]').attr('content', desc);
   }
+  // тот же набор тегов, что у русских страниц в tools/head-meta.mjs
   if (title) {
     $('meta[property="og:title"]').attr('content', title);
     $('meta[name="twitter:title"]').attr('content', title);
+    $('meta[property="og:image:alt"]').attr('content', title);
+    $('meta[name="twitter:image:alt"]').attr('content', title);
   }
   $('meta[property="og:locale"]').attr('content', 'en_US');
   $('meta[property="og:url"]').attr('content', enUrl);

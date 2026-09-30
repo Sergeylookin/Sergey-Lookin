@@ -6,9 +6,11 @@
 // aria-current, etc). This script regenerates ONLY those four regions in place from
 // the config + templates below, so they can never diverge again.
 //
-// WHAT IT DOES NOT TOUch: <!doctype>, <html>, <head>'s title/description/OG/twitter,
-// the skip link, the entire <main>, and the i18n <script> — all preserved byte-for-byte.
-// index.html and 404.html keep their bespoke shells; this script only unifies their ?v=.
+// WHAT IT DOES NOT TOUch: <!doctype>, <html>, the skip link, the entire <main>, and the
+// i18n <script> — all preserved byte-for-byte. <head>'s title/description/OG/twitter are
+// re-synced from the page's own meta.title/meta.description (tools/head-meta.mjs), so the
+// link preview can't drift from the dictionary — on every page, index and 404 included.
+// index.html and 404.html keep their bespoke shells; otherwise only their ?v= is unified.
 //
 // Usage:  node tools/build-pages.mjs          # regenerate + report
 //         node tools/build-pages.mjs --check  # verify only, non-zero exit on drift
@@ -19,6 +21,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { syncHeadFromDict } from './head-meta.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = process.argv.includes('--check');
@@ -174,7 +177,7 @@ for (const [file, cfg] of Object.entries(PAGES)) {
   const path = resolve(ROOT, file);
   const src = readFileSync(path, 'utf8');
   const r = regenerate(src, cfg);
-  const html = bustVideos(r.html);
+  const html = syncHeadFromDict(bustVideos(r.html));
   const changed = html !== src;
   const warnings = r.warnings;
   allWarnings.push(...warnings.map((w) => `${file}: ${w}`), ...checkSharedI18n(html, file), ...checkI18nCoverage(html, file));
@@ -189,9 +192,9 @@ for (const [file, cfg] of Object.entries(PAGES)) {
 for (const file of ['index.html', '404.html']) {
   const path = resolve(ROOT, file);
   const src = readFileSync(path, 'utf8');
-  const html = bustVideos(src.replace(/\?v=\d+/g, `?v=${VERSION}`));
+  const html = syncHeadFromDict(bustVideos(src.replace(/\?v=\d+/g, `?v=${VERSION}`)));
   allWarnings.push(...checkSharedI18n(html, file).filter((w) => !w.includes('no i18n dict')), ...checkI18nCoverage(html, file));
-  if (html !== src) { anyChange = true; if (!CHECK) { writeFileSync(path, html); console.log('written ', file, '(version only)'); } else console.log('DRIFT   ', file); }
+  if (html !== src) { anyChange = true; if (!CHECK) { writeFileSync(path, html); console.log('written ', file, '(version + head)'); } else console.log('DRIFT   ', file); }
   else console.log('ok      ', file);
 }
 
