@@ -2396,7 +2396,8 @@ function drawWidth(box){
     + '<button class="i" data-hint="Рамка текста, как в Figma: уже — строки короче и их больше, шире — наоборот. Мерится в знаках, поэтому одинаково работает на любом экране. Шире своей колонки текст не станет. На телефоне рамка обычно шире экрана и ничего не меняет.">i</button>';
   const range=box.querySelector('input'), wv=box.querySelector('.wv');
   const put=v=>{
-    if(v) map[key]=v; else delete map[key];
+    // сброс — пустое значение, а не удаление ключа: серверу надо знать, что рамку сняли
+    map[key]=v||'';
     Live.setWidths(map); Live.setWidth(key, v);
     mark();
   };
