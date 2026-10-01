@@ -222,7 +222,9 @@ function loadPage(page) {
     const tag = el.tagName ? el.tagName.toLowerCase() : '';
     if (k && !seen.has(k) && editableKey(k) && k in (dict.ru || {})) {
       seen.add(k);
-      home(el).fields.push({ k, label: labels[k] || fallbackLabel(tag) });
+      // auto — название подобрано по типу тега, а не по правилу: значит, для этой
+      // надписи правила в cms/labels.mjs ещё нет (самопроверка это подсветит)
+      home(el).fields.push(labels[k] ? { k, label: labels[k] } : { k, label: fallbackLabel(tag), auto: true });
       // поле-атрибут ставим сразу за надписью, к которой оно относится
       for (const r of attrRules) {
         if (!$el.is(r.sel)) continue;
@@ -943,10 +945,12 @@ async function gitBlob(rel) {
 // Проверки перед публикацией — ровно те ошибки, что мы вычищали руками.
 function validate() {
   const problems = [];
-  const roles = {}, years = {};
+  const roles = {}, years = {}, tableRoles = {};
   for (const n of caseIds()) {
     const c = loadCase(n);
     roles[n] = c.dict.ru['p.role']; years[n] = c.year;
+    // у строки таблицы может быть своя, более короткая роль — это не разнобой
+    tableRoles[n] = c.dict.ru['works.role'] || c.dict.ru['p.role'];
     const ta = String(c.dict.ru['p.ta'] || '');
     const facts = [1, 2, 3, 4, 5].map((i) => c.dict.ru[`p.f${i}`]).filter(Boolean);
     for (const [k, v] of Object.entries(c.dict.ru)) {
@@ -978,7 +982,7 @@ function validate() {
     const card = pf(`[data-i18n="c${i}.role"]`).first().text().trim();
     const row = ix(`[data-i18n="wk.${i}.r"]`).first().text().trim();
     if (card && roles[n] && card !== roles[n]) problems.push({ lvl: 'warn', n, msg: `Роль «${roles[n]}» в кейсе против «${card}» в карточке портфолио.` });
-    if (row && roles[n] && row !== roles[n]) problems.push({ lvl: 'info', n, msg: `Роль «${roles[n]}» в кейсе против «${row}» в таблице манифеста.` });
+    if (row && tableRoles[n] && row !== tableRoles[n]) problems.push({ lvl: 'info', n, msg: `Роль «${tableRoles[n]}» в кейсе против «${row}» в таблице манифеста.` });
   }
   return problems;
 }

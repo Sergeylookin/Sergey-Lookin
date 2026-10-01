@@ -279,7 +279,19 @@ g('Контакты и ссылки');
 g('Проверки содержания');
 const probs = (await get('/api/validate')).problems || [];
 ok('проверки работают', Array.isArray(probs), `замечаний: ${probs.length}`);
-ok('ловит расхождение ролей', probs.some((p) => /Роль/.test(p.msg)), probs.find((p) => /Роль/.test(p.msg))?.msg?.slice(0, 60) || 'не найдено');
+{
+  // Подсовываем процент без базы и смотрим, что проверка его увидела. Раньше тест
+  // опирался на расхождение ролей, которое случайно было на сайте, — исчезло бы
+  // оно, и тест стал бы красным на исправном сайте.
+  const was = await get('/api/case/08');
+  const bad = JSON.parse(JSON.stringify(was));
+  bad.dict.ru['p.ov'] = (bad.dict.ru['p.ov'] || '') + ' Рост +45%.';
+  const saved = await post('/api/case/08', bad);
+  ok('ловит процент без базы', (saved.problems || []).some((p) => p.n === '08' && /процент без базы/.test(p.msg)));
+  await post('/api/case/08', was);
+  restore('projects/08.html', 'en/', 'index.html', 'portfolio.html');
+  ok('после проверки кейс вернулся', dirty(['projects/', 'en/', 'index.html', 'portfolio.html']) === 0);
+}
 
 g('История');
 const hist = await get('/api/history');
@@ -287,6 +299,240 @@ ok('история читается', hist.items?.length > 5, `${hist.items?.len
 ok('видно неопубликованное', typeof hist.unpublished === 'number', `${hist.unpublished}`);
 const badRev = await post('/api/history/revert', { hash: 'zzzz' });
 ok('мусорная версия отклоняется', !!badRev.error);
+
+// ─────────────────────────────────────────────────────────────────────────
+// Конструктор. Каждая операция, которая пишет в файлы сайта, проверяется кругом
+// «сделал — вернул»: после него файл обязан совпасть с исходным байт в байт.
+const rd = (f) => readFileSync(resolve(ROOT, f), 'utf8');
+const SITE_PATHS = ['index.html', 'about.html', 'portfolio.html', '404.html', 'projects/', 'en/', 'content/', 'sitemap.xml'];
+
+g('Модель страницы');
+{
+  const ix = await get('/api/page/index.html');
+  const real = (ix.screens || []).filter((s) => !s.id.startsWith('@'));
+  ok('главная разложена по экранам', real.length === 12, real.map((s) => s.id).join(' '));
+  ok('экраны идут в порядке сайта', real[0]?.id === 'hero' && real[real.length - 1]?.id === 'cta');
+  const all = [];
+  for (const f of ['index.html', 'about.html', 'portfolio.html', '404.html']) {
+    const m = f === 'index.html' ? ix : await get('/api/page/' + f);
+    for (const sc of m.screens) for (const fl of sc.fields) all.push({ f, ...fl });
+  }
+  const coded = all.filter((x) => !x.label || x.label === x.k);
+  ok('ни одно поле не подписано кодом', coded.length === 0, coded.slice(0, 3).map((x) => x.k).join(', '));
+  // Новая надпись в вёрстке без правила в cms/labels.mjs получит название по типу
+  // тега («Надпись», «Абзац»). Работать будет, но человек не поймёт, что это.
+  const auto = all.filter((x) => x.auto);
+  ok('у каждой надписи своё название по месту', auto.length === 0, auto.slice(0, 4).map((x) => x.f + ':' + x.k).join(', '));
+  ok('подсказки тем менторства отдаются полями', Object.keys(ix.attrs || {}).length === 20, `${Object.keys(ix.attrs || {}).length} шт.`);
+  const ab = await get('/api/page/about.html');
+  ok('у «Обо мне» есть портрет', ab.images?.some((i) => i.name === 'about' && i.exists));
+  ok('превью для мессенджеров на месте', ix.og?.w === 1200 && ix.og?.h === 630, ix.og ? `${ix.og.w}×${ix.og.h}` : 'нет');
+  // холостое сохранение вместе с подсказками и рамками
+  for (const f of ['index.html', 'about.html']) {
+    const m = f === 'index.html' ? ix : ab;
+    await post('/api/page/' + f, { dict: m.dict, attrs: m.attrs, widths: m.widths });
+  }
+  ok('холостое сохранение с подсказками и рамками', dirty(SITE_PATHS) === 0);
+}
+
+g('Экраны главной');
+{
+  const base = rd('index.html') + rd('en/index.html');
+  const ix = await get('/api/page/index.html');
+  const ids = ix.screens.filter((s) => !s.id.startsWith('@')).map((s) => s.id);
+  const noop = await post('/api/page/index.html/structure', { order: ids, hidden: [] });
+  ok('тот же порядок — ничего не пишется', noop.changed === 0 && dirty(SITE_PATHS) === 0);
+
+  await post('/api/page/index.html/structure', { order: ids, hidden: ['mentor'] });
+  const hid = rd('index.html');
+  ok('скрытый экран убран в <template>', /<template data-off="mentor"><section id="mentor"/.test(hid));
+  ok('номера глав пересчитаны', /<b>05<\/b> → <span data-i18n="aud\.kicker"/.test(hid), (hid.match(/<b>(\d\d)<\/b> → <span data-i18n="aud\.kicker"/) || [])[1]);
+  ok('английская версия скрыла тот же экран', /<template data-off="mentor">/.test(rd('en/index.html')));
+  ok('тексты скрытого экрана остались в файле', hid.includes('data-i18n="mentor.title"'));
+  const m2 = await get('/api/page/index.html');
+  ok('редактор видит экран как скрытый', m2.screens.find((s) => s.id === 'mentor')?.hidden === true);
+  await post('/api/page/index.html/structure', { order: ids, hidden: [] });
+  ok('вернул экран — файл байт в байт как был', rd('index.html') + rd('en/index.html') === base);
+
+  const moved = ids.filter((x) => x !== 'audience');
+  moved.splice(moved.indexOf('evaluation'), 0, 'audience');
+  await post('/api/page/index.html/structure', { order: moved, hidden: [] });
+  const mv = rd('index.html');
+  ok('перестановка меняет порядок', mv.indexOf('<section id="audience"') < mv.indexOf('<section id="evaluation"'));
+  const nums = [...mv.matchAll(/sec-aside--right[^"]*">\s*<b>(\d\d)<\/b>/g)].map((x) => x[1]).join(',');
+  ok('номера идут подряд', nums === '00,01,02,03,04,05,06,07,08,09', nums);
+  await post('/api/page/index.html/structure', { order: ids, hidden: [] });
+  ok('вернул порядок — файл байт в байт как был', rd('index.html') + rd('en/index.html') === base);
+
+  const e1 = await post('/api/page/index.html/structure', { order: ids, hidden: ['hero'] });
+  ok('первый экран скрыть нельзя', !!e1.error, e1.error || '');
+  const e2 = await post('/api/page/index.html/structure', { order: [...ids].reverse(), hidden: [] });
+  ok('первый экран и контакты не двигаются', !!e2.error);
+  const e3 = await post('/api/page/index.html/structure', { order: ids.slice(1), hidden: [] });
+  ok('неполный список экранов отклоняется', !!e3.error);
+  ok('отказы ничего не записали', dirty(SITE_PATHS) === 0);
+  if (dirty(SITE_PATHS)) restore('index.html', 'en/');
+}
+
+g('Рамки текста и подсказки');
+{
+  const base = rd('about.html') + rd('en/about.html');
+  const tagOf = (f) => (rd(f).match(/<p[^>]*data-i18n="ab\.p3"[^>]*>/) || [''])[0];
+  await post('/api/page/about.html', { dict: {}, widths: { 'ab.p3': '34ch' } });
+  ok('ширина рамки записана в страницу', /max-width:34ch!important/.test(tagOf('about.html')), tagOf('about.html').slice(0, 90));
+  ok('прежние правила в style сохранены', /transition-delay/.test(tagOf('about.html')));
+  ok('английская версия получила ту же рамку', /max-width:34ch!important/.test(tagOf('en/about.html')));
+  ok('редактор читает ширину обратно', (await get('/api/page/about.html')).widths?.['ab.p3'] === '34ch');
+  await post('/api/page/about.html', { dict: {}, widths: { 'ab.p3': '9000px' } });
+  ok('кривая ширина не записывается', /max-width:34ch!important/.test(tagOf('about.html')));
+  await post('/api/page/about.html', { dict: {}, widths: { 'ab.p3': '' } });
+  ok('сброс рамки — файл байт в байт как был', rd('about.html') + rd('en/about.html') === base);
+
+  const ibase = rd('index.html') + rd('en/index.html');
+  const ix = await get('/api/page/index.html');
+  const id = Object.keys(ix.attrs)[0];
+  const was = ix.attrs[id];
+  await post('/api/page/index.html', { dict: {}, attrs: { [id]: { ru: 'Проба "подсказки" & <текста>', en: was.en } } });
+  const got = (await get('/api/page/index.html')).attrs[id];
+  ok('подсказка темы сохраняется со спецсимволами', got.ru === 'Проба "подсказки" & <текста>', got.ru);
+  ok('второй язык подсказки не тронут', got.en === was.en);
+  ok('разметка не сломана кавычками', rd('index.html').includes('data-desc-ru="Проба &quot;подсказки&quot; &amp; &lt;текста&gt;"'));
+  await post('/api/page/index.html', { dict: {}, attrs: { [id]: was } });
+  ok('вернул подсказку — файл байт в байт как был', rd('index.html') + rd('en/index.html') === ibase);
+  if (dirty(SITE_PATHS)) restore('index.html', 'about.html', 'en/');
+}
+
+g('Видео и обложка');
+{
+  const mp4 = readFileSync(resolve(ROOT, 'assets/vid/runa.mp4'));
+  const snapAll = () => rd('portfolio.html') + rd('index.html') + rd('content/cases.json') + rd('projects/01.html');
+  const base = snapAll();
+
+  // обложка: картинка → видео → картинка
+  const no = await post('/api/case/02/cover', { kind: 'vid' });
+  ok('видео-обложку нельзя включить без файла', !!no.error);
+  const up = await raw('/api/video?slug=rocketwork', mp4);
+  ok('размер кадра читается из самого ролика', up.ok && up.w > 0 && up.h > 0, `${up.w}×${up.h}`);
+  await post('/api/case/02/cover', { kind: 'vid' });
+  ok('карточка в портфолио стала роликом', rd('portfolio.html').includes('assets/vid/rocketwork.mp4'));
+  ok('таблица на главной знает про видео', /data-slug="rocketwork" data-cover="vid"/.test(rd('index.html')));
+  const lib2 = await get('/api/media');
+  ok('видео видно в медиатеке с местом', lib2.videos?.find((v) => v.name === 'rocketwork')?.used?.length === 1);
+  ok('используемое видео удалить нельзя', !!(await post('/api/media/delete-video', { name: 'rocketwork' })).error);
+  await post('/api/case/02/cover', { kind: 'img' });
+  ok('вернул картинку — всё как было', snapAll() === base);
+  ok('лишнее видео удаляется', (await post('/api/media/delete-video', { name: 'rocketwork' })).ok === true);
+
+  // точка кадра
+  await post('/api/case/02/cover', { pos: '30% 40%' });
+  ok('точка кадра попала в таблицу', /data-slug="rocketwork"[^>]*data-pos="30% 40%"/.test(rd('index.html')));
+  ok('кривая точка кадра отклонена', !!(await post('/api/case/02/cover', { pos: 'левее' })).error);
+  await post('/api/case/02/cover', { pos: '' });
+  ok('сброс точки — всё как было', snapAll() === base);
+
+  // видео внутри кейса
+  const v = await raw('/api/video?stem=runa', mp4);
+  ok('ролик кейса получает своё имя', /^runa-v\d+$/.test(v.name || ''), v.name || v.error);
+  const c = await get('/api/case/01');
+  const mediaWas = JSON.stringify(c.media);
+  c.media.push({ type: 'video', video: v.name, poster: 'runa-1', alt: 'Проба "видео"', w: v.w, h: v.h });
+  const saved = await post('/api/case/01', c);
+  const tag = (rd('projects/01.html').match(new RegExp('<video[^>]*><source src="\\.\\./assets/vid/' + v.name + '\\.mp4[^>]*></video>')) || [''])[0];
+  ok('видео-блок записан в страницу', !!tag, tag.slice(0, 80));
+  ok('с постером и размерами кадра', /poster="\.\.\/assets\/img\/runa-1\.webp"/.test(tag) && /width="\d+" height="\d+"/.test(tag));
+  ok('без автозапуска: ролик не качается, пока не виден', /preload="none"/.test(tag) && !/autoplay/.test(tag));
+  ok('описание экранировано', tag.includes('aria-label="Проба &quot;видео&quot;"'));
+  ok('английская страница получила ролик', rd('en/projects/01.html').includes('assets/vid/' + v.name + '.mp4'));
+  const back = (await get('/api/case/01')).media;
+  const vb = back.find((m) => m.type === 'video');
+  ok('редактор читает блок обратно', vb?.video === v.name && vb?.poster === 'runa-1' && vb?.alt === 'Проба "видео"' && vb?.exists);
+  ok('к заполненному видео замечаний нет', !(saved.problems || []).some((p) => p.n === '01' && /идео/.test(p.msg)));
+  // блок без постера — проверка напоминает
+  const c2 = await get('/api/case/01');
+  c2.media.find((m) => m.type === 'video').poster = '';
+  const s2 = await post('/api/case/01', c2);
+  ok('видео без постера — замечание', (s2.problems || []).some((p) => p.n === '01' && /нет постера/.test(p.msg)));
+  // пустые слоты на страницу не пишутся
+  const c3 = await get('/api/case/01');
+  c3.media = c3.media.filter((m) => m.type !== 'video');
+  c3.media.push({ type: 'full', src: '', alt: '' });
+  await post('/api/case/01', c3);
+  ok('пустой слот не даёт битой картинки', !/assets\/img\/\.webp/.test(rd('projects/01.html')));
+  ok('убрал блоки — медиа кейса как было', JSON.stringify((await get('/api/case/01')).media) === mediaWas);
+  ok('тестовый ролик удалён', (await post('/api/media/delete-video', { name: v.name })).ok === true);
+  ok('после видео-тестов сайт как был', snapAll() === base && dirty(SITE_PATHS) === 0);
+  if (dirty(SITE_PATHS)) restore(...SITE_PATHS);
+  for (const n of ['rocketwork', v.name].filter(Boolean)) { const f = resolve(ROOT, 'assets/vid', n + '.mp4'); if (existsSync(f)) rmSync(f, { force: true }); }
+}
+
+g('Превью для мессенджеров');
+{
+  ok('мусор не принимается', !!(await raw('/api/og', Buffer.from('это не картинка'))).error);
+  const sharp = (await import('sharp')).default;
+  const px = Buffer.alloc(1600 * 900 * 3, 40);
+  const png = await sharp(px, { raw: { width: 1600, height: 900, channels: 3 } }).png().toBuffer();
+  const hashOf = () => (rd('index.html').match(/og-cover\.png\?v=([0-9a-f]+)/) || [])[1];
+  const h0 = hashOf();
+  const r = await raw('/api/og', png);
+  ok('любой формат приводится к 1200×630', r.ok && r.w === 1200 && r.h === 630, `${r.w}×${r.h}, было ${r.was}`);
+  ok('об обрезке сказано', r.cropped === true);
+  ok('адрес картинки в страницах сменился', !!hashOf() && hashOf() !== h0, `${h0} → ${hashOf()}`);
+  ok('и в английской версии', rd('en/index.html').includes('og-cover.png?v=' + hashOf()));
+  restore('assets/og/', 'index.html', 'about.html', 'portfolio.html', 'en/');
+  ok('вернулось как было', dirty(['assets/og/', ...SITE_PATHS]) === 0 && hashOf() === h0);
+}
+
+g('Поиск и сверка переводов');
+{
+  const s1 = await get('/api/search?q=' + encodeURIComponent('runa'));
+  ok('поиск находит текст и говорит, где он', s1.items?.length > 0 && s1.items.every((i) => i.where && i.label && i.key), `${s1.total} совпадений`);
+  ok('результат ведёт в раздел', s1.items?.every((i) => ['case', 'page', 'shell'].includes(i.type)));
+  ok('слишком короткий запрос не ищется', ((await get('/api/search?q=a')).items || []).length === 0);
+  ok('на чистом сайте забытых переводов нет', ((await get('/api/mirror')).items || []).length === 0);
+  const was = await get('/api/case/08');
+  const ed = JSON.parse(JSON.stringify(was));
+  ed.dict.ru['p.lead'] = (ed.dict.ru['p.lead'] || '') + ' Проба.';
+  await post('/api/case/08', ed);
+  const mir = (await get('/api/mirror')).items || [];
+  ok('русский изменён, английский нет — замечено', mir.some((m) => m.file === 'projects/08.html' && m.key === 'p.lead'), mir.map((m) => m.where + ':' + m.label).join('; ').slice(0, 70));
+  ed.dict.en['p.lead'] = (ed.dict.en['p.lead'] || '') + ' Probe.';
+  await post('/api/case/08', ed);
+  ok('перевели — замечание ушло', !((await get('/api/mirror')).items || []).some((m) => m.key === 'p.lead'));
+  await post('/api/case/08', was);
+  restore('projects/08.html', 'en/', 'index.html', 'portfolio.html');
+  ok('после сверки кейс вернулся', dirty(SITE_PATHS) === 0);
+}
+
+g('Карточка и таблица кейса');
+{
+  const snapPf = () => rd('portfolio.html') + rd('index.html') + rd('en/portfolio.html') + rd('en/index.html');
+  const base = snapPf();
+  const was = await get('/api/case/08');
+  const ed = JSON.parse(JSON.stringify(was));
+  ed.dict.ru['card.desc'] = 'Проба описания карточки'; ed.dict.en['card.desc'] = 'Card description probe';
+  ed.dict.ru['works.dir'] = 'Проба'; ed.dict.en['works.dir'] = 'Probe';
+  await post('/api/case/08', ed);
+  ok('описание карточки доходит до портфолио', rd('portfolio.html').includes('Проба описания карточки'));
+  ok('и до английского портфолио', rd('en/portfolio.html').includes('Card description probe'));
+  ok('направление доходит до таблицы на главной', />Проба<\/span><\/a><\/li>/.test(rd('index.html')));
+  await post('/api/case/08', was);
+  ok('вернул — карточка и таблица как были', snapPf() === base);
+  restore('projects/08.html', 'en/', 'index.html', 'portfolio.html');
+  ok('после теста карточки сайт как был', dirty(SITE_PATHS) === 0);
+}
+
+g('Опубликованная версия для сравнения');
+{
+  const head = git('rev-parse', 'HEAD').trim();
+  ok('CMS знает текущую версию', (await get('/api/head')).sha === head);
+  const b = await fetch(API + '/__base/index.html');
+  const committed = execFileSync(GIT, ['show', 'HEAD:index.html'], { cwd: ROOT, maxBuffer: 1 << 26 });
+  ok('отдаёт страницу из последней версии', b.status === 200 && Buffer.compare(Buffer.from(await b.arrayBuffer()), committed) === 0);
+  ok('английская и ассеты тоже', (await code('/__base/en/')) === 200 && (await code('/__base/assets/core.min.css')) === 200);
+  ok('выход за пределы папки закрыт', [400, 404].includes(await code('/__base/../cms/server.mjs')));
+  ok('части интерфейса отдаются', (await code('/__cms/ui/guard.js')) === 200 && (await code('/__cms/ui/live.js')) === 200 && (await code('/__cms/ui/dialogs.js')) === 200);
+  ok('остальное из папки cms наружу не отдаётся', (await code('/__cms/ui/../server.mjs')) === 404 && (await code('/__cms/server.mjs')) === 404);
+}
 
 // ─────────────────────────────────────────────────────────────────────────
 g('Сборка');
@@ -347,7 +593,7 @@ g('Стражи');
   const ch = await get('/api/changes');
   ok('неотправленные версии видны', typeof ch.ahead === 'number', `ahead: ${ch.ahead}`);
   ok('кнопка публикации смотрит и на версии, и на файлы',
-    /!ch\.files\.length\s*&&\s*!ch\.ahead/.test(cms));
+    /const can\s*=\s*ch\.files\.length\s*\|\|\s*ch\.ahead/.test(cms));
 
   // 4. CMS обязана слушать только свою машину. Открытый наружу порт — это
   // право переписать сайт и нажать «Опубликовать» у любого в той же вайфай-сети.
@@ -356,6 +602,31 @@ g('Стражи');
   // 5. Несуществующий кейс — понятный отказ, а не 500 и вечное «Загружаю…».
   const nope = await fetch(API + '/api/case/999');
   ok('несуществующий кейс отвечает отказом', nope.status === 404, 'код ' + nope.status);
+
+  // 6. Всё, что CMS умеет менять, должно уходить при публикации. Превью для
+  // мессенджеров лежит в assets/og — без этой папки в списке замена картинки
+  // оставалась бы на диске и молча не публиковалась.
+  const addLine = (srv.match(/await git\('add', '--',[\s\S]*?\);/) || [''])[0];
+  ok('список публикации найден', addLine.length > 20);
+  for (const need of ['assets/img', 'assets/vid', 'assets/cv', 'assets/og', 'content', 'projects', 'en'])
+    ok(`публикуется ${need}`, addLine.includes(`'${need}'`));
+
+  // 7. Класс подписи поля не должен совпасть с классом окна на весь экран:
+  // один раз подпись «.lb» накрыла собой весь интерфейс.
+  ok('подпись поля не названа классом окна', !/<span class="lb">/.test(cms) && /<span class="flb">/.test(cms));
+
+  // 8. Скрытое обязано быть скрытым: без этого правила пустые полосы черновика
+  // и публикации висели на экране.
+  ok('есть правило для [hidden]', /\[hidden\]\{display:none!important\}/.test(cms));
+
+  // 9. Модули интерфейса подключены и лежат на месте.
+  for (const f of ['dialogs', 'guard', 'live'])
+    ok(`модуль ${f}.js подключён`, cms.includes(`/__cms/ui/${f}.js`) && existsSync(resolve(ROOT, 'cms/ui', f + '.js')));
+
+  // 10. Системные вопросы браузера в интерфейсе не используются: они блокируют
+  // вкладку и не умеют объяснить последствия.
+  const main = cms.slice(cms.lastIndexOf('<script>'));
+  ok('нет системных confirm и prompt', !/[^.\w](confirm|prompt)\(/.test(main));
 }
 
 g('Чистота');

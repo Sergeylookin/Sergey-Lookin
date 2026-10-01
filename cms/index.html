@@ -712,7 +712,7 @@ async function open(n, focusKey){
   if(!(await leaveOk())) return;
   MODE='case'; PAGE=null; MANIFEST=null;
   CUR=n; DATA=await api('/api/case/'+n); ORIG=JSON.parse(JSON.stringify(DATA)); DIRTY=false;
-  navOn(null); markCur(); remember({type:'case',n});
+  navOn(null); markCur(); remember({type:'case',n}); sectionOpened();
   $('#save').style.display=$('#revert').style.display='';
   const meta=MODEL.cases.find(c=>c.n===n)||{};
   $('#ttl').innerHTML = `${n} · ${esc(DATA.dict.ru['p.title']||'без названия')}`
@@ -1635,8 +1635,14 @@ function buildSecNav(){
 
 // ── история публикаций и откат ──────────────────────────────────────────
 // общий вход в раздел без полей и без превью-страницы
+// Раздел открылся: форма с начала, язык полей — только там, где есть переводимые поля.
+function sectionOpened(){
+  $('.main').scrollTop=0;
+  $('#fmode').style.display = (MODE==='case'||MODE==='page'||MODE==='shell') ? '' : 'none';
+}
 function enterSection(mode, navSel, title, withSave){
   MODE=mode; CUR=null; PAGE=null; MANIFEST=null; DIRTY=false;
+  sectionOpened();
   navOn(navSel); markCur();
   $('#ttl').textContent=title;
   $('#chkBadge').classList.remove('on'); guardReset();
@@ -1906,7 +1912,7 @@ let MANIFEST=null;
 async function openPage(file, focusKey){
   if(!(await leaveOk())) return;
   MODE='page'; CUR=null; DIRTY=false;
-  navOn('.pg[data-f="'+file+'"]'); markCur(); remember({type:'page',file});
+  navOn('.pg[data-f="'+file+'"]'); markCur(); remember({type:'page',file}); sectionOpened();
   $('#form').onclick=null;
   await loadPageData(file);
   ORIG=snapPage();
@@ -2644,6 +2650,13 @@ $('#pub').onclick=async()=>{
   if(DIRTY && !(await ask({title:'Есть несохранённые правки', text:'В публикацию уходит только то, что сохранено. Несохранённое останется в полях.', ok:'Публиковать без них', cancel:'Вернуться и сохранить'}))) return;
   const [ch,val,mir]=await Promise.all([api('/api/changes'),api('/api/validate'),api('/api/mirror').catch(()=>({items:[]}))]);
   const errs=val.problems.filter(p=>p.lvl==='err'), warns=val.problems.filter(p=>p.lvl!=='err');
+  // Кнопка отправляет содержимое сайта: страницы, словари, картинки, видео, резюме.
+  // Код (скрипты сайта, сама CMS, инструменты сборки) отсюда не уходит — его в
+  // списке не показываем, чтобы не обещать лишнего.
+  const SITE=/^(index|portfolio|about|404)\.html$|^(projects|en|content)\/|^assets\/(img|cv|vid|og)\/|^sitemap\.xml$/;
+  const fileOf=l=>l.replace(/^\S+\s+/,'').replace(/^"|"$/g,'');
+  const other=ch.files.filter(l=>!SITE.test(fileOf(l))).length;
+  ch.files=ch.files.filter(l=>SITE.test(fileOf(l)));
   const pages=changedPages(ch.files);
   const can=ch.files.length||ch.ahead;
   const v=document.createElement('div'); v.className='veil';
@@ -2653,6 +2666,7 @@ $('#pub').onclick=async()=>{
       ${ch.files.length? `<div class="steps" style="max-height:132px;overflow:auto">${ch.files.map(f=>`<div>${esc(f)}</div>`).join('')}</div>`
         : ch.ahead? `<p>Правок в файлах нет, но готовых версий без публикации: <b>${ch.ahead}</b>. Так бывает после отката — его тоже надо довезти до сайта.</p>`
         : '<p>Изменений нет — на сайте уже актуальная версия.</p>'}
+      ${other? `<p style="color:var(--mute);font-size:12px">Ещё ${other} ${plural(other,['файл','файла','файлов'])} с кодом (скрипты, CMS, инструменты) изменены, но этой кнопкой не отправляются.</p>`:''}
       ${errs.length? `<h4 style="color:var(--accent)">Ошибки — публикация не пойдёт</h4>${errs.map(p=>`<p>${p.n}: ${p.msg}</p>`).join('')}`:''}
       <div id="pubGuard"></div>
       ${mir.items&&mir.items.length? `<h4>Перевод не обновлён — ${mir.items.length}</h4><p style="margin-bottom:8px">Русский текст изменён, английский остался прежним. Публиковать можно, но на английской версии будет старый смысл.</p>${mir.items.slice(0,10).map((m,i)=>`<div class="gitem" style="border-left-color:var(--warn)"><span class="gw">${esc(m.where)}</span><span>${esc(m.label)}</span><button class="x" data-mir="${i}">Открыть</button></div>`).join('')}${mir.items.length>10?`<p>…и ещё ${mir.items.length-10}</p>`:''}`:''}
