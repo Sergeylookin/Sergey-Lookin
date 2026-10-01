@@ -529,7 +529,9 @@ g('Опубликованная версия для сравнения');
   const committed = execFileSync(GIT, ['show', 'HEAD:index.html'], { cwd: ROOT, maxBuffer: 1 << 26 });
   ok('отдаёт страницу из последней версии', b.status === 200 && Buffer.compare(Buffer.from(await b.arrayBuffer()), committed) === 0);
   ok('английская и ассеты тоже', (await code('/__base/en/')) === 200 && (await code('/__base/assets/core.min.css')) === 200);
-  ok('выход за пределы папки закрыт', [400, 404].includes(await code('/__base/../cms/server.mjs')));
+  // «..» шлём закодированным: обычный запрос схлопнул бы его ещё до отправки,
+  // и проверка била бы мимо защиты.
+  ok('выход за пределы папки закрыт', (await code('/__base/..%2Fcms/server.mjs')) === 400 && (await code('/__base/en/..%2F..%2Fpackage.json')) === 400);
   ok('части интерфейса отдаются', (await code('/__cms/ui/guard.js')) === 200 && (await code('/__cms/ui/live.js')) === 200 && (await code('/__cms/ui/dialogs.js')) === 200);
   ok('остальное из папки cms наружу не отдаётся', (await code('/__cms/ui/../server.mjs')) === 404 && (await code('/__cms/server.mjs')) === 404);
 }
