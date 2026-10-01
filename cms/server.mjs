@@ -13,6 +13,7 @@ import { dirname, resolve, join, extname } from 'node:path';
 import { execFile } from 'node:child_process';
 import { load } from 'cheerio';
 import { syncHeadMeta } from '../tools/head-meta.mjs';
+import { SCREEN_NAMES, FIXED_SCREENS, ATTR_RULES, ARIA_LABELS, META_LABELS, labelsFor, fallbackLabel } from './labels.mjs';
 
 // sharp кэширует открытые файлы, и на Windows из-за этого не удаётся ни
 // переименовать, ни перезаписать картинку, которую он недавно читал.
@@ -79,10 +80,23 @@ const FIELDS = [
   { k: 'p.f3',      label: 'Факт 3',          kind: 'text',  hint: 'Не пересказывай «Решение».' },
   { k: 'p.f4',      label: 'Факт 4',          kind: 'text',  hint: 'Чужое достижение подписывай: «компания получила…».' },
   { k: 'p.f5',      label: 'Факт 5',          kind: 'text',  hint: 'Необязательный. Пустое поле — строка исчезнет со страницы.', optional: true },
-  { k: 'meta.title',       label: 'SEO · заголовок', kind: 'line', hint: 'Вкладка браузера и строка в выдаче Google.' },
-  { k: 'meta.description', label: 'SEO · описание',  kind: 'text', hint: 'Подпись под ссылкой в поиске и в превью при отправке в мессенджер.' },
+  // Эти ключи живут только в словаре кейса: на его странице их нет, а в сетку
+  // портфолио и в таблицу на главной их разносит tools/build-cases.mjs.
+  { k: 'card.desc', label: 'Описание на карточке', kind: 'text', hint: 'Одна фраза под названием кейса в сетке портфолио.' },
+  { k: 'card.t1',   label: 'Тег 1',           kind: 'line',  hint: 'Мелкие теги над названием карточки в портфолио. Пустое поле — тега нет.', optional: true },
+  { k: 'card.t2',   label: 'Тег 2',           kind: 'line',  hint: 'Второй тег карточки. Пустое поле — тега нет.', optional: true },
+  { k: 'card.t3',   label: 'Тег 3',           kind: 'line',  hint: 'Третий тег карточки. Пустое поле — тега нет.', optional: true },
+  { k: 'works.title', label: 'Название в таблице', kind: 'line', hint: 'Строка кейса в таблице «Проекты» на главной. Пусто — берётся название кейса.', optional: true },
+  { k: 'works.role', label: 'Роль в таблице', kind: 'line',  hint: 'Колонка «Роль» в таблице на главной. Пусто — берётся роль из шапки кейса.', optional: true },
+  { k: 'works.dir', label: 'Направление',     kind: 'line',  hint: 'Последняя колонка таблицы на главной. Одно слово: Бренд, Веб, Система, Полный цикл.' },
+  { k: 'works.year', label: 'Год в таблице',  kind: 'line',  hint: 'Колонка года в таблице узкая, диапазон «2023—2026» в неё не влезает. Пусто — берётся первый год кейса. Год не переводится, поэтому поле одно.', optional: true, neutral: true },
+  { k: 'meta.title',       label: 'Заголовок для поиска и превью', kind: 'line', hint: 'Вкладка браузера, строка в выдаче Google и заголовок превью в мессенджере.' },
+  { k: 'meta.description', label: 'Описание для поиска и превью',  kind: 'text', hint: 'Подпись под ссылкой в поиске и в превью при отправке в мессенджер.' },
 ];
 const EDITABLE = new Set(FIELDS.map((f) => f.k));
+// Ключи, которых нет в разметке кейса: пустое значение у них — это просто пустая
+// строка в словаре, удалять ключ и искать элемент на странице незачем.
+const DICT_ONLY = /^(card|works)\./;
 
 const casePath = (n) => resolve(ROOT, 'projects', `${n}.html`);
 const caseIds = () => readdirSync(resolve(ROOT, 'projects')).filter((f) => /^\d\d\.html$/.test(f)).map((f) => f.slice(0, 2)).sort();
@@ -135,20 +149,266 @@ const GROUPS = {
   e404: 'Тексты 404', nf: 'Тексты 404',
 };
 
+// Скрытый экран лежит в файле внутри <template data-off="id">: браузер его не
+// рисует, скрипты сайта его не видят, поисковик не читает. Для разбора разметки
+// шаблон разворачиваем в обычный блок — иначе cheerio внутрь не заглянет.
+const TPL_RE = /<template data-off="([^"]*)">([\s\S]*?)<\/template>/g;
+const openTemplates = (html) => html.replace(TPL_RE, '<div data-off="$1">$2</div>');
+
+const decAttr = (s) => String(s ?? '').replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+const encAttr = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// Ширина текстовой рамки — «max-width:42ch!important» в style самой надписи.
+// Никакого другого места у неё нет: правило уезжает вместе с элементом и в
+// английскую версию, и при перестановке экранов.
+const WIDTH_RE = /max-width:\s*(\d{2,3}(?:\.\d)?ch)\s*!important/;
+function widthsOf($) {
+  const out = {};
+  $('[data-i18n][style]').each((_i, el) => {
+    const m = String($(el).attr('style') || '').match(WIDTH_RE);
+    const k = $(el).attr('data-i18n');
+    if (m && !(k in out)) out[k] = m[1];
+  });
+  return out;
+}
+
+// Картинка превью для мессенджеров — одна на главную, «Обо мне» и портфолио.
+const OG_FILE = resolve(ROOT, 'assets', 'og', 'og-cover.png');
+const OG_PAGES = ['index.html', 'about.html', 'portfolio.html'];
+async function ogInfo() {
+  if (!existsSync(OG_FILE)) return null;
+  try {
+    const m = await sharpMod.default(OG_FILE).metadata();
+    return { file: 'assets/og/og-cover.png', w: m.width, h: m.height, kb: Math.round(statSync(OG_FILE).size / 1024) };
+  } catch { return null; }
+}
+
+// Модель страницы для редактора: экраны в том порядке, в каком они идут на сайте,
+// внутри — поля в порядке разметки, с человеческими названиями (cms/labels.mjs).
 function loadPage(page) {
   const raw = readFileSync(resolve(ROOT, page.file), 'utf8');
   const html = raw.replace(/^﻿/, '');
-  const dict = JSON.parse(load(html, { decodeEntities: false })('#i18n-data').html() || '{}');
-  const keys = Object.keys(dict.ru || {}).filter(editableKey);
-  const groups = {};
-  for (const k of keys) {
-    const g = k.split('.')[0];
-    (groups[g] = groups[g] || []).push(k);
-  }
-  return {
-    file: page.file, label: page.label, dict,
-    groups: Object.entries(groups).map(([g, ks]) => ({ id: g, label: GROUPS[g] || g, keys: ks })),
+  const $ = load(openTemplates(html), { decodeEntities: false });
+  const dict = JSON.parse($('#i18n-data').html() || '{}');
+  const labels = labelsFor($, page.file);
+  const attrRules = ATTR_RULES[page.file] || [];
+
+  const screens = [];
+  const byId = new Map();
+  const screenOf = (id, name, extra = {}) => {
+    if (!byId.has(id)) { const s = { id, name, fields: [], ...extra }; byId.set(id, s); screens.push(s); }
+    return byId.get(id);
   };
+  // экраны заводим заранее и в порядке страницы — даже те, где нет ни одного поля
+  $('main section[id]').each((_i, el) => {
+    const $s = $(el), id = $s.attr('id');
+    screenOf(id, SCREEN_NAMES[id] || id, {
+      hidden: $s.closest('[data-off]').length > 0,
+      fixed: FIXED_SCREENS.has(id),
+      num: ($s.find('.sec-aside--right b').first().text() || '').trim(),
+    });
+  });
+  const hasScreens = screens.length > 0;
+  const home = (el) => {
+    const $sec = $(el).closest('section[id]');
+    return hasScreens && $sec.length ? byId.get($sec.attr('id')) : screenOf('@page', page.label);
+  };
+
+  const attrs = {};
+  const seen = new Set();
+  $('[data-i18n], [data-i18n-aria]').each((_i, el) => {
+    const $el = $(el);
+    const k = $el.attr('data-i18n');
+    const tag = el.tagName ? el.tagName.toLowerCase() : '';
+    if (k && !seen.has(k) && editableKey(k) && k in (dict.ru || {})) {
+      seen.add(k);
+      home(el).fields.push({ k, label: labels[k] || fallbackLabel(tag) });
+      // поле-атрибут ставим сразу за надписью, к которой оно относится
+      for (const r of attrRules) {
+        if (!$el.is(r.sel)) continue;
+        const sibs = $el.parent().children(r.nOf || r.sel);
+        let n = 0; for (let j = 0; j < sibs.length; j++) if (sibs[j] === el) n = j + 1;
+        const id = '@' + r.ru + ':' + k;
+        attrs[id] = { ru: decAttr($el.attr(r.ru)), en: decAttr($el.attr(r.en)) };
+        home(el).fields.push({ k: id, label: r.label.replace('{n}', String(n)), attr: true });
+      }
+    }
+    const a = $el.attr('data-i18n-aria');
+    if (a && !seen.has(a) && editableKey(a) && a in (dict.ru || {})) {
+      seen.add(a);
+      home(el).fields.push({ k: a, label: ARIA_LABELS[a] || 'Подпись для экранных читалок', aria: true });
+    }
+  });
+  if (!screens.length) screenOf('@page', page.label);
+
+  const metaKeys = ['meta.title', 'meta.description'].filter((k) => k in (dict.ru || {}));
+  if (metaKeys.length) {
+    const s = screenOf('@meta', 'Поиск и превью в мессенджерах');
+    for (const k of metaKeys) { seen.add(k); s.fields.push({ k, label: META_LABELS[k][0], hint: META_LABELS[k][1] }); }
+  }
+  // Ключи-пути (data-i18n-href) — это адреса файлов, а не текст: их меняет загрузка
+  // файла, руками править нельзя. Всё прочее, чего нет в разметке, показываем отдельно.
+  const sys = new Set(); $('[data-i18n-href]').each((_i, el) => sys.add($(el).attr('data-i18n-href')));
+  const rest = Object.keys(dict.ru || {}).filter((k) => editableKey(k) && !seen.has(k) && !sys.has(k));
+  if (rest.length) { const s = screenOf('@rest', 'Прочие надписи'); for (const k of rest) s.fields.push({ k, label: 'Надпись' }); }
+
+  // картинки самой страницы: всё в <main>, кроме сетки кейсов — её собирает build-cases
+  const images = [];
+  $('main img[src]').each((_i, el) => {
+    const $im = $(el);
+    if ($im.closest('.cases, .case').length) return;
+    const name = base($im.attr('src'));
+    if (!name || images.some((x) => x.name === name)) return;
+    images.push({ name, alt: $im.attr('alt') || '', w: $im.attr('width') || '', h: $im.attr('height') || '', ...fileInfo(name) });
+  });
+
+  return {
+    file: page.file, label: page.label, dict, screens, attrs, widths: widthsOf($), images,
+    canStructure: hasScreens,
+    // старое поле для совместимости: группа = экран
+    groups: screens.map((s) => ({ id: s.id, label: s.name, keys: s.fields.filter((f) => !f.attr).map((f) => f.k) })),
+  };
+}
+
+// Подмена ВСЕХ вхождений ключа. Один и тот же ключ бывает на странице дважды:
+// надпись карточки «Ремесла» стоит и в свёрнутом, и в раскрытом виде, реплики
+// «Аудитории» продублированы для бегущей строки.
+function replaceInnerAll(html, key, inner) {
+  const mark = `data-i18n="${key}"`;
+  let from = 0, hit = false;
+  for (;;) {
+    const at = html.indexOf(mark, from);
+    if (at < 0) break;
+    const r = replaceInnerAt(html, at, inner);
+    if (!r) break;
+    html = r[0]; from = r[1]; hit = true;
+  }
+  return hit ? html : null;
+}
+
+// Открывающий тег элемента с данным ключом: [начало, конец, текст].
+function openTagOf(html, key) {
+  const at = html.indexOf(`data-i18n="${key}"`);
+  if (at < 0) return null;
+  const lt = html.lastIndexOf('<', at), gt = html.indexOf('>', at);
+  if (lt < 0 || gt < 0) return null;
+  return [lt, gt + 1, html.slice(lt, gt + 1)];
+}
+
+function setAttrOnKey(html, key, attr, value) {
+  const t = openTagOf(html, key);
+  if (!t) return null;
+  const re = new RegExp('(\\s' + attr + '=")[^"]*(")');
+  if (!re.test(t[2])) return null;                       // новых атрибутов не заводим
+  return html.slice(0, t[0]) + t[2].replace(re, (_m, a, b) => a + encAttr(value) + b) + html.slice(t[1]);
+}
+
+// val: '' — убрать рамку, '42ch' — поставить. Остальные правила в style не трогаем.
+function setMaxWidth(html, key, val) {
+  const t = openTagOf(html, key);
+  if (!t) return null;
+  let tag = t[2];
+  const cur = (tag.match(/\sstyle="([^"]*)"/) || [])[1];
+  const decls = (cur || '').split(';').map((s) => s.trim()).filter((d) => d && !/^max-width\s*:/.test(d));
+  if (val) decls.push(`max-width:${val}!important`);
+  const style = decls.join(';');
+  if (cur != null) tag = style ? tag.replace(/\sstyle="[^"]*"/, ` style="${style}"`) : tag.replace(/\sstyle="[^"]*"/, '');
+  else if (style) tag = tag.replace(/\s*\/?>$/, (end) => ` style="${style}"` + (end.includes('/') ? ' />' : '>'));
+  return html.slice(0, t[0]) + tag + html.slice(t[1]);
+}
+const okWidth = (v) => v === '' || (/^\d{2,3}(\.\d)?ch$/.test(v) && parseFloat(v) >= 12 && parseFloat(v) <= 140);
+
+// Применяет к разметке ширины рамок и поля-атрибуты, пришедшие из редактора.
+// Возвращает [html, сколько изменено]. Пишет только то, что реально отличается.
+function applyExtras(html, payload, file) {
+  let n = 0;
+  if (payload.widths) {
+    const now = widthsOf(load(openTemplates(html), { decodeEntities: false }));
+    for (const [k, v] of Object.entries(payload.widths)) {
+      const val = String(v || '');
+      if (!okWidth(val) || (now[k] || '') === val) continue;
+      const nx = setMaxWidth(html, k, val);
+      if (nx) { html = nx; n++; }
+    }
+  }
+  if (payload.attrs) {
+    for (const r of ATTR_RULES[file] || []) {
+      for (const [id, v] of Object.entries(payload.attrs)) {
+        if (!id.startsWith('@' + r.ru + ':')) continue;
+        const key = id.slice(r.ru.length + 2);
+        const t = openTagOf(html, key);
+        if (!t) continue;
+        for (const [lang, attr] of [['ru', r.ru], ['en', r.en]]) {
+          if (v[lang] == null) continue;
+          const was = decAttr((t[2].match(new RegExp('\\s' + attr + '="([^"]*)"')) || [])[1]);
+          if (was === String(v[lang])) continue;
+          const nx = setAttrOnKey(html, key, attr, String(v[lang]));
+          if (nx) { html = nx; n++; }
+        }
+      }
+    }
+  }
+  return [html, n];
+}
+
+// ── экраны страницы: порядок и видимость ────────────────────────────────────
+// Страница — это цепочка <section id> внутри <main>. Скрытый экран обёрнут в
+// <template data-off>. Разбираем <main> на блоки; если между экранами нашлось
+// что-то кроме пробелов, разметка не та, на которую мы рассчитываем, — не трогаем.
+function readStructure(html) {
+  const open = html.indexOf('<main');
+  const close = html.lastIndexOf('</main>');
+  if (open < 0 || close < 0) return null;
+  const openEnd = html.indexOf('>', open) + 1;
+  const inner = html.slice(openEnd, close);
+  const re = /(<template data-off="[^"]*">\s*)?(<section\b[^>]*\bid="([^"]+)"[^>]*>[\s\S]*?<\/section>)(\s*<\/template>)?/g;
+  const blocks = [];
+  let last = 0, m;
+  while ((m = re.exec(inner))) {
+    if (inner.slice(last, m.index).trim()) return null;
+    blocks.push({ id: m[3], hidden: !!m[1], html: m[2] });
+    last = re.lastIndex;
+  }
+  if (!blocks.length || inner.slice(last).trim()) return null;
+  return { pre: html.slice(0, openEnd), post: html.slice(close), blocks };
+}
+
+// Номер главы стоит в разметке цифрами (<b>03</b>). После перестановки или
+// скрытия пересчитываем видимые экраны подряд, с нуля — как было в макете.
+const NUM_RE = /(<div class="sec-aside sec-aside--right[^"]*">\s*<b>)\d\d(<\/b>)/;
+function saveStructure(page, payload) {
+  const p = resolve(ROOT, page.file);
+  const orig = readFileSync(p, 'utf8');
+  const bom = orig.charCodeAt(0) === 0xfeff;
+  const html = orig.replace(/^﻿/, '');
+  const st = readStructure(html);
+  if (!st) return { error: 'У этой страницы нет экранов, которые можно переставлять.' };
+
+  const ids = st.blocks.map((b) => b.id);
+  const order = Array.isArray(payload.order) ? payload.order.map(String) : ids;
+  if (order.length !== ids.length || [...order].sort().join() !== [...ids].sort().join())
+    return { error: 'Список экранов не совпал со страницей — обнови окно CMS.' };
+  const hidden = new Set((payload.hidden || []).map(String));
+  for (let i = 0; i < ids.length; i++) {
+    if (!FIXED_SCREENS.has(ids[i])) continue;
+    if (order[i] !== ids[i]) return { error: `Экран «${SCREEN_NAMES[ids[i]] || ids[i]}» стоит на своём месте — его нельзя двигать.` };
+    if (hidden.has(ids[i])) return { error: `Экран «${SCREEN_NAMES[ids[i]] || ids[i]}» нельзя скрыть.` };
+  }
+  const same = order.join() === ids.join() && st.blocks.every((b) => b.hidden === hidden.has(b.id));
+  if (same) return { changed: 0 };
+
+  const byId = Object.fromEntries(st.blocks.map((b) => [b.id, b]));
+  let n = 0;
+  const parts = order.map((id) => {
+    const b = byId[id];
+    if (hidden.has(id)) return `<template data-off="${id}">${b.html}</template>`;
+    return b.html.replace(NUM_RE, (_m, a, z) => a + String(n++).padStart(2, '0') + z);
+  });
+  const next = st.pre + '\n' + parts.join('\n\n') + '\n' + st.post;
+  const tmp = p + '.tmp';
+  writeFileSync(tmp, (bom ? '﻿' : '') + next, 'utf8');
+  renameSync(tmp, p);
+  return { changed: 1 };
 }
 
 function savePage(page, payload) {
@@ -164,17 +424,20 @@ function savePage(page, payload) {
   // молча меняет текст сайта в местах, которых никто не просил трогать.
   const changed = { ru: [], en: [] };
   for (const lang of ['ru', 'en']) {
-    for (const [k, v] of Object.entries(payload.dict[lang] || {})) {
+    for (const [k, v] of Object.entries((payload.dict || {})[lang] || {})) {
       if (!editableKey(k) || !(k in (dict[lang] || {}))) continue;   // новых ключей не заводим
       if (dict[lang][k] === v) continue;
       dict[lang][k] = v;
       changed[lang].push(k);
     }
   }
-  if (!changed.ru.length && !changed.en.length) return { changed: 0 };
+  // ширины рамок и поля-атрибуты живут в разметке, а не в словаре
+  const [withExtras, extras] = applyExtras(html, payload, page.file);
+  html = withExtras;
+  if (!changed.ru.length && !changed.en.length && !extras) return { changed: 0 };
 
   for (const k of changed.ru) {
-    const nx = replaceInner(html, k, dict.ru[k]);
+    const nx = replaceInnerAll(html, k, dict.ru[k]);
     if (nx) html = nx;
     // ключи, которые сидят в aria-label, а не в тексте
     html = html.replace(new RegExp(`(data-i18n-aria="${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*aria-label=")[^"]*(")`),
@@ -185,12 +448,12 @@ function savePage(page, payload) {
     title: changed.ru.includes('meta.title') ? dict.ru['meta.title'] : null,
     description: changed.ru.includes('meta.description') ? dict.ru['meta.description'] : null,
   });
-  html = writeDict(html, dict);
+  if (changed.ru.length || changed.en.length) html = writeDict(html, dict);
 
   const tmp = p + '.tmp';
   writeFileSync(tmp, (bom ? '﻿' : '') + html, 'utf8');
   renameSync(tmp, p);
-  return { changed: changed.ru.length + changed.en.length };
+  return { changed: changed.ru.length + changed.en.length + extras };
 }
 
 // index.html держит словарь с пробелами после двоеточий, кейсы — вплотную.
@@ -343,7 +606,57 @@ function mediaLibrary() {
   });
 
   items.sort((a, b) => (b.used.length - a.used.length) || a.name.localeCompare(b.name));
-  return { items, total: items.length, unused: items.filter((i) => !i.used.length).length };
+  return { items, total: items.length, unused: items.filter((i) => !i.used.length).length, videos: videoLibrary(titles) };
+}
+
+// Видео сайта: обложки карточек и ролики внутри кейсов. Где стоит — так же, как у картинок.
+function videoLibrary(titles = {}) {
+  if (!existsSync(VIDDIR)) return [];
+  const names = readdirSync(VIDDIR).filter((f) => f.endsWith('.mp4')).map((f) => f.replace(/\.mp4$/, ''));
+  let reg = { cases: [] };
+  try { reg = readReg(); } catch {}
+  const pages = caseIds().map((id) => ({ id, html: readFileSync(casePath(id), 'utf8') }));
+  return names.map((name) => {
+    const used = [];
+    const re = new RegExp('assets/vid/' + escRe(name) + '\\.mp4');
+    for (const c of reg.cases) {
+      if (c.cover && c.cover.kind === 'vid' && c.cover.video === `assets/vid/${name}.mp4`)
+        used.push({ where: `Видео-обложка кейса ${c.id} · ${titles[c.id] || ''} — карточка в портфолио` });
+    }
+    for (const pg of pages) {
+      // закомментированный пример в разметке — не использование
+      if (re.test(pg.html.replace(/<!--[\s\S]*?-->/g, ''))) used.push({ where: `Кейс ${pg.id} · ${titles[pg.id] || ''} — ролик внутри кейса` });
+    }
+    return { name, ...videoInfo(name), used };
+  }).sort((a, b) => (b.used.length - a.used.length) || a.name.localeCompare(b.name));
+}
+
+// После замены файла под тем же именем размеры в разметке врут: width/height
+// остались от старой картинки, и страница резервирует под неё не то место.
+// Правим их везде, где картинка стоит. Возвращает число изменённых файлов.
+async function syncImageDims(name) {
+  const f = resolve(IMGDIR, name + '.webp');
+  if (!existsSync(f)) return 0;
+  const meta = await sharpMod.default(f).metadata();
+  const files = [...PAGES.map((x) => x.file), ...caseIds().map((n) => `projects/${n}.html`)];
+  let touched = 0;
+  for (const rel of files) {
+    const abs = resolve(ROOT, rel);
+    if (!existsSync(abs)) continue;
+    const before = readFileSync(abs, 'utf8');
+    // Последняя запись srcset — настоящая ширина оригинала только у картинок,
+    // вписанных в страницу руками. В кейсах и в сетке портфолио там условные
+    // 1920/940/1400 под раскладку, их ставит сборка — не трогаем.
+    const ownSrcset = rel === 'about.html' || rel === 'index.html' || rel === '404.html';
+    const re = new RegExp('<img\\b[^>]*\\bsrc="(?:\\.\\./)?assets/img/' + escRe(name) + '\\.webp"[^>]*>', 'g');
+    const after = before.replace(re, (tag) => {
+      let t = tag.replace(/\bwidth="\d+"/, `width="${meta.width}"`).replace(/\bheight="\d+"/, `height="${meta.height}"`);
+      if (ownSrcset) t = t.replace(new RegExp('(assets/img/' + escRe(name) + '\\.webp )\\d+w'), `$1${meta.width}w`);
+      return t;
+    });
+    if (after !== before) { await writeFileSafe(abs, Buffer.from(after, 'utf8')); touched++; }
+  }
+  return touched;
 }
 
 // Пересборка всего, что зависит от состава кейсов. Зовётся после любой операции.
@@ -382,6 +695,10 @@ function readMedia($) {
     const tag = el.tagName ? el.tagName.toLowerCase() : '';
     if (tag === 'img') {
       out.push({ type: 'full', ...pick($el) });
+    } else if (tag === 'video' && $el.find('source[src*="assets/vid/"]').length) {
+      const video = String($el.find('source').attr('src') || '').replace(/^.*\//, '').replace(/\.mp4.*$/, '');
+      out.push({ type: 'video', video, poster: base($el.attr('poster')), alt: $el.attr('aria-label') || '',
+                 w: $el.attr('width') || '', h: $el.attr('height') || '', ...videoInfo(video) });
     } else if (tag === 'div' && $el.hasClass('row') && $el.find('video').length === 0) {
       const items = [];
       $el.find('img').each((_j, im) => items.push(pick($(im))));
@@ -409,13 +726,50 @@ function imgTag(it, kind) {
   const dim = (it.w && it.h) ? ` width="${it.w}" height="${it.h}"` : '';
   return `<img src="../assets/img/${name}.webp"${srcset} alt="${esc}"${dim} decoding="async" loading="lazy">`;
 }
-function renderMedia(media) {
+// Видео в кейсе размечаем так же, как видео-обложки карточек: без autoplay и с
+// preload="none". Запуск и паузу по видимости делает assets/site.js — ролик не
+// качается, пока до него не докрутили. width/height берём из самого файла, чтобы
+// страница не дёргалась, пока видео грузится.
+const VIDDIR = resolve(ROOT, 'assets', 'vid');
+function videoInfo(name) {
+  const f = resolve(VIDDIR, name + '.mp4');
+  if (!name || !existsSync(f)) return { exists: false, mb: 0 };
+  return { exists: true, mb: +(statSync(f).size / 1048576).toFixed(1) };
+}
+// Размер кадра из mp4: атом tkhd видеодорожки кончается шириной и высотой в формате
+// 16.16. У звуковой дорожки там нули — её пропускаем.
+function mp4Size(buf) {
+  let i = 0;
+  while ((i = buf.indexOf('tkhd', i)) !== -1) {
+    const start = i - 4;
+    const size = start >= 0 ? buf.readUInt32BE(start) : 0;
+    if (size >= 84 && start + size <= buf.length) {
+      const w = buf.readUInt32BE(start + size - 8) >>> 16, h = buf.readUInt32BE(start + size - 4) >>> 16;
+      if (w && h) return { w, h };
+    }
+    i += 4;
+  }
+  return null;
+}
+function videoTag(m, ver) {
+  const poster = m.poster ? ` poster="../assets/img/${m.poster}.webp"` : '';
+  const dim = (m.w && m.h) ? ` width="${m.w}" height="${m.h}"` : '';
+  const label = String(m.alt || '').trim() ? ` aria-label="${encAttr(m.alt)}"` : '';
+  return `<video${poster}${dim} muted loop playsinline preload="none"${label}><source src="../assets/vid/${m.video}.mp4?v=${ver}" type="video/mp4"></video>`;
+}
+function renderMedia(media, ver = '1') {
+  // Пустые слоты на страницу не пишем: тег без файла — это битая картинка на сайте.
+  // Пара, в которой заполнена одна половина, встаёт во всю ширину.
   const lines = media.map((m) => {
     if (m.type === 'raw' || m.type === 'comment') return '    ' + m.html.trim();
-    if (m.type === 'full') return '    ' + imgTag(m, 'full');
-    return '    <div class="row">' + m.items.map((i) => imgTag(i, 'row')).join('') + '</div>';
-  });
-  return '\n' + lines.join('\n') + '\n';
+    if (m.type === 'video') return m.video ? '    ' + videoTag(m, ver) : null;
+    if (m.type === 'full') return m.src ? '    ' + imgTag(m, 'full') : null;
+    const items = (m.items || []).filter((i) => i.src);
+    if (!items.length) return null;
+    if (items.length === 1) return '    ' + imgTag(items[0], 'full');
+    return '    <div class="row">' + items.map((i) => imgTag(i, 'row')).join('') + '</div>';
+  }).filter(Boolean);
+  return '\n' + lines.join('\n') + (lines.length ? '\n' : '');
 }
 
 function loadCase(n) {
@@ -426,7 +780,7 @@ function loadCase(n) {
   $('.pcase__f').each((_i, el) => {
     if ($(el).find('.l').attr('data-i18n') === 'f.year') year = $(el).find('.v').text().trim();
   });
-  return { n, dict, year, media: readMedia($), nextTitle: dict.ru['ui.nextTitle'] || '' };
+  return { n, dict, year, media: readMedia($), widths: widthsOf($), nextTitle: dict.ru['ui.nextTitle'] || '' };
 }
 
 // ── Точечная запись ────────────────────────────────────────────────────────
@@ -441,6 +795,12 @@ function loadCase(n) {
 function replaceInner(html, key, inner) {
   const at = html.indexOf(`data-i18n="${key}"`);
   if (at < 0) return null;
+  const r = replaceInnerAt(html, at, inner);
+  return r ? r[0] : null;
+}
+// То же по позиции атрибута. Возвращает [новый html, позиция сразу за вставкой] —
+// вторая нужна, чтобы пройти по всем вхождениям одного ключа.
+function replaceInnerAt(html, at, inner) {
   const lt = html.lastIndexOf('<', at);
   const tag = (html.slice(lt + 1).match(/^[a-zA-Z][a-zA-Z0-9]*/) || [null])[0];
   if (!tag) return null;
@@ -454,7 +814,7 @@ function replaceInner(html, key, inner) {
     const o = open.exec(html), c = close.exec(html);
     if (!c) return null;
     if (o && o.index < c.index) { depth++; i = o.index + 1; }
-    else { depth--; i = c.index + (depth === 0 ? 0 : 1); if (depth === 0) return html.slice(0, openEnd + 1) + inner + html.slice(c.index); }
+    else { depth--; i = c.index + (depth === 0 ? 0 : 1); if (depth === 0) return [html.slice(0, openEnd + 1) + inner + html.slice(c.index), openEnd + 1 + inner.length]; }
   }
   return null;
 }
@@ -489,6 +849,12 @@ function saveCase(n, payload) {
   for (const lang of ['ru', 'en']) {
     for (const [k, v] of Object.entries(payload.dict[lang] || {})) {
       if (!EDITABLE.has(k)) continue;
+      if (DICT_ONLY.test(k)) {
+        // пустое остаётся пустой строкой, если ключ уже был, и не заводится, если не было
+        if (String(v).trim() !== '') dict[lang][k] = v;
+        else if (k in dict[lang]) dict[lang][k] = '';
+        continue;
+      }
       if (String(v).trim() === '') { delete dict[lang][k]; if (lang === 'ru') dropped.push(k); }
       else dict[lang][k] = v;
     }
@@ -510,9 +876,13 @@ function saveCase(n, payload) {
   html = html.replace(/(data-i18n="f\.year">[^<]*<\/div><div class="v">)[^<]*(<\/div>)/, `$1${payload.year}$2`);
 
   if (payload.media) {
-    const next = replaceRegion(html, '<section class="pcase__full pcase__media"', renderMedia(payload.media));
+    const ver = (html.match(/\.min\.css\?v=(\d+)/) || [, '1'])[1];
+    const next = replaceRegion(html, '<section class="pcase__full pcase__media"', renderMedia(payload.media, ver));
     if (next) html = next;
   }
+
+  // ширины текстовых рамок — в style самих надписей
+  html = applyExtras(html, { widths: payload.widths }, '')[0];
 
   const nd = replaceInner(html.replace('id="i18n-data"', 'id="i18n-data" data-i18n="__dict__"'), '__dict__', JSON.stringify(dict));
   if (nd) html = nd.replace(' data-i18n="__dict__"', '');
@@ -544,6 +914,26 @@ const run = (cmd, args) => new Promise((ok) => {
 const node = (script, ...a) => run(NODE, [resolve(ROOT, 'tools', script), ...a]);
 const git = (...a) => run(GIT, a);
 
+// Файл из последней сохранённой версии сайта (HEAD), побайтно. По нему CMS
+// сравнивает «как опубликовано» с «как после правки»: и вёрстку, и тексты.
+// Кэш живёт, пока версия та же, — страница тянет десяток файлов разом.
+const BASE = { sha: '', at: 0, files: new Map() };
+async function gitBlob(rel) {
+  if (Date.now() - BASE.at > 3000) {
+    const sha = (await git('rev-parse', 'HEAD')).out.trim();
+    if (sha !== BASE.sha) { BASE.sha = sha; BASE.files.clear(); }
+    BASE.at = Date.now();
+  }
+  const key = rel.replace(/\\/g, '/');
+  if (BASE.files.has(key)) return BASE.files.get(key);
+  const buf = await new Promise((ok) => {
+    execFile(GIT, ['show', 'HEAD:' + key], { cwd: ROOT, maxBuffer: 1 << 28, encoding: 'buffer', windowsHide: true },
+      (e, so) => ok(e ? null : so));
+  });
+  BASE.files.set(key, buf);
+  return buf;
+}
+
 // Проверки перед публикацией — ровно те ошибки, что мы вычищали руками.
 function validate() {
   const problems = [];
@@ -565,6 +955,12 @@ function validate() {
       for (const i of items) {
         if (!i.alt.trim()) problems.push({ lvl: 'warn', n, msg: `У картинки ${i.src} пустой alt.` });
         if (!existsSync(resolve(IMGDIR, i.src + '.webp'))) problems.push({ lvl: 'err', n, msg: `Картинки ${i.src}.webp нет на диске.` });
+      }
+      if (m.type === 'video') {
+        if (!m.exists) problems.push({ lvl: 'err', n, msg: `Видео ${m.video}.mp4 нет на диске.` });
+        if (!m.poster) problems.push({ lvl: 'warn', n, msg: `У видео ${m.video} нет постера — пока ролик грузится, на его месте будет пустой прямоугольник.` });
+        else if (!existsSync(resolve(IMGDIR, m.poster + '.webp'))) problems.push({ lvl: 'err', n, msg: `Постера ${m.poster}.webp нет на диске.` });
+        if (!String(m.alt || '').trim()) problems.push({ lvl: 'warn', n, msg: `У видео ${m.video} нет описания — что на нём, одной фразой.` });
       }
     }
   }
@@ -603,6 +999,30 @@ const srv = createServer(async (req, res) => {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
       return res.end(readFileSync(resolve(HERE, 'index.html')));
     }
+    // части интерфейса: cms/ui/*.js. Кроме них из папки cms наружу ничего не отдаём.
+    if (path.startsWith('/__cms/ui/')) {
+      const name = path.slice('/__cms/ui/'.length);
+      const f = resolve(HERE, 'ui', name);
+      if (!/^[a-z0-9-]+\.(js|css)$/.test(name) || !existsSync(f)) { res.writeHead(404); return res.end('нет такого файла'); }
+      res.writeHead(200, { 'content-type': MIME[extname(f)], 'cache-control': 'no-store' });
+      return res.end(readFileSync(f));
+    }
+    // Сайт «как опубликован»: те же адреса под /__base/, но файлы берутся из
+    // последней версии в git. Проверка вёрстки грузит обе копии и сравнивает.
+    if (path === '/__base' || path.startsWith('/__base/')) {
+      let rel = path.slice('/__base/'.length).replace(/^Sergey-Lookin\//, '');
+      if (!rel || rel.endsWith('/')) rel += 'index.html';
+      if (rel.includes('..')) { res.writeHead(400); return res.end('плохой адрес'); }
+      const ext = extname(rel);
+      const work = resolve(ROOT, rel);
+      // видео тяжёлые и на раскладку не влияют — отдаём текущие; того, чего в
+      // опубликованной версии ещё нет (новая картинка), тоже берём с диска
+      let buf = ext === '.mp4' ? null : await gitBlob(rel);
+      if (!buf && work.startsWith(ROOT) && existsSync(work) && ext) buf = readFileSync(work);
+      if (!buf) { res.writeHead(404); return res.end('нет такой страницы'); }
+      res.writeHead(200, { 'content-type': MIME[ext] || 'application/octet-stream', 'cache-control': 'no-store' });
+      return res.end(buf);
+    }
     if (path === '/' || path === '/index.html') {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
       return res.end(readFileSync(resolve(ROOT, 'index.html')));
@@ -619,7 +1039,8 @@ const srv = createServer(async (req, res) => {
           if (String(c.dict.ru[k] ?? '').trim() && !String(c.dict.en[k] ?? '').trim()) needsEn++;
         }
         return { n: rc.id, title: c.dict.ru['p.title'], year: c.year, role: c.dict.ru['p.role'],
-                 status: rc.status, order: rc.order, cover: rc.cover, slug: rc.slug, needsEn };
+                 status: rc.status, order: rc.order, cover: rc.cover, slug: rc.slug, needsEn,
+                 pos: rc.pos || '', video: videoInfo(rc.slug) };
       });
       return json(res, 200, { fields: FIELDS, cases, statuses: STATUSES, statusRu: STATUS_RU });
     }
@@ -721,11 +1142,29 @@ const srv = createServer(async (req, res) => {
 
     if (path.startsWith('/api/case/') && path.endsWith('/cover') && req.method === 'POST') {
       const id = path.split('/')[3];
-      const { poster, kind } = JSON.parse((await body(req)).toString('utf8'));
+      // Меняем только то, что прислали: постер, вид обложки (картинка или видео)
+      // и точку кадра — каждое по отдельности, остальное остаётся как было.
+      const inc = JSON.parse((await body(req)).toString('utf8'));
       const reg = readReg();
       const c = reg.cases.find((x) => x.id === id);
       if (!c) return json(res, 404, { error: 'нет такого кейса' });
-      c.cover = { ...c.cover, kind: kind || c.cover.kind || 'img', poster: poster || '' };
+      const cover = { ...c.cover };
+      if ('poster' in inc) cover.poster = String(inc.poster || '');
+      if (inc.kind) {
+        if (!['img', 'vid'].includes(inc.kind)) return json(res, 400, { error: 'Обложка бывает картинкой или видео.' });
+        if (inc.kind === 'vid') {
+          if (!videoInfo(c.slug).exists) return json(res, 400, { error: 'Сначала загрузи видео — файла assets/vid/' + c.slug + '.mp4 пока нет.' });
+          cover.video = `assets/vid/${c.slug}.mp4`;
+        } else delete cover.video;
+        cover.kind = inc.kind;
+      }
+      cover.kind = cover.kind || 'img';
+      c.cover = cover;
+      if ('pos' in inc) {
+        const pos = String(inc.pos || '').trim();
+        if (pos && !/^\d{1,3}% \d{1,3}%$/.test(pos)) return json(res, 400, { error: 'Точка кадра — два процента: «50% 42%».' });
+        c.pos = pos;
+      }
       writeReg(reg);
       const r = await rebuild();
       return json(res, 200, { ok: r.ok, out: r.out });
@@ -739,24 +1178,63 @@ const srv = createServer(async (req, res) => {
       if (req.method === 'GET') return json(res, 200, loadCase(n));
       if (req.method === 'POST') {
         saveCase(n, JSON.parse((await body(req)).toString('utf8')));
-        const b = await node('build-en.mjs');
-        if (b.code !== 0) console.log('[build-en] код ' + b.code + ' :: ' + b.out.slice(-500));
-        return json(res, 200, { ok: true, en: b.code === 0, enOut: b.out.slice(-300), problems: validate() });
+        // Название, роль, год, описание карточки и направление стоят ещё и в сетке
+        // портфолио и в таблице на главной. Пересобираем их сразу: раньше они
+        // обновлялись только при смене порядка, и карточка расходилась с кейсом.
+        const b = await rebuild();
+        if (!b.ok) console.log('[пересборка] ' + b.out);
+        return json(res, 200, { ok: true, en: b.ok, enOut: b.out.slice(-300), problems: validate(), data: loadCase(n) });
       }
     }
     // ── остальные страницы сайта ──────────────────────────────────────────
     if (path === '/api/pages') return json(res, 200, { pages: PAGES.map(({ file, label }) => ({ file, label })) });
 
+    // порядок и видимость экранов страницы
+    if (path.startsWith('/api/page/') && path.endsWith('/structure') && req.method === 'POST') {
+      const file = decodeURIComponent(path.slice('/api/page/'.length, -'/structure'.length));
+      const page = PAGES.find((p) => p.file === file);
+      if (!page) return json(res, 404, { error: 'нет такой страницы' });
+      const r = saveStructure(page, JSON.parse((await body(req)).toString('utf8') || '{}'));
+      if (r.error) return json(res, 400, r);
+      if (r.changed) { const b = await node('build-en.mjs'); if (b.code !== 0) return json(res, 500, { error: 'Английская версия не собралась:\n' + b.out.slice(-300) }); }
+      return json(res, 200, { ok: true, changed: r.changed, screens: loadPage(page).screens });
+    }
+
     if (path.startsWith('/api/page/')) {
       const file = decodeURIComponent(path.slice('/api/page/'.length));
       const page = PAGES.find((p) => p.file === file);
       if (!page) return json(res, 404, { error: 'нет такой страницы' });
-      if (req.method === 'GET') return json(res, 200, loadPage(page));
-      if (req.method === 'POST') {
-        savePage(page, JSON.parse((await body(req)).toString('utf8')));
-        const b = await node('build-en.mjs');
-        return json(res, 200, { ok: b.code === 0, out: b.out.slice(-300) });
+      if (req.method === 'GET') {
+        const m = loadPage(page);
+        m.og = OG_PAGES.includes(file) ? await ogInfo() : null;
+        return json(res, 200, m);
       }
+      if (req.method === 'POST') {
+        const r = savePage(page, JSON.parse((await body(req)).toString('utf8')));
+        const b = await node('build-en.mjs');
+        return json(res, 200, { ok: b.code === 0, out: b.out.slice(-300), changed: r.changed });
+      }
+    }
+
+    // ── картинка превью для мессенджеров ─────────────────────────────────
+    // Любой формат и размер приводим к 1200×630 PNG: это размер, который ждут
+    // Telegram, WhatsApp и соцсети. Лишнее обрезается по центру. Адрес картинки
+    // в <head> получает новый отпечаток — без него мессенджеры держат старую.
+    if (path === '/api/og' && req.method === 'POST') {
+      const buf = await body(req);
+      if (!imageKind(buf)) return json(res, 400, { error: 'Не похоже на картинку. Нужен PNG, JPG или WebP.' });
+      let out, meta;
+      try {
+        meta = await sharpMod.default(buf).metadata();
+        out = await sharpMod.default(buf).resize(1200, 630, { fit: 'cover', position: 'centre' }).png({ compressionLevel: 9 }).toBuffer();
+      } catch { return json(res, 400, { error: 'Не удалось прочитать картинку.' }); }
+      mkdirSync(dirname(OG_FILE), { recursive: true });
+      await writeFileSafe(OG_FILE, out);
+      const a = await node('build-pages.mjs');
+      const b = await node('build-en.mjs');
+      const ratio = meta.width / meta.height;
+      return json(res, 200, { ok: a.code === 0 && b.code === 0, ...(await ogInfo()),
+        cropped: Math.abs(ratio - 1200 / 630) > 0.02, was: `${meta.width}×${meta.height}` });
     }
 
     // ── CV: два PDF, русский и английский. Имена файлов постоянны, чтобы
@@ -803,16 +1281,24 @@ const srv = createServer(async (req, res) => {
         kind: got.kind, mode: got.mode, wasKb: Math.round(got.was / 1024), kb: Math.round(buf.length / 1024) });
     }
     // ── видео-обложки кейсов ─────────────────────────────────────────────
+    // ?slug=имя — записать ровно в этот файл (замена: ссылки не рвутся);
+    // ?stem=основа — новый файл, свободный номер подбирает сервер: runa-v1, runa-v2…
     if (path === '/api/video' && req.method === 'POST') {
-      const slug = url.searchParams.get('slug');
+      let slug = url.searchParams.get('slug');
+      const stem = url.searchParams.get('stem');
+      if (!slug && stem) {
+        if (!/^[a-z0-9-]+$/.test(stem)) return json(res, 400, { error: 'Основа имени — только латиница, цифры и дефисы.' });
+        let k = 1;
+        do { slug = `${stem}-v${k++}`; } while (existsSync(resolve(VIDDIR, slug + '.mp4')));
+      }
       if (!/^[a-z0-9-]+$/.test(slug || '')) return json(res, 400, { error: 'Неверное имя.' });
       const buf = await body(req);
       if (buf.slice(4, 8).toString() !== 'ftyp') return json(res, 400, { error: 'Это не mp4. Нужен файл .mp4.' });
       if (buf.length > 40 * 1024 * 1024) return json(res, 400, { error: 'Больше 40 МБ — тяжело для сайта.' });
-      mkdirSync(resolve(ROOT, 'assets', 'vid'), { recursive: true });
-      const dst = resolve(ROOT, 'assets', 'vid', slug + '.mp4');
-      await writeFileSafe(dst, buf);
-      return json(res, 200, { ok: true, slug, mb: (buf.length / 1048576).toFixed(1) });
+      mkdirSync(VIDDIR, { recursive: true });
+      await writeFileSafe(resolve(VIDDIR, slug + '.mp4'), buf);
+      const size = mp4Size(buf) || {};
+      return json(res, 200, { ok: true, slug, name: slug, mb: (buf.length / 1048576).toFixed(1), w: size.w || '', h: size.h || '' });
     }
 
     // ── история версий: последние публикации и откат ─────────────────────
@@ -991,6 +1477,81 @@ const srv = createServer(async (req, res) => {
       return json(res, 200, { ok: true });
     }
 
+    if (path === '/api/media/delete-video' && req.method === 'POST') {
+      const { name } = JSON.parse((await body(req)).toString('utf8'));
+      const it = videoLibrary().find((x) => x.name === name);
+      if (!it) return json(res, 404, { error: 'нет такого файла' });
+      if (it.used.length) return json(res, 400, { error: 'Видео используется: ' + it.used.map((u) => u.where).join('; ') + '. Сначала убери его оттуда.' });
+      if (!(await rmRetry(resolve(VIDDIR, name + '.mp4')))) return json(res, 500, { error: 'Не удалось удалить — файл занят другой программой.' });
+      return json(res, 200, { ok: true });
+    }
+
+    // ── поиск по всем текстам сайта ──────────────────────────────────────
+    // Находит надпись на любой странице и в любом кейсе, на русском и английском,
+    // и говорит, где она лежит: клик по результату открывает нужное поле.
+    if (path === '/api/search') {
+      const q = String(url.searchParams.get('q') || '').trim().toLowerCase();
+      if (q.length < 2) return json(res, 200, { items: [] });
+      const plain = (v) => String(v ?? '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+      const items = [];
+      const scan = (target, where, key, label, ru, en) => {
+        for (const [lang, v] of [['ru', ru], ['en', en]]) {
+          const t = plain(v), at = t.toLowerCase().indexOf(q);
+          if (at < 0) continue;
+          const from = Math.max(0, at - 28);
+          items.push({ ...target, where, key, label, lang, snippet: (from ? '…' : '') + t.slice(from, at + q.length + 44) + (at + q.length + 44 < t.length ? '…' : '') });
+          return;
+        }
+      };
+      for (const pg of PAGES) {
+        const m = loadPage(pg);
+        for (const s of m.screens) for (const f of s.fields) {
+          const where = pg.label + (s.id.startsWith('@') ? '' : ' → ' + s.name);
+          if (f.attr) scan({ type: 'page', file: pg.file }, where, f.k, f.label, m.attrs[f.k].ru, m.attrs[f.k].en);
+          else scan({ type: 'page', file: pg.file }, where, f.k, f.label, m.dict.ru[f.k], m.dict.en[f.k]);
+        }
+      }
+      for (const id of caseIds()) {
+        const c = loadCase(id);
+        for (const f of FIELDS) scan({ type: 'case', n: id }, `Кейс ${id} · ${plain(c.dict.ru['p.title'])}`, f.k, f.label, c.dict.ru[f.k], c.dict.en[f.k]);
+      }
+      const sh = JSON.parse(readFileSync(resolve(ROOT, 'content', 'shell.json'), 'utf8'));
+      for (const k of Object.keys(sh.ru)) scan({ type: 'shell' }, 'Шапка и подвал', k, SHELL_LABELS[k] || k, sh.ru[k], sh.en[k]);
+      return json(res, 200, { items: items.slice(0, 60), total: items.length });
+    }
+
+    // ── русский изменён, английский нет ──────────────────────────────────
+    // Сравниваем словари с последней опубликованной версией. Поле, где русский
+    // текст поменяли, а английский остался прежним, — почти всегда забытый перевод.
+    if (path === '/api/mirror') {
+      const files = [...PAGES.map((x) => x.file), ...caseIds().map((n) => `projects/${n}.html`)];
+      const dictOf = (html) => { try { return JSON.parse((html.match(/<script id="i18n-data" type="application\/json">([\s\S]*?)<\/script>/) || [, '{}'])[1]); } catch { return {}; } };
+      const out = [];
+      for (const rel of files) {
+        const abs = resolve(ROOT, rel);
+        if (!existsSync(abs)) continue;
+        const was = await gitBlob(rel);
+        if (!was) continue;                                  // новой страницы в опубликованной версии нет
+        const a = dictOf(was.toString('utf8')), b = dictOf(readFileSync(abs, 'utf8'));
+        const isCase = rel.startsWith('projects/');
+        const pg = PAGES.find((x) => x.file === rel);
+        let labels = null;
+        for (const k of Object.keys(b.ru || {})) {
+          if (isCase ? !EDITABLE.has(k) : !editableKey(k)) continue;
+          if (isCase && (FIELDS.find((f) => f.k === k) || {}).neutral) continue;
+          const ruWas = (a.ru || {})[k], ruNow = b.ru[k], enWas = (a.en || {})[k], enNow = (b.en || {})[k];
+          if (ruWas === undefined || ruWas === ruNow) continue;
+          if (enWas !== enNow || !String(enNow ?? '').trim()) continue;   // перевод тронут или его нет вовсе — это другая проверка
+          if (!isCase && !labels) { labels = {}; for (const s of loadPage(pg).screens) for (const f of s.fields) labels[f.k] = f.label; }
+          out.push({ file: rel, key: k,
+            where: isCase ? `Кейс ${rel.slice(9, 11)}` : pg.label,
+            label: isCase ? (FIELDS.find((f) => f.k === k) || {}).label || k : labels[k] || k,
+            target: isCase ? { type: 'case', n: rel.slice(9, 11) } : { type: 'page', file: rel } });
+        }
+      }
+      return json(res, 200, { items: out });
+    }
+
     // заменить КОНКРЕТНЫЙ файл, имя сохраняется — ссылки на него не рвутся
     if (path === '/api/replace' && req.method === 'POST') {
       const name = url.searchParams.get('name');
@@ -1009,6 +1570,9 @@ const srv = createServer(async (req, res) => {
         if (w >= meta.width) { if (existsSync(v)) rmSync(v, { force: true }); continue; }
         await sharp(dst).resize({ width: w }).webp({ quality: 82 }).toFile(v);
       }
+      // новая картинка может быть других пропорций — правим размеры в разметке
+      // и пересобираем сетку портфолио и английскую версию
+      if (await syncImageDims(name)) await rebuild();
       return json(res, 200, { ok: true, name, w: meta.width, h: meta.height, ...fileInfo(name),
         kind: got.kind, mode: got.mode, wasKb: Math.round(got.was / 1024), kb: Math.round(buf.length / 1024) });
     }
@@ -1042,7 +1606,7 @@ const srv = createServer(async (req, res) => {
       const add = await git('add', '--',
         'index.html', 'portfolio.html', 'about.html', '404.html',
         'projects', 'en', 'content',
-        'assets/img', 'assets/cv', 'assets/vid',
+        'assets/img', 'assets/cv', 'assets/vid', 'assets/og',
         'sitemap.xml');
       steps.push({ name: 'Отбор файлов', ok: add.code === 0, out: add.out.slice(-300) });
       const staged = await git('diff', '--cached', '--name-only');
@@ -1076,7 +1640,8 @@ const srv = createServer(async (req, res) => {
     // Страницы ссылаются на ассеты абсолютно — /Sergey-Lookin/assets/… — потому что
     // сайт живёт в подпапке GitHub Pages. Локально мы отдаём проект с корня, поэтому
     // этот префикс снимаем: иначе 404-я и часть страниц открывались бы без стилей.
-    const localPath = path.startsWith('/Sergey-Lookin/') ? path.slice('/Sergey-Lookin'.length) : path;
+    let localPath = path.startsWith('/Sergey-Lookin/') ? path.slice('/Sergey-Lookin'.length) : path;
+    if (localPath.endsWith('/')) localPath += 'index.html';       // /en/ — это /en/index.html
     const f = resolve(ROOT, '.' + localPath);
     if (f.startsWith(ROOT) && existsSync(f) && extname(f)) {
       res.writeHead(200, { 'content-type': MIME[extname(f)] || 'application/octet-stream', 'cache-control': 'no-store' });
