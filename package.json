@@ -1,7 +1,7 @@
 {
   "name": "portfolio",
   "version": "1.0.0",
-  "description": "Sergey Lukin — Design Lead portfolio (static site + small build tooling)",
+  "description": "Sergey Lukin — Art Director portfolio (static site + small build tooling)",
   "private": true,
   "type": "commonjs",
   "scripts": {
