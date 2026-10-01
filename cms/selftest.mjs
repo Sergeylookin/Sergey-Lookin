@@ -8,6 +8,7 @@
 
 import { readFileSync, readdirSync, existsSync, writeFileSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { request as httpRequest } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -62,6 +63,22 @@ ok('кривой адрес не роняет сервер', (await code('//')) 
 ok('битое кодирование', (await code('/%%%%')) === 400);
 ok('выход за пределы папки закрыт', (await code('/../../etc/passwd')) === 404);
 ok('сервер жив после этого', (await code('/api/model')) === 200);
+
+// Браузер на компьютере общий: любая открытая в нём страница может послать в CMS
+// запрос «вслепую». Сервер обязан принимать только то, что пришло от самой CMS.
+g('Чужие запросы');
+const withHeaders = (p, headers, method = 'GET') => fetch(API + p, { method, headers }).then((r) => r.status).catch(() => 0);
+ok('запрос с чужого сайта отклонён', (await withHeaders('/api/model', { origin: 'https://example.com' })) === 403);
+ok('запись с чужого сайта отклонена', (await withHeaders('/api/order', { origin: 'https://example.com', 'content-type': 'text/plain' }, 'POST')) === 403);
+ok('источник «null» отклонён', (await withHeaders('/api/model', { origin: 'null' })) === 403);
+ok('межсайтовый запрос к API отклонён', (await withHeaders('/api/model', { 'sec-fetch-site': 'cross-site' })) === 403);
+ok('свой источник проходит', (await withHeaders('/api/model', { origin: new URL(API).origin })) === 200);
+// подменённое имя хоста (DNS-подмена) — через сырой запрос: fetch не даёт задать Host
+ok('чужое имя хоста отклонено', (await new Promise((done) => {
+  const u = new URL(API);
+  httpRequest({ host: u.hostname, port: u.port, path: '/api/model', headers: { host: 'evil.example:8150' } }, (r) => { r.resume(); done(r.statusCode); })
+    .on('error', () => done(0)).end();
+})) === 403);
 
 // ─────────────────────────────────────────────────────────────────────────
 g('Кейсы — чтение');

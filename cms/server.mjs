@@ -1065,6 +1065,8 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=u
 
 const body = (req) => new Promise((ok) => { const c = []; req.on('data', (d) => c.push(d)); req.on('end', () => ok(Buffer.concat(c))); });
 
+const OWN_HOSTS = new Set([`localhost:${PORT}`, `127.0.0.1:${PORT}`]);
+
 const srv = createServer(async (req, res) => {
   // Разбор адреса ВНУТРИ try: кривой запрос (например «//») роняет new URL,
   // а вместе с ним ронял и весь сервер — CMS просто закрывалась.
@@ -1074,6 +1076,16 @@ const srv = createServer(async (req, res) => {
     path = decodeURIComponent(url.pathname);
   } catch {
     res.writeHead(400); return res.end('плохой адрес');
+  }
+  // CMS слушает только этот компьютер, но браузер на нём общий: любая открытая в нём
+  // страница может послать сюда запрос «вслепую» и, например, нажать «Опубликовать».
+  // Принимаем только своё: имя хоста — наше (иначе адрес подменили через DNS), и
+  // источник запроса, если браузер его назвал, — тоже наш.
+  const origin = req.headers.origin;
+  if (!OWN_HOSTS.has(req.headers.host || '')
+      || (origin && !OWN_HOSTS.has(origin.replace(/^https?:\/\//, '')))
+      || (path.startsWith('/api/') && req.headers['sec-fetch-site'] === 'cross-site')) {
+    res.writeHead(403, { 'content-type': 'text/plain; charset=utf-8' }); return res.end('чужой запрос');
   }
   try {
     // Интерфейс CMS живёт по своему адресу, а не по «/». Иначе главная сайта

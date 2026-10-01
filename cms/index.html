@@ -733,7 +733,8 @@ async function openUntranslated(n){
   await open(n);
   if(CUR!==n) return;                 // уход отменён: остались несохранённые правки
   setTimeout(()=>{
-    const hit=$('#form .oth.none') || [...$('#form').querySelectorAll('.rf[data-l="en"]')].find(e=>!e.textContent.trim() && !e.closest('[data-neutral]'));
+    // в режиме «RU» пустой перевод помечен под полем; в «EN» и «Оба» ищем само пустое английское поле
+    const hit=(FMODE==='ru' && $('#form .oth.none')) || [...$('#form').querySelectorAll('.rf[data-l="en"]')].find(e=>!e.textContent.trim() && !e.closest('[data-neutral]'));
     const f=hit&&hit.closest('.f'); if(!f) return;
     unfold(f.closest('.sec')); scrollMainTo(f);
     f.classList.add('flash'); setTimeout(()=>f.classList.remove('flash'),1600);
@@ -975,7 +976,10 @@ document.addEventListener('selectionchange',()=>{
 function wireRich(el, onChange){
   el.addEventListener('paste', e=>{
     e.preventDefault();
-    const t=(e.clipboardData||window.clipboardData).getData('text/plain');
+    let t=(e.clipboardData||window.clipboardData).getData('text/plain');
+    // в однострочное поле (название, роль, метрика) переносы из буфера не пускаем:
+    // Enter в нём запрещён, а вставка протащила бы <br> в заголовок
+    if(el.classList.contains('rf--one')) t=t.replace(/\s*\r?\n\s*/g,' ').trim();
     document.execCommand('insertText', false, t);
   });
   el.addEventListener('keydown', e=>{
