@@ -995,6 +995,17 @@ const run = (cmd, args) => new Promise((ok) => {
 const node = (script, ...a) => run(NODE, [resolve(ROOT, 'tools', script), ...a]);
 const git = (...a) => run(GIT, a);
 
+// Адрес живого сайта — из адреса репозитория на GitHub. Нужен, чтобы показать
+// человеку настоящую ссылку страницы (превью в мессенджере, обновление кэша).
+let SITE_URL = null;
+async function siteUrl() {
+  if (SITE_URL === null) {
+    const m = (await git('remote', 'get-url', 'origin')).out.trim().match(/github\.com[/:]([^/]+)\/([^/.\s]+)/);
+    SITE_URL = m ? `https://${m[1].toLowerCase()}.github.io/${m[2]}/` : '';
+  }
+  return SITE_URL;
+}
+
 // Файл из последней сохранённой версии сайта (HEAD), побайтно. По нему CMS
 // сравнивает «как опубликовано» с «как после правки»: и вёрстку, и тексты.
 // Кэш живёт, пока версия та же, — страница тянет десяток файлов разом.
@@ -1139,7 +1150,7 @@ const srv = createServer(async (req, res) => {
                  status: rc.status, order: rc.order, cover: rc.cover, slug: rc.slug, needsEn,
                  pos: rc.pos || '', video: videoInfo(rc.slug) };
       });
-      return json(res, 200, { fields: FIELDS, cases, statuses: STATUSES, statusRu: STATUS_RU });
+      return json(res, 200, { fields: FIELDS, cases, statuses: STATUSES, statusRu: STATUS_RU, site: await siteUrl() });
     }
 
     // создать новый кейс: копия шаблона с очищенным содержимым, сразу черновик
@@ -1657,6 +1668,120 @@ const srv = createServer(async (req, res) => {
       }
       return json(res, 200, { items: out });
     }
+
+    // ── что изменится на сайте: правки по полям, а не по файлам ─────────────
+    // Список файлов человеку ничего не говорит. Здесь рабочая версия сравнивается с
+    // опубликованной и раскладывается на то, что видно на сайте: какое поле на какой
+    // странице было каким и каким стало, что с экранами, кейсами, картинками.
+    if (path === '/api/diff') {
+      const dictOf = (html) => { try { return JSON.parse((html.match(/<script id="i18n-data" type="application\/json">([\s\S]*?)<\/script>/) || [, '{}'])[1]); } catch { return {}; } };
+      const plain = (v) => String(v ?? '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+      const texts = (a, b, keep, label) => {
+        const items = [];
+        for (const lang of ['ru', 'en']) {
+          const x = a[lang] || {}, y = b[lang] || {};
+          for (const k of new Set([...Object.keys(x), ...Object.keys(y)])) {
+            if (!keep(k)) continue;
+            const was = String(x[k] ?? ''), now = String(y[k] ?? '');
+            if (was !== now) items.push({ key: k, label: label(k), lang, was, now });
+          }
+        }
+        return items;
+      };
+      // То, что в разметке меняется помимо текстов: порядок и видимость экранов,
+      // набор картинок и видео, ширина текстовых рамок. Версии файлов (?v=…) и
+      // прочая механика сборки сюда не попадают — человеку они не видны.
+      const shape = (html) => ({
+        order: [...html.matchAll(/<section\b[^>]*\bid="([^"]+)"/g)].map((m) => m[1]),
+        off: [...html.matchAll(/<template\b[^>]*\bdata-off\b[^>]*>\s*<section\b[^>]*\bid="([^"]+)"/g)].map((m) => m[1]),
+        media: [...html.matchAll(/<(?:img|source|video)\b[^>]*?\b(?:src|poster)="([^"?]+)/g)].map((m) => m[1].replace(/^.*\//, '').replace(/-(480|960|1440)(?=\.)/, '')),
+        widths: (html.match(/max-width:\s*\d+ch\s*!important/g) || []).join('|'),
+      });
+      const notes = (a, b, names) => {
+        const out = [], A = shape(a), B = shape(b), nm = (id) => names[id] || id;
+        for (const id of B.off) if (!A.off.includes(id)) out.push({ note: `Экран «${nm(id)}» скрыт` });
+        for (const id of A.off) if (!B.off.includes(id)) out.push({ note: `Экран «${nm(id)}» возвращён на сайт` });
+        const common = (x, y) => x.filter((id) => y.includes(id)).join();
+        if (common(A.order, B.order) !== common(B.order, A.order)) out.push({ note: 'Изменён порядок экранов' });
+        if ([...new Set(A.media)].sort().join() !== [...new Set(B.media)].sort().join()) out.push({ note: 'Изменён набор картинок или видео' });
+        else if (A.media.join() !== B.media.join()) out.push({ note: 'Изменён порядок картинок или видео' });
+        if (A.widths !== B.widths) out.push({ note: 'Изменена ширина текстовой рамки' });
+        return out;
+      };
+      const groups = [];
+      let meta = false;
+      for (const pg of PAGES) {
+        const abs = resolve(ROOT, pg.file);
+        if (!existsSync(abs)) continue;
+        const was = await gitBlob(pg.file), now = readFileSync(abs, 'utf8');
+        if (!was) { groups.push({ where: pg.label, target: { type: 'page', file: pg.file }, file: pg.file, items: [{ note: 'Новая страница' }] }); continue; }
+        const old = was.toString('utf8');
+        if (old === now) continue;
+        const labels = {}, names = {};
+        for (const s of loadPage(pg).screens) { names[s.id] = s.name; for (const f of s.fields) labels[f.k] = (s.id.startsWith('@') ? '' : s.name + ' · ') + f.label; }
+        const items = [...texts(dictOf(old), dictOf(now), editableKey, (k) => labels[k] || k), ...notes(old, now, names)];
+        if (items.length) groups.push({ where: pg.label, target: { type: 'page', file: pg.file }, file: pg.file, items });
+      }
+      for (const n of caseIds()) {
+        const rel = `projects/${n}.html`, now = readFileSync(resolve(ROOT, rel), 'utf8');
+        const was = await gitBlob(rel), title = plain(dictOf(now).ru?.['p.title']) || 'без названия';
+        const target = { type: 'case', n };
+        if (!was) { groups.push({ where: `Кейс ${n} · ${title}`, target, file: rel, items: [{ note: 'Новый кейс' }] }); continue; }
+        const old = was.toString('utf8');
+        if (old === now) continue;
+        const items = [...texts(dictOf(old), dictOf(now), (k) => EDITABLE.has(k), (k) => (FIELDS.find((f) => f.k === k) || {}).label || k),
+          ...notes(old, now, {})];
+        if (items.length) groups.push({ where: `Кейс ${n} · ${title}`, target, file: rel, items });
+      }
+      const jsonAt = async (rel) => { const b = await gitBlob(rel); try { return b ? JSON.parse(b.toString('utf8')) : null; } catch { return null; } };
+      const jsonNow = (rel) => { try { return JSON.parse(readFileSync(resolve(ROOT, rel), 'utf8')); } catch { return null; } };
+      {   // шапка и подвал — одни на все страницы
+        const a = await jsonAt('content/shell.json'), b = jsonNow('content/shell.json');
+        if (a && b) { const items = texts(a, b, () => true, (k) => SHELL_LABELS[k] || k);
+          if (items.length) groups.push({ where: 'Шапка и подвал', target: { type: 'shell' }, items }); }
+      }
+      {   // контакты и ссылки
+        const a = await jsonAt('content/contacts.json'), b = jsonNow('content/contacts.json');
+        if (a && b) {
+          const items = [], row = (x) => (x ? [x.handle, x.url].filter(Boolean).join(' · ') : '');
+          const ids = new Set([...(a.items || []), ...(b.items || [])].map((x) => x.id));
+          for (const id of ids) { const x = (a.items || []).find((i) => i.id === id), y = (b.items || []).find((i) => i.id === id);
+            if (JSON.stringify(x) !== JSON.stringify(y)) items.push({ key: id, label: (y || x).name || id, lang: '', was: row(x), now: row(y) }); }
+          if (JSON.stringify(a.extra || []) !== JSON.stringify(b.extra || [])) items.push({ note: 'Изменён список дополнительных ссылок' });
+          if (items.length) groups.push({ where: 'Контакты и ссылки', items });
+        }
+      }
+      {   // реестр кейсов: видимость, порядок, обложки
+        const a = await jsonAt('content/cases.json'), b = jsonNow('content/cases.json');
+        if (a && b) {
+          const items = [], byId = (r) => Object.fromEntries((r.cases || []).map((c) => [c.id, c]));
+          const A = byId(a), B = byId(b), seq = (r) => (r.cases || []).slice().sort((x, y) => x.order - y.order).map((c) => c.id);
+          for (const id of Object.keys(B)) {
+            if (!A[id]) continue;
+            if (A[id].status !== B[id].status) items.push({ key: id, label: `Кейс ${id} · видимость`, lang: '', was: STATUS_RU[A[id].status] || A[id].status, now: STATUS_RU[B[id].status] || B[id].status });
+            if (JSON.stringify(A[id].cover) !== JSON.stringify(B[id].cover) || (A[id].pos || '') !== (B[id].pos || '')) items.push({ note: `Кейс ${id}: изменена обложка` });
+          }
+          const keep = (s, o) => s.filter((id) => o.includes(id));
+          if (keep(seq(a), seq(b)).join() !== keep(seq(b), seq(a)).join()) items.push({ label: 'Порядок кейсов', lang: '', was: keep(seq(a), seq(b)).join(' → '), now: keep(seq(b), seq(a)).join(' → ') });
+          if (items.length) groups.push({ where: 'Кейсы', items });
+        }
+      }
+      // файлы: картинки, видео, резюме, превью для мессенджеров
+      const media = [];
+      for (const line of (await git('status', '--short')).out.split('\n')) {
+        const m = line.trim().match(/^(\S+)\s+"?(assets\/(img|vid|cv|og)\/[^"]+?)"?$/);
+        if (!m) continue;
+        const name = m[2].replace(/^.*\//, '').replace(/-(480|960|1440)(?=\.webp$)/, '');
+        const kind = /^(\?\?|A)/.test(m[1]) ? 'new' : m[1].includes('D') ? 'gone' : 'changed';
+        if (m[3] === 'og') meta = true;
+        if (!media.some((x) => x.name === name)) media.push({ name, kind, type: m[3] });
+      }
+      for (const g of groups) if (g.items.some((it) => /^meta\.(title|description)$/.test(it.key || ''))) { meta = true; g.meta = true; }
+      return json(res, 200, { groups, media, meta, site: await siteUrl() });
+    }
+
+    // связь с сервером: интерфейс в браузере живёт и тогда, когда окно CMS закрыли
+    if (path === '/api/ping') return json(res, 200, { ok: true });
 
     // заменить КОНКРЕТНЫЙ файл, имя сохраняется — ссылки на него не рвутся
     if (path === '/api/replace' && req.method === 'POST') {

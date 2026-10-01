@@ -57,6 +57,7 @@ for (const [label, path] of [
   ['стили по абсолютному пути', '/Sergey-Lookin/assets/core.min.css'],
   ['картинка', '/assets/img/runa-1.webp'], ['PDF резюме', '/assets/cv/sergey-lookin-cv-ru.pdf'],
 ]) ok(label, (await code(path)) === 200);
+ok('проверка связи отвечает', (await get('/api/ping')).ok === true);
 
 g('Устойчивость');
 ok('кривой адрес не роняет сервер', (await code('//')) === 400);
@@ -131,9 +132,19 @@ const en08 = readFileSync(resolve(ROOT, 'en/projects/08.html'), 'utf8');
 ok('правка попадает в тело страницы', html08.includes('ТЕСТ ЗАГОЛОВКА'));
 ok('правка попадает в словарь', (html08.match(/ТЕСТ ЗАГОЛОВКА/g) || []).length >= 2);
 ok('английская версия пересобирается', en08.includes('TEST TITLE'));
+// Окно публикации показывает правки по полям, а не по файлам: эта правка обязана
+// там быть с прежним и новым текстом, и ничего лишнего рядом с ней быть не должно.
+const df = await get('/api/diff');
+const g08 = (df.groups || []).find((x) => x.file === 'projects/08.html');
+const t08 = g08?.items.find((it) => it.key === 'p.title' && it.lang === 'ru');
+ok('правка видна в списке «что изменится»', !!t08 && t08.now === 'ТЕСТ ЗАГОЛОВКА' && t08.was === before.dict.ru['p.title'],
+  t08 ? `${t08.was} → ${t08.now}` : 'не найдена');
+ok('в списке только то, что менялось', (df.groups || []).length === 1 && g08?.items.length === 2,
+  (df.groups || []).map((x) => `${x.where}: ${x.items.map((it) => it.key || it.note).join(', ')}`).join(' | '));
 await post('/api/case/08', before);
 restore('projects/08.html', 'en/');
 ok('откат правки чист', dirty(['projects/', 'en/']) === 0);
+ok('после отката список изменений пуст', ((await get('/api/diff')).groups || []).length === 0);
 
 g('Кейсы — состав');
 const created = await post('/api/case/new', { title: 'Автотест' });
