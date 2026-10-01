@@ -363,14 +363,20 @@ function readStructure(html) {
   const inner = html.slice(openEnd, close);
   const re = /(<template data-off="[^"]*">\s*)?(<section\b[^>]*\bid="([^"]+)"[^>]*>[\s\S]*?<\/section>)(\s*<\/template>)?/g;
   const blocks = [];
-  let last = 0, m;
+  let last = 0, lead = '', m;
   while ((m = re.exec(inner))) {
-    if (inner.slice(last, m.index).trim()) return null;
-    blocks.push({ id: m[3], hidden: !!m[1], html: m[2] });
+    const gap = inner.slice(last, m.index);
+    if (gap.trim()) return null;
+    // Пробелы после экрана принадлежат ему и ездят вместе с ним. Тогда «скрыл и
+    // вернул» или «переставил и вернул» даёт файл байт в байт как был.
+    if (blocks.length) blocks[blocks.length - 1].sep = gap; else lead = gap;
+    blocks.push({ id: m[3], hidden: !!m[1], html: m[2], sep: '' });
     last = re.lastIndex;
   }
-  if (!blocks.length || inner.slice(last).trim()) return null;
-  return { pre: html.slice(0, openEnd), post: html.slice(close), blocks };
+  const tail = inner.slice(last);
+  if (!blocks.length || tail.trim()) return null;
+  blocks[blocks.length - 1].sep = tail;
+  return { pre: html.slice(0, openEnd) + lead, post: html.slice(close), blocks };
 }
 
 // Номер главы стоит в разметке цифрами (<b>03</b>). После перестановки или
@@ -401,10 +407,10 @@ function saveStructure(page, payload) {
   let n = 0;
   const parts = order.map((id) => {
     const b = byId[id];
-    if (hidden.has(id)) return `<template data-off="${id}">${b.html}</template>`;
-    return b.html.replace(NUM_RE, (_m, a, z) => a + String(n++).padStart(2, '0') + z);
+    if (hidden.has(id)) return `<template data-off="${id}">${b.html}</template>` + b.sep;
+    return b.html.replace(NUM_RE, (_m, a, z) => a + String(n++).padStart(2, '0') + z) + b.sep;
   });
-  const next = st.pre + '\n' + parts.join('\n\n') + '\n' + st.post;
+  const next = st.pre + parts.join('') + st.post;
   const tmp = p + '.tmp';
   writeFileSync(tmp, (bom ? '﻿' : '') + next, 'utf8');
   renameSync(tmp, p);
@@ -1264,10 +1270,19 @@ const srv = createServer(async (req, res) => {
     if (path === '/api/upload' && req.method === 'POST') {
       // Имя подбирает СЕРВЕР, сверяясь с диском: клиент видит только картинки
       // текущего кейса и мог бы затереть чужой файл с тем же номером.
+      // ?name= — точное имя (обложка кейса обязана зваться <слаг>-preview: по этому
+      // имени главная собирает кадр для окна при наведении). Занятое имя не затираем.
       const stem = url.searchParams.get('stem');
-      if (!/^[a-z0-9-]+$/.test(stem || '')) return json(res, 400, { error: 'Основа имени — только латиница, цифры и дефисы.' });
+      const exact = url.searchParams.get('name');
       let k = 1, name;
-      do { name = `${stem}-${k++}`; } while (existsSync(resolve(IMGDIR, name + '.webp')));
+      if (exact) {
+        if (!/^[a-z0-9-]+$/.test(exact)) return json(res, 400, { error: 'Имя файла — только латиница, цифры и дефисы.' });
+        if (existsSync(resolve(IMGDIR, exact + '.webp'))) return json(res, 400, { error: 'Файл с таким именем уже есть — его нужно заменить, а не загружать заново.' });
+        name = exact;
+      } else {
+        if (!/^[a-z0-9-]+$/.test(stem || '')) return json(res, 400, { error: 'Основа имени — только латиница, цифры и дефисы.' });
+        do { name = `${stem}-${k++}`; } while (existsSync(resolve(IMGDIR, name + '.webp')));
+      }
       const raw = await body(req);
       if (!raw.length) return json(res, 400, { error: 'Пустой файл.' });
       const got = await intake(raw, url.searchParams.get('mode'));
@@ -1578,6 +1593,9 @@ const srv = createServer(async (req, res) => {
     }
 
     if (path === '/api/validate') return json(res, 200, { problems: validate() });
+    // текущая сохранённая версия сайта — по ней проверка вёрстки понимает,
+    // что эталон для сравнения сменился
+    if (path === '/api/head') return json(res, 200, { sha: (await git('rev-parse', 'HEAD')).out.trim() });
     // Что ждёт публикации. Кроме правок в файлах бывают ГОТОВЫЕ версии, которые
     // ещё не уехали: откат сам создаёт версию и оставляет папку чистой. Без этой
     // цифры кнопка «Опубликовать» гасла, и откат было невозможно довезти до сайта.
