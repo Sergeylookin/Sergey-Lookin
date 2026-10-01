@@ -323,7 +323,8 @@ g('Модель страницы');
   // тега («Надпись», «Абзац»). Работать будет, но человек не поймёт, что это.
   const auto = all.filter((x) => x.auto);
   ok('у каждой надписи своё название по месту', auto.length === 0, auto.slice(0, 4).map((x) => x.f + ':' + x.k).join(', '));
-  ok('подсказки тем менторства отдаются полями', Object.keys(ix.attrs || {}).length === 20, `${Object.keys(ix.attrs || {}).length} шт.`);
+  const hints = Object.keys(ix.attrs || {}).filter((k) => k.startsWith('@data-desc-ru:'));
+  ok('подсказки тем менторства отдаются полями', hints.length === 20, `${hints.length} шт.`);
   const ab = await get('/api/page/about.html');
   ok('у «Обо мне» есть портрет', ab.images?.some((i) => i.name === 'about' && i.exists));
   ok('превью для мессенджеров на месте', ix.og?.w === 1200 && ix.og?.h === 630, ix.og ? `${ix.og.w}×${ix.og.h}` : 'нет');
@@ -390,7 +391,7 @@ g('Рамки текста и подсказки');
 
   const ibase = rd('index.html') + rd('en/index.html');
   const ix = await get('/api/page/index.html');
-  const id = Object.keys(ix.attrs)[0];
+  const id = Object.keys(ix.attrs).find((k) => k.startsWith('@data-desc-ru:'));
   const was = ix.attrs[id];
   await post('/api/page/index.html', { dict: {}, attrs: { [id]: { ru: 'Проба "подсказки" & <текста>', en: was.en } } });
   const got = (await get('/api/page/index.html')).attrs[id];
