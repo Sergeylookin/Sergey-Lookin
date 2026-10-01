@@ -6,7 +6,7 @@
 // Все тесты, которые что-то меняют, возвращают состояние назад и в конце
 // сверяются с git: рабочая папка обязана остаться такой же, как была.
 
-import { readFileSync, existsSync, writeFileSync, rmSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, writeFileSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
@@ -71,6 +71,30 @@ ok('у каждого есть статус', model.cases?.every((c) => c.status
 const c01 = await get('/api/case/01');
 ok('поля кейса читаются', !!c01.dict?.ru['p.title'] && c01.media?.length > 0, `${c01.media?.length} медиа-блоков`);
 ok('у картинок есть вес и размеры', c01.media.some((m) => m.exists && m.kb > 0));
+// Год в таблице не переводится: заполненный по-русски и пустой по-английски,
+// он не должен зажигать у кейса метку «без перевода».
+const c03 = await get('/api/case/03');
+const need03 = model.cases.find((c) => c.n === '03')?.needsEn;
+ok('год в таблице не считается непереведённым',
+  !!c03.dict?.ru['works.year'] && !c03.dict?.en['works.year'] && need03 === 0, `без перевода: ${need03}`);
+
+g('Переносы строк');
+// Перенос из поля обязан уходить в словарь тегом <br>: символ перевода строки
+// сайт схлопывает в пробел, и переносы пропадают без единого предупреждения.
+const nlInDicts = (html) => {
+  const m = html.match(/<script[^>]*id="i18n-data"[^>]*>([\s\S]*?)<\/script>/);
+  if (!m) return [];
+  const d = JSON.parse(m[1]);
+  return Object.keys(d).flatMap((l) => Object.keys(d[l]).filter((k) => /[\r\n]/.test(String(d[l][k]))).map((k) => `${l}:${k}`));
+};
+const nlPages = ['index.html', 'about.html', 'portfolio.html', '404.html',
+  ...readdirSync(resolve(ROOT, 'projects')).filter((f) => /^\d\d\.html$/.test(f)).map((f) => `projects/${f}`)];
+const nlHits = nlPages.flatMap((f) => nlInDicts(readFileSync(resolve(ROOT, f), 'utf8')).map((k) => `${f} ${k}`));
+ok('в словарях нет переносов символом вместо <br>', nlHits.length === 0, nlHits.slice(0, 3).join(' · '));
+ok('страж переносов видит подсунутый символ',
+  nlInDicts('<script type="application/json" id="i18n-data">{"ru":{"a":"раз\\nдва"}}</script>').length === 1);
+ok('поле сохраняет Enter тегом <br>',
+  /nodeType===3[\s\S]{0,700}?\.replace\(\/\\r\?\\n\/g,'<br>'\)/.test(readFileSync(resolve(ROOT, 'cms/index.html'), 'utf8')));
 
 g('Кейсы — сохранение');
 for (const n of ['01', '05', '10']) {
