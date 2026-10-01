@@ -158,7 +158,7 @@ nav .brand:hover{color:#fff}   /* вордмарк подсвечивается 
 }
 /* Меню не центрируется по ОКНУ, а стоит группой справа, перед RU/EN.
    Центровка по окну ставила пункты в зависимость от длины вордмарка:
-   «Сергей Лукин — Head of Design» на средних ширинах подходил к ним
+   «Сергей Лукин — Design Lead» на средних ширинах подходил к ним
    вплотную, и полоса читалась как слипшийся кусок. Теперь между именем
    и меню всегда одно живое поле, а группа справа держит свой ритм. */
 .nav-center{margin-left:auto;display:flex;align-items:center;gap:.85rem;font-family:var(--mono);font-size:var(--t-nav);letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--mute);pointer-events:auto}
