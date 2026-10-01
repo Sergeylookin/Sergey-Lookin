@@ -141,18 +141,27 @@ const Live = (() => {
   }
   function hideHot() { if (hot) hot.hidden = true; }
 
-  // прокрутить превью к надписи и подсветить её
-  function reveal(key) {
-    const el = find(key), w = win();
+  // прокрутить превью к элементу и подсветить его; get — как найти элемент заново
+  // (после прокрутки сайт мог его перерисовать)
+  function revealNode(get) {
+    const el = get(), w = win();
     if (!el || !w) return;
     const r = el.getBoundingClientRect();
     const inView = r.top > 60 && r.bottom < w.innerHeight - 40;
-    const flash = () => showHot(find(key), '', true);
+    const flash = () => showHot(get(), '', true);
     if (inView) return flash();
-    const y = Math.max(0, r.top + w.scrollY - w.innerHeight * 0.35);
+    // высокий блок ставим верхом под шапку сайта, обычный — в верхнюю треть экрана
+    const lift = r.height > w.innerHeight * 0.6 ? 90 : w.innerHeight * 0.3;
+    const y = Math.max(0, r.top + w.scrollY - lift);
     if (w.__lenis && w.__lenis.scrollTo) w.__lenis.scrollTo(y, { duration: 0.45 });
     else w.scrollTo({ top: y, behavior: 'smooth' });
     setTimeout(flash, 560);
+  }
+  // …к надписи из словаря
+  function reveal(key) { revealNode(() => find(key)); }
+  // …к надписи, которая лежит прямо в разметке (знак, вписанный в картинку, подсвечиваем целиком)
+  function revealSel(sel) {
+    revealNode(() => { const d = doc(), t = d && sel ? d.querySelector(sel) : null; return t ? (t.closest('svg') || t) : null; });
   }
 
   // ── превью → форма ────────────────────────────────────────────────────────
@@ -236,7 +245,7 @@ const Live = (() => {
   function setEdit(on) { EDIT = !!on; localStorage.setItem('cms.pmode', EDIT ? 'edit' : 'view'); hideHot(); }
 
   return {
-    init, load, push, pushAttr, navLabel, text, revealSection, setWidth, find, reveal, showHot, hideHot, doc, win, setEdit,
+    init, load, push, pushAttr, navLabel, text, revealSection, setWidth, find, reveal, revealSel, showHot, hideHot, doc, win, setEdit,
     get edit() { return EDIT; },
     setWidths(map) { liveWidths = { ...map }; },
   };

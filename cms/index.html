@@ -17,7 +17,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);ov
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 input,textarea{font:inherit;color:var(--ink);background:#0e0e11;border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;resize:vertical}
 input:focus,textarea:focus{outline:0;border-color:#4a4a55}
-.app{display:grid;grid-template-columns:210px minmax(340px,1fr) 6px minmax(320px,var(--prevw,44%));height:100vh}
+/* Превью по умолчанию берёт всё, что остаётся после колонки полей в 640 px, но не больше,
+   чем нужно десктопному кадру в полный размер (1440 + рамка и поля): при 100 %
+   кадр не проходит через масштабирование и текст в нём остаётся резким. */
+.app{display:grid;grid-template-columns:210px minmax(340px,1fr) 6px minmax(320px,var(--prevw,clamp(360px,calc(100vw - 856px),1476px)));height:100vh}
 /* Граница между полями и превью двигается мышкой: иногда важнее видеть текст,
    иногда — сайт целиком. Ширина запоминается. */
 .grip{cursor:col-resize;background:var(--line);position:relative}
@@ -45,7 +48,7 @@ body.resizing iframe{pointer-events:none}
 
 /* ── центр ── */
 .main{overflow:auto;min-height:0;padding:0 0 80px}
-.bar{position:sticky;top:0;z-index:5;background:rgba(11,11,13,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:11px 20px;display:flex;gap:10px;align-items:center}
+.bar{position:sticky;top:0;z-index:5;background:rgba(11,11,13,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:11px 20px;min-height:59px;display:flex;gap:10px;align-items:center}
 .bar h1{margin:0;font-size:15px;font-weight:600;flex:1}
 .btn{padding:7px 14px;border-radius:6px;border:1px solid var(--line);background:#17171b;font-size:13px}
 .btn:hover{border-color:#43434e}
@@ -54,8 +57,12 @@ body.resizing iframe{pointer-events:none}
 .btn:disabled{opacity:.4;cursor:default}
 .sec{padding:18px 20px;border-bottom:1px solid var(--line)}
 /* 1. полоска разделов: форма кейса в 60+ экранов, без неё не найти нужное */
-.secnav{position:sticky;top:47px;z-index:4;display:flex;gap:2px;overflow-x:auto;padding:7px 20px;
-  background:rgba(11,11,13,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);scrollbar-width:none}
+.secnavbox{position:sticky;top:var(--barh,59px);z-index:4;background:rgba(11,11,13,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.secnavbox::before,.secnavbox::after{content:"";position:absolute;top:0;bottom:0;width:52px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:1}
+.secnavbox::before{left:0;background:linear-gradient(90deg,var(--bg) 25%,transparent)}
+.secnavbox::after{right:0;background:linear-gradient(270deg,var(--bg) 25%,transparent)}
+.secnavbox.more-l::before,.secnavbox.more-r::after{opacity:1}
+.secnav{position:relative;display:flex;gap:2px;overflow-x:auto;padding:7px 20px;scrollbar-width:none}
 .secnav::-webkit-scrollbar{display:none}
 .secnav button{flex:none;padding:5px 10px;border-radius:6px;font-size:12px;color:var(--mute);white-space:nowrap}
 .secnav button:hover{background:#1b1b1f;color:var(--ink)}
@@ -70,7 +77,7 @@ body.resizing iframe{pointer-events:none}
   border:1px solid var(--warn);color:var(--warn);background:rgba(201,151,63,.08)}
 .chkbadge.on{display:inline-flex}
 .chkbadge.err{border-color:var(--accent);color:var(--accent);background:rgba(226,84,58,.08)}
-.chkpop{position:absolute;top:44px;right:20px;z-index:30;width:min(520px,72vw);max-height:52vh;overflow:auto;
+.chkpop{position:fixed;z-index:30;width:min(520px,72vw);max-height:52vh;overflow:auto;
   background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:9px;box-shadow:0 14px 40px rgba(0,0,0,.55)}
 /* 3. восстановление черновика */
 .draftbar{display:flex;align-items:center;gap:10px;padding:10px 20px;background:rgba(201,151,63,.1);
@@ -90,7 +97,7 @@ body.resizing iframe{pointer-events:none}
 .rf b,.rf strong{font-weight:700;color:#fff}
 .rf em{font-style:italic}
 .rf span.num{color:var(--accent);font-weight:600;background:rgba(226,84,58,.1);border-radius:3px;padding:0 3px}
-.rf--one{min-height:0;white-space:pre;overflow-x:auto}
+.rf--one{min-height:0}
 .rtool{position:fixed;z-index:110;display:flex;gap:2px;padding:3px;border-radius:8px;
   background:#22222a;border:1px solid #3a3a44;box-shadow:0 8px 26px rgba(0,0,0,.5)}
 .rtool button{padding:4px 9px;border-radius:5px;font-size:12px;color:#dcdce2;white-space:nowrap}
@@ -189,7 +196,8 @@ body.resizing iframe{pointer-events:none}
 .fmt__opt u{display:block;text-decoration:none;font-size:12px;color:var(--mute);margin-top:5px;line-height:1.45}
 .cvrow{display:grid;grid-template-columns:1fr auto;gap:9px 10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:11px;background:#0e0e11;margin-bottom:8px}
 .cvrow .cvdrop{grid-column:1/-1}
-a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
+.cvacts{display:flex;gap:7px}
+a.btn{display:inline-block;text-decoration:none;white-space:nowrap;color:inherit}
 .cvrow b{font-size:13px}
 .cvmeta{font:11px var(--mono);color:var(--mute);margin-top:3px}
 .cvdrop{padding:10px;font-size:11.5px;margin:0}
@@ -226,15 +234,16 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
 /* ── превью ── */
 .prev{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--panel)}
 .prev .bar{border-bottom:1px solid var(--line);background:none;backdrop-filter:none}
-.prev iframe{flex:1;width:100%;border:0;background:#fff}
-/* Сцена превью. Рамке всегда даётся НАСТОЯЩАЯ ширина устройства — иначе сайт
-   не переключит медиазапросы и покажет не ту вёрстку. Колонка CMS узкая, и
-   без этого даже режим «Веб» уходил в мобильную раскладку. Поэтому кадр не
-   сплющиваем, а уменьшаем целиком, как «зум» в инструментах браузера:
-   пропорции и точки перелома остаются настоящими. */
-.stage{flex:1;min-height:0;display:flex;justify-content:center;overflow:hidden;background:var(--bg);padding:14px 0}
-.devbox{overflow:hidden}
-.stage iframe{flex:none;transform-origin:top left;border:1px solid var(--line);border-radius:10px;background:#fff}
+/* Сцена превью. Кадру всегда даётся НАСТОЯЩИЙ размер экрана устройства — и ширина,
+   и высота. Без настоящей ширины сайт не переключит медиазапросы и покажет не ту
+   вёрстку; без настоящей высоты первый экран и всё, что считается от высоты окна,
+   растягивается — и превью врёт. Поэтому кадр не сплющиваем и не вытягиваем, а
+   уменьшаем целиком, как «зум» в инструментах браузера.
+   Рамка стоит на неподвижной обёртке: на самом кадре она уменьшалась бы вместе с
+   ним до долей пикселя и рисовалась бы рваной. */
+.stage{flex:1;min-height:0;display:flex;justify-content:center;align-items:flex-start;overflow:hidden;background:var(--bg);padding:14px 0}
+.devbox{flex:none;box-sizing:content-box;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.stage iframe{display:block;transform-origin:top left;border:0;background:var(--bg)}
 .devnote{font:11px var(--mono);color:var(--mute);margin-right:10px;white-space:nowrap}
 .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg button{padding:5px 11px;font:11px var(--mono);color:var(--mute)}
@@ -248,11 +257,13 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
 .badge--hidden{color:var(--warn);border-color:var(--warn)}
 
 /* ── проверки ── */
-.checks{padding:12px 20px;display:grid;gap:6px}
+.checks{display:grid;gap:6px}
+#secChecks>h2{cursor:default}
+#secChecks>h2::before{display:none}
 .chk{display:flex;gap:8px;padding:8px 10px;border-radius:6px;font-size:12.5px;line-height:1.45;background:#141418;border-left:2px solid var(--line)}
 .chk.err{border-left-color:var(--accent)} .chk.warn{border-left-color:var(--warn)} .chk.info{border-left-color:#3d5a80}
 .chk .n{font:11px var(--mono);color:var(--mute);flex:none}
-.empty{color:var(--ok);font-size:12.5px;padding:8px 10px}
+.empty{color:var(--ok);font-size:12.5px}
 
 /* ── модалки ── */
 .veil{position:fixed;inset:0;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:28px;z-index:50}
@@ -409,9 +420,9 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap}
     </div>
     <div class="deploybar" id="deployBar" hidden></div>
     <div class="draftbar" id="draftBar" hidden></div>
-    <div class="secnav" id="secnav"></div>
+    <div class="secnavbox" id="secnavBox" hidden><div class="secnav" id="secnav"></div></div>
     <div id="form"></div>
-    <div class="sec"><h2>Проверка</h2><div class="checks" id="checks"></div></div>
+    <div class="sec" id="secChecks" hidden><h2>Проверка</h2><div class="checks" id="checks"></div></div>
   </main>
 
   <div class="grip" id="grip" title="потяни, чтобы расширить превью"></div>
@@ -512,11 +523,11 @@ const RULES = {
 <p>На каждой странице внизу формы есть экран «Поиск и превью в мессенджерах»: заголовок, описание и картинка, которые видно, когда ссылку присылают в Telegram или WhatsApp. Картинка нужна 1200×630 — другой формат CMS обрежет по центру. Telegram держит старое превью у себя: после публикации отправь ссылку боту <code>@WebpageBot</code>.</p>`,
   'Превью и проверка вёрстки': `
 <h4>Веб, планшет, мобилка</h4>
-<p>Три кнопки над превью. Внутри рамке даётся настоящая ширина устройства — 1440, 820 и 390 px, — поэтому сайт переключает вёрстку по-честному, как на живом экране.</p>
+<p>Три кнопки над превью. Кадр — настоящий экран устройства: 1440×900, 820×1180 и 390×844 px. Сайт переключает вёрстку по-честному, а первый экран выглядит так же, как у посетителя: не растянут и не сжат.</p>
 <h4>Масштаб</h4>
-<p>Если колонка уже устройства, кадр уменьшается целиком и рядом пишется процент. Пропорции при этом верные: это зум, а не сжатие.</p>
+<p>Если кадр не помещается в колонку, он уменьшается целиком и рядом пишется процент. Пропорции при этом верные: это зум, а не сжатие. Под кадром десктопа может оставаться пустое место — экран шире, чем колонка.</p>
 <h4>Колонку можно двигать</h4>
-<p>Тёмная полоска между полями и превью тянется мышкой — сайт станет шире. Двойной щелчок по ней возвращает как было. Ширина запоминается.</p>
+<p>Тёмная полоска между полями и превью тянется мышкой — кадр станет крупнее. Двойной щелчок по ней возвращает как было. Ширина запоминается.</p>
 <h4>Проверка вёрстки — сама</h4>
 <p>После каждого сохранения CMS невидимо открывает страницу на трёх ширинах и двух языках и ищет четыре вещи: текст вылез за край экрана, текст обрезан своим блоком, один текст наехал на другой, появилась горизонтальная прокрутка.</p>
 <p>Она сравнивает страницу с опубликованной версией. Бегущие строки, лента кадров и карусель «вылезают» нарочно — это не считается. Замечание — только то, чего на сайте не было.</p>
@@ -826,7 +837,7 @@ function onFieldFocus(el){
   const ds=el.dataset;
   if(ds.l===LANG && !f.dataset.fromPreview){
     if(ds.pa && ds.pa.startsWith('@nav:')) Live.revealSection(ds.pa.slice(5));
-    else if(ds.pa && ds.pa.startsWith('@text:')){ const t=Live.doc()&&Live.doc().querySelector(ds.lru); if(t) Live.showHot(t.closest('svg')||t,'',true); }
+    else if(ds.pa && ds.pa.startsWith('@text:')) Live.revealSel(LANG==='ru'?ds.lru:ds.len);
     else { const key = ds.pa ? ds.pa.slice(ds.pa.indexOf(':')+1) : fKey(ds); if(key) Live.reveal(key); }
   }
   delete f.dataset.fromPreview;
@@ -977,7 +988,7 @@ function render(){
   const cover=meta.cover||{}, isVid=cover.kind==='vid', vid=meta.video||{};
   const pos=(meta.pos||'50% 50%').split(' ').map(x=>parseFloat(x));
   let h=`<div class="sec"><h2>Кейс</h2>
-    <div class="rhint">Выдели текст — появится панель: <b>Ж</b> жирный, <i>К</i> курсив, <span style="color:var(--accent);font-weight:600">12</span> подсветить число. Теги писать не надо.</div>
+    <div class="rhint" style="margin:0 0 12px">Выдели текст — появится панель: <b>Ж</b> жирный, <i>К</i> курсив, <span style="color:var(--accent);font-weight:600">12</span> подсветить число. Теги писать не надо.</div>
     <div class="f"><label>Где показывается<button class="i" data-hint="«На сайте» — кейс в сетке портфолио, в таблице манифеста и в карте сайта. «Скрыт» — исчезает из сетки, таблицы и поиска, но страница остаётся на своём адресе и содержимое цело. Вернуть можно в любой момент одним кликом, ничего заново заполнять не надо.">i</button></label>
       <div class="seg seg--wide" id="statusSeg">
         ${MODEL.statuses.map(s=>`<button data-s="${s}" class="${s===meta.status?'on':''}">${MODEL.statusRu[s]}</button>`).join('')}
@@ -1612,31 +1623,43 @@ function offerDraft(){
 
 /* ── 1. Полоска разделов ───────────────────────────────────────────────── */
 function buildSecNav(){
-  const nav=$('#secnav');
+  const nav=$('#secnav'), box=$('#secnavBox');
   const secs=[...$('#form').querySelectorAll('.sec')].filter(s=>s.querySelector('h2'));
-  if(secs.length<2){ nav.innerHTML=''; nav.style.display='none'; return; }
-  nav.style.display='';
+  if(secs.length<2){ nav.innerHTML=''; box.hidden=true; return; }
+  box.hidden=false;
   nav.innerHTML=secs.map((s,i)=>{
     const n=s.querySelectorAll('.rf,input,textarea').length;
     return '<button data-s="'+i+'">'+esc(s.querySelector('h2').textContent)+(n?'<span class="n">'+n+'</span>':'')+'</button>';
   }).join('');
+  // заголовок экрана встаёт сразу под шапкой и полоской, а не прячется за ними
   nav.onclick=e=>{ const b=e.target.closest('[data-s]'); if(!b) return;
     const s=secs[+b.dataset.s];
     s.classList.remove('folded');
-    const m=$('.main');
-    // offsetTop считается от позиционированного предка, а не от прокручиваемой
-    // области — поэтому берём разницу прямоугольников, иначе никуда не едет
-    const y=s.getBoundingClientRect().top - m.getBoundingClientRect().top + m.scrollTop - 8;
-    m.scrollTo({top:Math.max(0,y),behavior:'smooth'}); };
+    scrollMainTo(s); };
   // сворачивание по клику на заголовок
   for(const s of secs) s.querySelector('h2').onclick=()=>{ s.classList.toggle('folded'); };
-  // подсветка текущего раздела при прокрутке
+  // Полоска длиннее колонки: с того края, где есть ещё экраны, она уходит в тень,
+  // а колесо мыши листает её вбок — иначе до дальних названий не добраться.
+  const edges=()=>{ box.classList.toggle('more-l',nav.scrollLeft>4);
+    box.classList.toggle('more-r',nav.scrollLeft+nav.clientWidth<nav.scrollWidth-4); };
+  nav.onscroll=edges;
+  nav.onwheel=e=>{ if(nav.scrollWidth>nav.clientWidth && Math.abs(e.deltaY)>Math.abs(e.deltaX)){ e.preventDefault(); nav.scrollLeft+=e.deltaY; } };
+  // подсветка текущего раздела при прокрутке; его название держим на виду
   const mainEl=$('.main');
+  let last=-1;
   const onScroll=()=>{
-    const top=mainEl.getBoundingClientRect().top;
+    const top=mainEl.getBoundingClientRect().top, line=barsHeight()+30;
     let cur=0;
-    secs.forEach((s,i)=>{ if(s.getBoundingClientRect().top - top <= 100) cur=i; });
+    secs.forEach((s,i)=>{ if(s.getBoundingClientRect().top - top <= line) cur=i; });
+    // форма докручена до конца — значит, смотрим последний раздел, даже если он короткий
+    if(mainEl.scrollTop>0 && mainEl.scrollTop+mainEl.clientHeight>=mainEl.scrollHeight-2){
+      for(let i=secs.length-1;i>cur;i--) if(secs[i].getBoundingClientRect().top - top < mainEl.clientHeight){ cur=i; break; }
+    }
     nav.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i===cur));
+    if(cur!==last){ last=cur; const b=nav.children[cur];
+      if(b){ const l=b.offsetLeft-40, r=b.offsetLeft+b.offsetWidth+40;
+        if(l<nav.scrollLeft) nav.scrollLeft=Math.max(0,l); else if(r>nav.scrollLeft+nav.clientWidth) nav.scrollLeft=r-nav.clientWidth; } }
+    edges();
   };
   mainEl.onscroll=onScroll; onScroll();
 }
@@ -1647,6 +1670,7 @@ function buildSecNav(){
 function sectionOpened(){
   $('.main').scrollTop=0;
   $('#fmode').style.display = (MODE==='case'||MODE==='page'||MODE==='shell') ? '' : 'none';
+  $('#secChecks').hidden = MODE!=='case';            // замечания к текстам считаются только по кейсам
 }
 function enterSection(mode, navSel, title, withSave){
   MODE=mode; CUR=null; PAGE=null; MANIFEST=null; DIRTY=false;
@@ -1654,10 +1678,9 @@ function enterSection(mode, navSel, title, withSave){
   navOn(navSel); markCur();
   $('#ttl').textContent=title;
   $('#chkBadge').classList.remove('on'); guardReset();
-  $('#secnav').innerHTML=''; $('#secnav').style.display='none'; $('#draftBar').hidden=true;
+  $('#secnav').innerHTML=''; $('#secnavBox').hidden=true; $('#draftBar').hidden=true;
   $('#save').style.display=$('#revert').style.display=withSave?'':'none';
   unmark(true);
-  $('#checks').innerHTML='<div class="empty">Замечания к текстам считаются по кейсам.</div>';
 }
 async function openHistory(){
   if(!(await leaveOk())) return;
@@ -1930,7 +1953,6 @@ async function openPage(file, focusKey){
   renderPage();
   offerDraft();
   refreshPreview();
-  $('#checks').innerHTML='<div class="empty">Замечания к текстам считаются по кейсам.</div>';
   if(focusKey) setTimeout(()=>focusField(focusKey),60);
 }
 async function loadPageData(file){
@@ -2112,8 +2134,8 @@ function cvHTML(){
     return '<div class="cvrow"><div><b>'+label+'</b><div class="cvmeta">'
       + (f? esc(f.name)+' · '+f.kb+' КБ · обновлён '+f.at : '<span style="color:var(--accent)">файла нет</span>')
       + '</div></div>'
-      + (f? '<a class="btn" href="/assets/cv/'+f.name+'?t='+Date.now()+'" target="_blank">Открыть</a>':'')
-      + '<button class="btn pri cvpick" data-lang="'+lang+'">'+(f?'Заменить файл':'Загрузить файл')+'</button>'
+      + '<div class="cvacts">'+(f? '<a class="btn" href="/assets/cv/'+f.name+'?t='+Date.now()+'" target="_blank">Открыть</a>':'')
+      + '<button class="btn'+(f?'':' pri')+' cvpick" data-lang="'+lang+'">'+(f?'Заменить файл':'Загрузить файл')+'</button></div>'
       + '<div class="drop cvdrop" data-lang="'+lang+'">перетащи новый PDF или нажми, чтобы выбрать</div></div>';
   };
   return '<div class="f" style="margin-top:18px"><label><span class="flb">Резюме — файлы PDF</span></label>'
@@ -2208,17 +2230,28 @@ function popList(anchor, html){
   const old=document.querySelector('.chkpop'); if(old){ old.remove(); return; }
   const pop=document.createElement('div'); pop.className='chkpop';
   pop.innerHTML=html;
-  $('.main').appendChild(pop);
+  document.body.appendChild(pop);
+  // под своим значком, в пределах колонки формы
+  const r=anchor.getBoundingClientRect(), m=$('.main').getBoundingClientRect(), w=pop.offsetWidth;
+  pop.style.top=Math.round(r.bottom+8)+'px';
+  pop.style.left=Math.round(Math.max(m.left+12, Math.min(r.right-w, innerWidth-w-8)))+'px';
+  pop.style.maxHeight=Math.max(160, innerHeight-r.bottom-24)+'px';
   setTimeout(()=>document.addEventListener('click',function off(e){
     if(!e.target.closest('.chkpop')&&e.target!==anchor){ pop.remove(); document.removeEventListener('click',off); }
   }),0);
   return pop;
 }
+// сколько сверху занято липкими полосами: шапка формы и полоска экранов
+const barsHeight=()=>$('.main>.bar').offsetHeight + ($('#secnavBox').hidden?0:$('#secnavBox').offsetHeight);
 function scrollMainTo(el){
   const m=$('.main');
-  const y=el.getBoundingClientRect().top - m.getBoundingClientRect().top + m.scrollTop - 96;
-  m.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+  const y=Math.max(0, el.getBoundingClientRect().top - m.getBoundingClientRect().top + m.scrollTop - barsHeight() - 8);
+  // близко — плавно, далеко — прыжком: форма главной длиной в десятки экранов,
+  // и плавная прокрутка через неё всю только мельтешит
+  m.scrollTo({top:y, behavior:Math.abs(y-m.scrollTop)>m.clientHeight*2.5?'auto':'smooth'});
 }
+// полоска экранов липнет под шапкой — её высоту знает только сама шапка
+new ResizeObserver(()=>$('.main').style.setProperty('--barh',$('.main>.bar').offsetHeight+'px')).observe($('.main>.bar'));
 
 // ── превью ──────────────────────────────────────────────────────────────
 // Адрес страницы, которую показывает превью в текущем разделе (русская версия).
@@ -2242,22 +2275,25 @@ $('#fmode').onclick=e=>{ const b=e.target.closest('button'); if(b) setFMode(b.da
 $('#pmode').onclick=e=>{ const b=e.target.closest('button'); if(!b) return; Live.setEdit(b.dataset.p==='edit'); paintModes(); };
 
 // ── как смотреть: веб, планшет, телефон ─────────────────────────────────
-// Рамку именно СУЖАЕМ до настоящей ширины устройства, а не масштабируем
-// картинку: сайт должен сам переключить медиазапросы, иначе проверка врёт.
+// Кадру даём настоящий размер экрана — и ширину, и высоту, — а не размер колонки:
+// сайт должен сам переключить медиазапросы, а первый экран и всё, что считается
+// от высоты окна, — выглядеть как у посетителя. Числа те же, по которым меряет
+// проверка вёрстки (cms/ui/guard.js): что видишь, то и проверяется.
 // Выбор запоминается — обычно смотришь то в одном режиме, то в другом.
-const DEVS={ web:{w:1440,name:'десктоп'}, tab:{w:820,name:'планшет'}, mob:{w:390,name:'телефон'} };
+const DEVS=Object.fromEntries(Guard.DEVS.map(d=>[d.id,{w:d.w,h:d.h,name:d.name.toLowerCase()}]));
 let DEV=localStorage.getItem('cms.dev')||'web';
 function fitDev(){
   const box=$('#devbox'), fr=$('#frame'), st=$('#stage');
-  const W=DEVS[DEV].w;
-  const availW=Math.max(120, st.clientWidth-28), availH=Math.max(120, st.clientHeight-28);
-  const k=Math.min(1, availW/W);
-  box.style.width=Math.round(W*k)+'px'; box.style.height=availH+'px';
-  fr.style.width=W+'px'; fr.style.height=Math.round(availH/k)+'px';
+  const {w:W,h:H}=DEVS[DEV];
+  const availW=Math.max(120, st.clientWidth-30), availH=Math.max(120, st.clientHeight-30);
+  const k=Math.min(1, availW/W, availH/H);
+  box.style.width=Math.floor(W*k)+'px'; box.style.height=Math.floor(H*k)+'px';
+  fr.style.width=W+'px'; fr.style.height=H+'px';
   fr.style.transform=k<1?'scale('+k+')':'none';
   // коротко — чтобы панель над превью помещалась в одну строку; полностью — в подсказке
-  $('#devnote').textContent=W+' px'+(k<1?' · '+Math.round(k*100)+'%':'');
-  $('#devnote').title='Ширина кадра '+W+' px — '+DEVS[DEV].name+(k<1?'. Показан в масштабе '+Math.round(k*100)+'%: пропорции настоящие, это зум, а не сжатие.':'.');
+  const pc=Math.round(k*100);
+  $('#devnote').textContent=W+' × '+H+(pc<100?' · '+pc+'%':'');
+  $('#devnote').title='Кадр '+W+' × '+H+' px — '+DEVS[DEV].name+', как на настоящем экране'+(pc<100?'. Показан в масштабе '+pc+'%: пропорции настоящие, это зум, а не сжатие.':'.');
   Live.hideHot();
 }
 function setDev(d){
