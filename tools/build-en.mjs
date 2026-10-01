@@ -94,6 +94,13 @@ function makeEn(ruHtml, dict, ruUrl, enUrl, isProject) {
     $('meta[property="og:image:alt"]').attr('content', title);
     $('meta[name="twitter:image:alt"]').attr('content', title);
   }
+  // Заголовок первого экрана целиком лежит в aria-label (сам текст скрипт режет на
+  // буквы). В английской странице он оставался русским — переводим и его.
+  const heroH1 = $('h1.hero-title[aria-label]');
+  if (heroH1.length && en['hero.title.static']) {
+    const flat = (v) => strip(v).replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    heroH1.attr('aria-label', (flat(en['hero.title.static']) + ' ' + flat(en['hero.title.word'])).trim());
+  }
   $('meta[property="og:locale"]').attr('content', 'en_US');
   $('meta[property="og:url"]').attr('content', enUrl);
   $('link[rel="canonical"]').attr('href', enUrl);

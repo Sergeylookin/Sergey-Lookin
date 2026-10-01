@@ -40,6 +40,27 @@ const Live = (() => {
     const d = doc(); if (!d) return;
     d.querySelectorAll('[data-i18n="' + CSS.escape(key) + '"]').forEach((el) => el.setAttribute(attr, value));
   }
+  // название экрана в боковом указателе сайта
+  function navLabel(sid, lang, value) {
+    if (lang !== LANG) return;
+    const d = doc(), w = win(); if (!d || !w) return;
+    const sec = d.getElementById(sid); if (!sec) return;
+    if (value) sec.setAttribute('data-nav-' + lang, value); else sec.removeAttribute('data-nav-' + lang);
+    try { if (typeof w.buildSideNavigation === 'function') w.buildSideNavigation(); } catch (e) {}
+  }
+  // надпись, которая лежит прямо в разметке, а не в словаре
+  function text(sel, lang, value) {
+    if (lang !== LANG || !sel) return;
+    const d = doc(); if (!d) return;
+    d.querySelectorAll(sel).forEach((el) => { el.textContent = value; });
+  }
+  // прокрутить превью к экрану
+  function revealSection(sid) {
+    const d = doc(), w = win(); if (!d || !w) return;
+    const el = d.getElementById(sid); if (!el) return;
+    const y = Math.max(0, el.getBoundingClientRect().top + w.scrollY);
+    if (w.__lenis && w.__lenis.scrollTo) w.__lenis.scrollTo(y, { duration: 0.45 }); else w.scrollTo({ top: y, behavior: 'smooth' });
+  }
   function apply(list) {
     const d = doc(), w = win();
     if (!d || !w || !list.length) return;
@@ -183,8 +204,12 @@ const Live = (() => {
     // несохранённые правки переживают перезагрузку кадра (смена языка, устройства)
     const settle = () => {
       const dirty = window.cmsDirtyValues ? cmsDirtyValues(LANG) : [];
-      apply(dirty.filter((x) => !x.attr).map((x) => [x.key, x.value]));
-      for (const x of dirty.filter((x) => x.attr)) pushAttr(x.key, x.attr, LANG, x.value);
+      apply(dirty.filter((x) => x.key && !x.attr).map((x) => [x.key, x.value]));
+      for (const x of dirty) {
+        if (x.attr) pushAttr(x.key, x.attr, LANG, x.value);
+        else if (x.nav) navLabel(x.nav, LANG, x.value);
+        else if (x.text) text(x.text, LANG, x.value);
+      }
       reapplyWidths();
       if (keepY != null) {
         const y = keepY; keepY = null;
@@ -211,7 +236,7 @@ const Live = (() => {
   function setEdit(on) { EDIT = !!on; localStorage.setItem('cms.pmode', EDIT ? 'edit' : 'view'); hideHot(); }
 
   return {
-    init, load, push, pushAttr, setWidth, find, reveal, showHot, hideHot, doc, win, setEdit,
+    init, load, push, pushAttr, navLabel, text, revealSection, setWidth, find, reveal, showHot, hideHot, doc, win, setEdit,
     get edit() { return EDIT; },
     setWidths(map) { liveWidths = { ...map }; },
   };

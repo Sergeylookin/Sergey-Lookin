@@ -20,6 +20,29 @@ export const SCREEN_NAMES = {
 // последний её закрывает — между ними порядок свободный.
 export const FIXED_SCREENS = new Set(['hero', 'cta']);
 
+// Названия разделов в боковом указателе сайта. Значения по умолчанию зашиты в
+// assets/manifest.js (SIDE_LABELS) — здесь их копия, чтобы редактор показывал то,
+// что сейчас на сайте. Правка кладёт своё значение атрибутом data-nav-ru/-en на сам
+// экран, и сайт берёт его оттуда. Самопроверка следит, что копия не разошлась.
+export const SIDE_DEFAULTS = {
+  ru: { hero: 'Начало', intro: 'Введение', works: 'Проекты', credo: 'Принципы', audience: 'Люди', evaluation: 'Оценка',
+        team: 'Команда', mentor: 'Менторство', ds: 'Ремесло', results: 'Результаты', companies: 'Опыт', cta: 'Контакт' },
+  en: { hero: 'Start', intro: 'Intro', works: 'Projects', credo: 'Principles', audience: 'People', evaluation: 'Evaluation',
+        team: 'Team', mentor: 'Mentorship', ds: 'Craft', results: 'Results', companies: 'Experience', cta: 'Contact' },
+};
+
+// Надписи, которые живут не в словаре, а прямо в разметке: у каждой свой элемент
+// на русский и на английский, сайт показывает нужный. re — где текст в файле
+// (вторая скобка — сам текст), sel — тот же элемент в превью.
+export const TEXT_RULES = {
+  'index.html': [
+    { id: 'ring', screen: 'team', label: 'Круглый знак · надпись по кругу',
+      hint: 'Текст идёт по кругу вокруг знака в экране «Команда». В конце оставь « · » — иначе конец слипнется с началом. Длину знак подгоняет сам.',
+      ru: { re: /(<text class="lb-ru"[^>]*><textPath[^>]*>)([^<]*)(<\/textPath>)/, sel: '.lb-ru textPath' },
+      en: { re: /(<text class="lb-en"[^>]*><textPath[^>]*>)([^<]*)(<\/textPath>)/, sel: '.lb-en textPath' } },
+  ],
+};
+
 const INDEX = [
   ['.hero-static', 'Первая фраза (слева вверху)'],
   ['.hero-title em', 'Вторая фраза (справа внизу)'],
@@ -83,6 +106,8 @@ const INDEX = [
 
   ['.sec-title', 'Заголовок'],
   ['.sec-sub', 'Подзаголовок'],
+
+  ['footer.foot [data-i18n="ft.tag"]', 'Подпись справа в подвале'],
 ];
 
 const ABOUT = [

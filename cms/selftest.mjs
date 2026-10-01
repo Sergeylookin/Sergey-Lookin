@@ -402,6 +402,44 @@ g('Рамки текста и подсказки');
   if (dirty(SITE_PATHS)) restore('index.html', 'about.html', 'en/');
 }
 
+g('Указатель, знак и подвал');
+{
+  const base = rd('index.html') + rd('en/index.html');
+  const ix = await get('/api/page/index.html');
+  const intro = ix.screens.find((sc) => sc.id === 'intro');
+  ok('у экрана есть название для бокового указателя', intro?.fields?.[0]?.k === '@nav:intro' && ix.attrs['@nav:intro']?.ru === 'Введение');
+  await post('/api/page/index.html', { dict: ix.dict, attrs: ix.attrs, widths: ix.widths });
+  ok('холостое сохранение с новыми полями', dirty(SITE_PATHS) === 0);
+
+  await post('/api/page/index.html', { dict: {}, attrs: { '@nav:intro': { ru: 'Старт', en: 'Kickoff' } } });
+  ok('название записано атрибутами на экран', /<section id="intro" data-nav-ru="Старт" data-nav-en="Kickoff">/.test(rd('index.html')));
+  ok('английская страница получила их же', rd('en/index.html').includes('data-nav-en="Kickoff"'));
+  await post('/api/page/index.html', { dict: {}, attrs: { '@nav:intro': { ru: 'Введение', en: 'Intro' } } });
+  ok('прежнее название — атрибуты убраны, файл как был', rd('index.html') + rd('en/index.html') === base);
+
+  const ring = ix.attrs['@text:ring'];
+  ok('надпись круглого знака отдаётся полем', !!ring?.ru && !!ring?.en, ring?.ru);
+  await post('/api/page/index.html', { dict: {}, attrs: { '@text:ring': { ru: 'ПРОБА & <ЗНАК> · ', en: ring.en } } });
+  ok('надпись знака записана и экранирована', rd('index.html').includes('ПРОБА &amp; &lt;ЗНАК&gt; · </textPath>'));
+  ok('редактор читает её обратно', (await get('/api/page/index.html')).attrs['@text:ring'].ru === 'ПРОБА & <ЗНАК> · ');
+  await post('/api/page/index.html', { dict: {}, attrs: { '@text:ring': ring } });
+  ok('вернул надпись — файл как был', rd('index.html') + rd('en/index.html') === base);
+
+  const foot = ix.screens.find((sc) => sc.id === '@foot');
+  ok('подпись в подвале главной правится', foot?.fields?.some((f) => f.k === 'ft.tag'));
+  const ab2 = await get('/api/page/about.html');
+  ok('на остальных страницах её ставит сборка — в редакторе её нет', !ab2.screens.some((sc) => sc.fields.some((f) => f.k === 'ft.tag')));
+
+  const h1 = (f) => (rd(f).match(/<h1 class="hero-title[^"]*" aria-label="([^"]*)"/) || [, ''])[1];
+  ok('английский aria-label заголовка — на английском', !!h1('en/index.html') && !/[А-Яа-яЁё]/.test(h1('en/index.html')), h1('en/index.html').slice(0, 50));
+  const word = ix.dict.ru['hero.title.word'];
+  await post('/api/page/index.html', { dict: { ru: { 'hero.title.word': 'Проба заголовка.' } } });
+  ok('aria-label идёт за фразой первого экрана', h1('index.html').endsWith('Проба заголовка.'), h1('index.html'));
+  await post('/api/page/index.html', { dict: { ru: { 'hero.title.word': word } } });
+  ok('вернул фразу — файл как был', rd('index.html') + rd('en/index.html') === base);
+  if (dirty(SITE_PATHS)) restore('index.html', 'en/');
+}
+
 g('Видео и обложка');
 {
   const mp4 = readFileSync(resolve(ROOT, 'assets/vid/runa.mp4'));
@@ -624,6 +662,24 @@ g('Стражи');
   // 9. Модули интерфейса подключены и лежат на месте.
   for (const f of ['dialogs', 'guard', 'live'])
     ok(`модуль ${f}.js подключён`, cms.includes(`/__cms/ui/${f}.js`) && existsSync(resolve(ROOT, 'cms/ui', f + '.js')));
+
+  // 11. Названия разделов для бокового указателя зашиты в скрипте сайта, а редактор
+  // держит их копию, чтобы показать текущее значение. Разойдутся — редактор покажет
+  // одно, а на сайте будет другое.
+  {
+    const js = readFileSync(resolve(ROOT, 'assets/manifest.js'), 'utf8');
+    const lab = readFileSync(resolve(ROOT, 'cms/labels.mjs'), 'utf8');
+    const pick = (src, name, lang) => {
+      const body = (src.match(new RegExp(name + '\\s*=\\s*\\{([\\s\\S]*?)\\n\\};')) || [, ''])[1];
+      const part = (body.match(new RegExp(lang + ':\\s*\\{([\\s\\S]*?)\\}')) || [, ''])[1];
+      return [...part.matchAll(/'?([a-z]+)'?\s*:\s*'([^']*)'/g)].map((m) => m[1] + '=' + m[2]).sort().join('|');
+    };
+    const a = pick(js, 'SIDE_LABELS', 'ru') + '#' + pick(js, 'SIDE_LABELS', 'en');
+    const b = pick(lab, 'SIDE_DEFAULTS', 'ru') + '#' + pick(lab, 'SIDE_DEFAULTS', 'en');
+    ok('названия для указателя найдены в скрипте сайта', a.split('|').length > 20, `${a.split('|').length} шт.`);
+    ok('копия названий в редакторе совпадает с сайтом', a === b);
+    ok('сайт умеет брать название из атрибута экрана', /getAttribute\('data-nav-'\+lang\)/.test(js));
+  }
 
   // 10. Системные вопросы браузера в интерфейсе не используются: они блокируют
   // вкладку и не умеют объяснить последствия.

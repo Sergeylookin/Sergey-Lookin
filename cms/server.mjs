@@ -13,7 +13,7 @@ import { dirname, resolve, join, extname } from 'node:path';
 import { execFile } from 'node:child_process';
 import { load } from 'cheerio';
 import { syncHeadMeta } from '../tools/head-meta.mjs';
-import { SCREEN_NAMES, FIXED_SCREENS, ATTR_RULES, ARIA_LABELS, META_LABELS, labelsFor, fallbackLabel } from './labels.mjs';
+import { SCREEN_NAMES, FIXED_SCREENS, ATTR_RULES, ARIA_LABELS, META_LABELS, SIDE_DEFAULTS, TEXT_RULES, labelsFor, fallbackLabel } from './labels.mjs';
 
 // sharp кэширует открытые файлы, и на Windows из-за этого не удаётся ни
 // переименовать, ни перезаписать картинку, которую он недавно читал.
@@ -124,7 +124,10 @@ const PAGES = [
   { file: 'portfolio.html', label: 'Портфолио — шапка' },
   { file: '404.html', label: 'Страница 404' },
 ];
-const SHELL = /^(nav\.|ft\.|skip$|f\.(client|year|role)$|ui\.(all|next|nextTitle)$)/;
+const SHELL = /^(nav\.|ft\.(copy|top)$|skip$|f\.(client|year|role)$|ui\.(all|next|nextTitle)$)/;
+// Подпись справа в подвале (ft.tag) своя у главной и у 404 — там её и правят.
+// На остальных страницах её ставит сборка каркаса, и правка была бы затёрта.
+const OWN_FOOT = new Set(['index.html', '404.html']);
 // Человеческие подписи для шапки и подвала — они одни на все страницы
 // и правятся отдельным разделом, а не внутри каждой страницы.
 const SHELL_LABELS = {
@@ -209,13 +212,26 @@ function loadPage(page) {
     });
   });
   const hasScreens = screens.length > 0;
+  // надпись вне экранов на странице с экранами — это подвал
   const home = (el) => {
     const $sec = $(el).closest('section[id]');
-    return hasScreens && $sec.length ? byId.get($sec.attr('id')) : screenOf('@page', page.label);
+    if (hasScreens && $sec.length) return byId.get($sec.attr('id'));
+    return hasScreens ? screenOf('@foot', 'Подвал страницы') : screenOf('@page', page.label);
   };
 
   const attrs = {};
   const seen = new Set();
+  if (!OWN_FOOT.has(page.file)) seen.add('ft.tag');
+  // у каждого экрана первым полем — его название в боковом указателе сайта
+  if (hasScreens) {
+    for (const sc of screens) {
+      const $s = $('main section[id="' + sc.id + '"]');
+      const id = '@nav:' + sc.id;
+      attrs[id] = { ru: decAttr($s.attr('data-nav-ru')) || SIDE_DEFAULTS.ru[sc.id] || '', en: decAttr($s.attr('data-nav-en')) || SIDE_DEFAULTS.en[sc.id] || '' };
+      sc.fields.push({ k: id, label: 'Название в боковом указателе', attr: true, short: true,
+        hint: 'Одно слово у правого края сайта: оно показывает, в каком разделе сейчас читатель, и стоит в меню разделов. Не обязано совпадать с названием раздела.' });
+    }
+  }
   $('[data-i18n], [data-i18n-aria]').each((_i, el) => {
     const $el = $(el);
     const k = $el.attr('data-i18n');
@@ -242,6 +258,15 @@ function loadPage(page) {
     }
   });
   if (!screens.length) screenOf('@page', page.label);
+
+  // надписи прямо в разметке (cms/labels.mjs → TEXT_RULES)
+  for (const r of TEXT_RULES[page.file] || []) {
+    const sc = byId.get(r.screen); if (!sc) continue;
+    const pick = (re) => decAttr(((html.match(re) || [])[2]) ?? '');
+    const id = '@text:' + r.id;
+    attrs[id] = { ru: pick(r.ru.re), en: pick(r.en.re) };
+    sc.fields.push({ k: id, label: r.label, attr: true, short: true, hint: r.hint, live: { ru: r.ru.sel, en: r.en.sel } });
+  }
 
   const metaKeys = ['meta.title', 'meta.description'].filter((k) => k in (dict.ru || {}));
   if (metaKeys.length) {
@@ -318,6 +343,25 @@ function setMaxWidth(html, key, val) {
   else if (style) tag = tag.replace(/\s*\/?>$/, (end) => ` style="${style}"` + (end.includes('/') ? ' />' : '>'));
   return html.slice(0, t[0]) + tag + html.slice(t[1]);
 }
+// Текст внутри элемента: кавычки остаются как есть, опасны только & и угловые скобки.
+const encText = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// Название экрана для бокового указателя сайта. Совпало с тем, что зашито в скрипте
+// сайта, — атрибут не нужен и убирается: так «поменял и вернул» даёт исходный файл.
+function setSectionNav(html, sid, lang, value) {
+  const re = new RegExp('<section\\b[^>]*\\bid="' + sid.replace(/[^a-z0-9_-]/gi, '') + '"[^>]*>');
+  const m = html.match(re);
+  if (!m) return null;
+  const attr = 'data-nav-' + lang;
+  const def = (SIDE_DEFAULTS[lang] || {})[sid] || '';
+  let tag = m[0];
+  const has = new RegExp('\\s' + attr + '="[^"]*"');
+  if (!value || value === def) tag = tag.replace(has, '');
+  else if (has.test(tag)) tag = tag.replace(has, ` ${attr}="${encAttr(value)}"`);
+  else tag = tag.replace(/>$/, ` ${attr}="${encAttr(value)}">`);
+  return tag === m[0] ? html : html.slice(0, m.index) + tag + html.slice(m.index + m[0].length);
+}
+
 const okWidth = (v) => v === '' || (/^\d{2,3}(\.\d)?ch$/.test(v) && parseFloat(v) >= 12 && parseFloat(v) <= 140);
 
 // Применяет к разметке ширины рамок и поля-атрибуты, пришедшие из редактора.
@@ -334,9 +378,31 @@ function applyExtras(html, payload, file) {
     }
   }
   if (payload.attrs) {
+    // название экрана в боковом указателе: атрибут на самом <section>
+    for (const [id, v] of Object.entries(payload.attrs)) {
+      if (!id.startsWith('@nav:')) continue;
+      const sid = id.slice(5);
+      for (const lang of ['ru', 'en']) {
+        if (v[lang] == null) continue;
+        const nx = setSectionNav(html, sid, lang, String(v[lang]).trim());
+        if (nx && nx !== html) { html = nx; n++; }
+      }
+    }
+    // надписи в разметке
+    for (const r of TEXT_RULES[file] || []) {
+      const v = payload.attrs['@text:' + r.id];
+      if (!v) continue;
+      for (const lang of ['ru', 'en']) {
+        if (v[lang] == null) continue;
+        const m = html.match(r[lang].re);
+        if (!m || decAttr(m[2]) === String(v[lang])) continue;
+        html = html.replace(r[lang].re, (_m, a, _b, c) => a + encText(v[lang]) + c);
+        n++;
+      }
+    }
     for (const r of ATTR_RULES[file] || []) {
       for (const [id, v] of Object.entries(payload.attrs)) {
-        if (!id.startsWith('@' + r.ru + ':')) continue;
+        if (!id.startsWith('@' + r.ru + ':')) continue;   // @nav: и @text: разобраны выше
         const key = id.slice(r.ru.length + 2);
         const t = openTagOf(html, key);
         if (!t) continue;
@@ -450,6 +516,13 @@ function savePage(page, payload) {
     // ключи, которые сидят в aria-label, а не в тексте
     html = html.replace(new RegExp(`(data-i18n-aria="${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*aria-label=")[^"]*(")`),
       (_m, a, b) => a + String(dict.ru[k]).replace(/"/g, '&quot;') + b);
+  }
+  // Заголовок первого экрана разбит скриптом на буквы, поэтому целиком он лежит в
+  // aria-label. Поменяли фразы — обновляем и его, иначе читалка скажет старое.
+  if (changed.ru.includes('hero.title.static') || changed.ru.includes('hero.title.word')) {
+    const flat = (v) => String(v ?? '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    html = html.replace(/(<h1 class="hero-title[^"]*" aria-label=")[^"]*(")/,
+      (_m, a, b) => a + encAttr((flat(dict.ru['hero.title.static']) + ' ' + flat(dict.ru['hero.title.word'])).trim()) + b);
   }
   // превью ссылки: <title>, description, og:*, twitter:* — одним текстом (tools/head-meta.mjs)
   html = syncHeadMeta(html, {

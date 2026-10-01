@@ -788,7 +788,12 @@ const fKey=ds=>ds.k||ds.pk||ds.sh||'';
 const same=(a,b)=>(a??'')===(b??'');
 // правка поля → превью
 function fLive(ds, lang, v){
-  if(ds.pa){ const at=ds.pa.indexOf(':'); Live.pushAttr(ds.pa.slice(at+1), ds.pa.slice(1,at).replace(/-ru$/,'-'+lang), lang, v??''); }
+  if(ds.pa){
+    // три вида полей вне словаря: название в боковом указателе, надпись в разметке, подсказка-атрибут
+    if(ds.pa.startsWith('@nav:')) return Live.navLabel(ds.pa.slice(5), lang, v??'');
+    if(ds.pa.startsWith('@text:')) return Live.text(lang==='ru'?ds.lru:ds.len, lang, v??'');
+    const at=ds.pa.indexOf(':'); Live.pushAttr(ds.pa.slice(at+1), ds.pa.slice(1,at).replace(/-ru$/,'-'+lang), lang, v??'');
+  }
   else if(fKey(ds)) Live.push(fKey(ds), lang, v??'');
 }
 
@@ -819,8 +824,11 @@ function onFieldFocus(el){
   document.querySelectorAll('.f.editing').forEach(x=>{ if(x!==f) x.classList.remove('editing'); });
   f.classList.add('editing');
   const ds=el.dataset;
-  const key = ds.pa ? ds.pa.slice(ds.pa.indexOf(':')+1) : fKey(ds);
-  if(key && ds.l===LANG && !f.dataset.fromPreview) Live.reveal(key);
+  if(ds.l===LANG && !f.dataset.fromPreview){
+    if(ds.pa && ds.pa.startsWith('@nav:')) Live.revealSection(ds.pa.slice(5));
+    else if(ds.pa && ds.pa.startsWith('@text:')){ const t=Live.doc()&&Live.doc().querySelector(ds.lru); if(t) Live.showHot(t.closest('svg')||t,'',true); }
+    else { const key = ds.pa ? ds.pa.slice(ds.pa.indexOf(':')+1) : fKey(ds); if(key) Live.reveal(key); }
+  }
   delete f.dataset.fromPreview;
   const w=f.querySelector('.wctl'); if(w) drawWidth(w);
 }
@@ -1964,8 +1972,9 @@ function pageField(f){
     pre+=fieldHTML({label:'Компания '+m[1]+' · годы', neutral:true, plain:true, ds:{mf:'c.'+m[1]+'.yrs'}})
        + fieldHTML({label:'Компания '+m[1]+' · название', neutral:true, ds:{mf:'c.'+m[1]+'.name'}});
   }
-  if(f.attr) return pre+fieldHTML({label:f.label, long:true, plain:true, ds:{pa:f.k},
-    hint:'Текст появляется, когда на тему наводят курсор. Обычный текст, без оформления.'});
+  if(f.attr) return pre+fieldHTML({label:f.label, long:!f.short, plain:true,
+    ds:{pa:f.k, ...(f.live?{lru:f.live.ru, len:f.live.en}:{})},
+    hint:f.hint||'Текст появляется, когда на тему наводят курсор. Обычный текст, без оформления.'});
   const ru=PAGE.dict.ru[f.k]??'';
   return pre+fieldHTML({label:f.label, ds:{pk:f.k}, wkey:f.aria?'':f.k,
     long:plainText(ru).length>60||String(ru).includes('<br>'),
@@ -2396,8 +2405,10 @@ window.cmsDirtyValues=function(lang){
     dicts(ORIG.dict,PAGE.dict);
     for(const [id,v] of Object.entries(PAGE.attrs||{})){
       if(same(((ORIG.attrs||{})[id]||{})[lang],v[lang])) continue;
-      const at=id.indexOf(':');
-      out.push({key:id.slice(at+1), attr:id.slice(1,at).replace(/-ru$/,'-'+lang), value:v[lang]??''});
+      const at=id.indexOf(':'), val=v[lang]??'';
+      if(id.startsWith('@nav:')) out.push({nav:id.slice(5), value:val});
+      else if(id.startsWith('@text:')){ const el=$('#form').querySelector('.rf[data-pa="'+CSS.escape(id)+'"]'); if(el) out.push({text:lang==='ru'?el.dataset.lru:el.dataset.len, value:val}); }
+      else out.push({key:id.slice(at+1), attr:id.slice(1,at).replace(/-ru$/,'-'+lang), value:val});
     }
   } else if(MODE==='shell'&&SHELL) dicts(ORIG,SHELL);
   return out;

@@ -1207,6 +1207,10 @@ function getActiveSection(){
 function getSectionLabel(sec){
   if(!sec) return '';
   const lang=(document.documentElement.lang||'ru').slice(0,2);
+  /* Своё название экрана, заданное в CMS, лежит атрибутом на самом экране
+     (data-nav-ru / data-nav-en). Нет его — берём из словаря выше. */
+  const own=sec.getAttribute('data-nav-'+lang);
+  if(own) return own;
   const dict=SIDE_LABELS[lang]||SIDE_LABELS.ru;
   return dict[sec.id]||'';
 }
