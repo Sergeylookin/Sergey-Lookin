@@ -920,11 +920,21 @@ function richToHtml(node){
         continue;
       }
     }
+    // Блок (DIV, P) — это отдельная строка: так браузер раскладывает многострочную
+    // вставку из буфера. Строка начинается с переноса, если перед ней уже что-то есть,
+    // и кончается переносом, если за ней идёт ещё что-то. Раньше перенос ставился только
+    // после блока, и «А⏎Б», вставленное в текст, склеивалось в «АБ».
+    if(tag==='DIV'||tag==='P'){
+      const line=richToHtml(n).replace(/<br>$/,'');            // <br> в пустой строке — служебный
+      if(out && !out.endsWith('<br>')) out+='<br>';
+      out+=line;
+      if(n.nextSibling) out+='<br>';
+      continue;
+    }
     const keep=RICH_OK[tag];
     const inner=richToHtml(n);
-    if(!inner.trim() && tag!=='BR') continue;
+    if(!inner.trim()) continue;
     out += keep ? '<'+keep+'>'+inner+'</'+keep+'>' : inner;   // чужое — разворачиваем
-    if(tag==='DIV'||tag==='P') out+='<br>';                   // блок из вставки — переносом
   }
   return out;
 }
