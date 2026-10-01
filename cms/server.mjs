@@ -1117,9 +1117,11 @@ const srv = createServer(async (req, res) => {
         const c = loadCase(rc.id);
         // сколько заполненных русских полей осталось без английского — чтобы
         // недопереведённый кейс было видно из списка, а не только зайдя внутрь
+        // Поля без перевода (год в таблице) не считаем: у них английского нет по замыслу.
         let needsEn = 0;
-        for (const k of EDITABLE) {
-          if (String(c.dict.ru[k] ?? '').trim() && !String(c.dict.en[k] ?? '').trim()) needsEn++;
+        for (const f of FIELDS) {
+          if (f.neutral) continue;
+          if (String(c.dict.ru[f.k] ?? '').trim() && !String(c.dict.en[f.k] ?? '').trim()) needsEn++;
         }
         return { n: rc.id, title: c.dict.ru['p.title'], year: c.year, role: c.dict.ru['p.role'],
                  status: rc.status, order: rc.order, cover: rc.cover, slug: rc.slug, needsEn,

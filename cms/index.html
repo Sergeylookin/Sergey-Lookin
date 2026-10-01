@@ -68,10 +68,16 @@ body.resizing iframe{pointer-events:none}
 .secnav button:hover{background:#1b1b1f;color:var(--ink)}
 .secnav button.on{background:#1f1f24;color:var(--ink)}
 .secnav .n{font:10px var(--mono);opacity:.6;margin-left:5px}
+/* «Свернуть все» стоит справа от полоски и не уезжает вместе с ней */
+.secnavbox{display:flex;align-items:center}
+.secnav{flex:1;min-width:0}
+.secnavbox::after{right:var(--foldw,0px)}
+.foldall{flex:none;margin:0 14px 0 4px;padding:5px 10px;border-radius:6px;font-size:12px;color:var(--mute);white-space:nowrap}
+.foldall:hover{background:#1b1b1f;color:var(--ink)}
 .sec>h2{cursor:pointer;user-select:none;display:flex;align-items:center;gap:7px}
 .sec>h2::before{content:'▾';font-size:9px;opacity:.5;transition:transform .15s}
 .sec.folded>h2::before{transform:rotate(-90deg)}
-.sec.folded>*:not(h2){display:none}
+.sec.folded>*:not(h2){display:none!important}   /* у части блоков display задан прямо в разметке */
 /* 2. счётчик замечаний в шапке — раньше они висели на 5000 px ниже */
 .chkbadge{display:none;align-items:center;gap:6px;padding:5px 11px;border-radius:6px;font-size:12.5px;
   border:1px solid var(--warn);color:var(--warn);background:rgba(201,151,63,.08)}
@@ -109,10 +115,13 @@ body.resizing iframe{pointer-events:none}
 .findbox{padding:8px 10px 4px}
 .findbox input{font-size:12.5px;padding:6px 9px}
 /* 7. метка недопереведённого кейса */
-.entag{display:inline-block;margin-left:6px;padding:1px 5px;border-radius:4px;border:1px solid var(--warn);
-  color:var(--warn);font:9px var(--mono);letter-spacing:.06em;vertical-align:middle}
+.entag{display:inline-block;margin:5px 0 0;padding:1px 6px;border-radius:4px;border:1px solid var(--warn);
+  color:var(--warn);font:normal 10.5px var(--mono);letter-spacing:.04em}
+.entag:hover{background:rgba(201,151,63,.14)}
+/* сколько сохранённого ещё не на сайте — на кнопке публикации */
+.pubn{display:inline-block;min-width:18px;margin-left:7px;padding:0 6px;border-radius:9px;background:rgba(0,0,0,.3);font:600 11px/1.6 var(--mono)}
 /* 6. отмена отдельного поля */
-.f.dirty>label::after{content:'изменено';font:9px var(--mono);color:var(--warn);letter-spacing:.05em}
+.f.dirty>label::after{content:'изменено';font:10.5px var(--mono);color:var(--warn);letter-spacing:.05em}
 .undo1{margin-left:auto;padding:1px 7px;border-radius:4px;border:1px solid var(--line);
   color:var(--mute);font-size:11px}
 .undo1:hover{border-color:var(--accent);color:var(--accent)}
@@ -392,7 +401,7 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap;color:inherit
 <div class="app">
   <aside class="side">
     <div class="brand">CMS<small id="root">портфолио</small></div>
-    <div class="findbox"><input id="findAll" placeholder="поиск по всему сайту" autocomplete="off" spellcheck="false">
+    <div class="findbox"><input id="findAll" placeholder="поиск по сайту · Ctrl+K" autocomplete="off" spellcheck="false">
       <div class="found" id="found" hidden></div></div>
     <div class="grouphead grouphead--first">Страницы</div>
     <div class="pages" id="pages"></div>
@@ -420,7 +429,7 @@ a.btn{display:inline-block;text-decoration:none;white-space:nowrap;color:inherit
     </div>
     <div class="deploybar" id="deployBar" hidden></div>
     <div class="draftbar" id="draftBar" hidden></div>
-    <div class="secnavbox" id="secnavBox" hidden><div class="secnav" id="secnav"></div></div>
+    <div class="secnavbox" id="secnavBox" hidden><div class="secnav" id="secnav"></div><button class="foldall" id="foldAll"></button></div>
     <div id="form"></div>
     <div class="sec" id="secChecks" hidden><h2>Проверка</h2><div class="checks" id="checks"></div></div>
   </main>
@@ -497,7 +506,7 @@ const RULES = {
 <b>Без потерь</b> — пиксель в пиксель, но тяжелее. Имеет смысл для скриншотов интерфейса с мелким текстом.</p>
 <p>Файл на компьютере при этом не трогается. Ширина оригинала — 1920 для полноширинных и 940 для парных.</p>
 <h4>Строка на две картинки</h4>
-<p>Кнопка «+ пара» ставит две картинки в ряд. На телефоне они всё равно встанут одна под другой.</p>
+<p>Кнопка «+ две в ряд» добавляет блок на две картинки рядом. У готовой картинки во всю ширину есть «добавить вторую рядом»: она встанет слева, справа появится место для второй. «Поставить друг под другом» делает обратное. На телефоне две в ряд всё равно встанут одна под другой.</p>
 <h4>Alt обязателен</h4>
 <p>Его читают поисковик и незрячие. Опиши, что на кадре, а не «картинка 3». Пустой alt подсветится в проверке.</p>
 <h4>Видео внутри кейса</h4>
@@ -621,7 +630,8 @@ function tip(el,text){
 const hideTip=()=>{ if(tipEl){tipEl.remove(); tipEl=null;} };
 addEventListener('scroll',hideTip,true);
 
-function toast(msg,ms=2600){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),ms); return t; }
+function toast(msg,ms=2600){ pubSoon();   // после любого действия пересчитать, что ещё не на сайте
+  const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),ms); return t; }
 
 /* ── список кейсов ── */
 async function boot(){
@@ -632,7 +642,8 @@ async function boot(){
   PAGES=(await api('/api/pages')).pages;
   $('#pages').innerHTML=PAGES.map(p=>`<button class="pg" data-f="${p.file}">${p.label}</button>`).join('');
   $('#pages').onclick = e=>{ const b=e.target.closest('.pg'); if(b) openPage(b.dataset.f); };
-  $('#cases').onclick = e=>{ const b=e.target.closest('.case'); if(b) open(b.dataset.n); };
+  $('#cases').onclick = e=>{ const b=e.target.closest('.case'); if(!b) return;
+    e.target.closest('.entag') ? openUntranslated(b.dataset.n) : open(b.dataset.n); };
   wireSearch();
   // открываем то, на чём остановились в прошлый раз; в первый раз — главную
   const last=(()=>{ try{ return JSON.parse(localStorage.getItem('cms.last')||'null'); }catch(e){ return null; } })();
@@ -695,8 +706,8 @@ function drawList(){
     || String(c.n).includes(q));
   $('#cases').innerHTML = list.map(c=>
     `<button class="case${c.status!=='published'?' case--off':''}" data-n="${c.n}" draggable="${q?'false':'true'}">
-       <b><i class="dot" style="background:${dot[c.status]}" title="${MODEL.statusRu[c.status]}"></i>${c.n} · ${c.title||'без названия'}${c.needsEn?'<span class="entag" title="полей без английского: '+c.needsEn+'">EN '+c.needsEn+'</span>':''}</b>
-       <span>${c.year||'—'} · ${c.role||'—'}${c.status!=='published'?' · '+MODEL.statusRu[c.status]:''}</span>
+       <b><i class="dot" style="background:${dot[c.status]}" title="${MODEL.statusRu[c.status]}"></i>${c.n} · ${c.title||'без названия'}</b>
+       <span>${c.year||'—'} · ${c.role||'—'}${c.status!=='published'?' · '+MODEL.statusRu[c.status]:''}</span>${c.needsEn?'<br><em class="entag" title="Столько полей заполнено по-русски и пусто по-английски. Нажми — открою первое.">без перевода: '+c.needsEn+'</em>':''}
      </button>`).join('')
     || '<div class="locked" style="padding:10px">Ничего не найдено.</div>';
   if(q) return;   // при поиске порядок мышью не трогаем — он про полный список
@@ -716,6 +727,17 @@ async function saveOrder(){
   const r=await api('/api/order',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ids})});
   MODEL=await api('/api/model'); drawList(); markCur(); refreshPreview();
   toast(r.ok?'Порядок сохранён. Сетка и таблица пересобраны.':'Не удалось: '+(r.out||''));
+}
+// Метка «без перевода» в списке кейсов ведёт прямо к первому такому полю.
+async function openUntranslated(n){
+  await open(n);
+  if(CUR!==n) return;                 // уход отменён: остались несохранённые правки
+  setTimeout(()=>{
+    const hit=$('#form .oth.none') || [...$('#form').querySelectorAll('.rf[data-l="en"]')].find(e=>!e.textContent.trim() && !e.closest('[data-neutral]'));
+    const f=hit&&hit.closest('.f'); if(!f) return;
+    unfold(f.closest('.sec')); scrollMainTo(f);
+    f.classList.add('flash'); setTimeout(()=>f.classList.remove('flash'),1600);
+  },80);
 }
 const markCur=()=>document.querySelectorAll('.case').forEach(b=>b.classList.toggle('on',b.dataset.n===CUR));
 
@@ -880,7 +902,10 @@ function richToHtml(node){
   let out='';
   for(const n of node.childNodes){
     if(n.nodeType===3){                       // текст
-      out += n.nodeValue.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      // Enter и вставка из буфера кладут в поле не тег, а символ перевода строки:
+      // в поле он виден как перенос (pre-wrap), а сайт его схлопывает в пробел.
+      // Поэтому в словарь перенос всегда уходит тегом <br>.
+      out += n.nodeValue.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\r?\n/g,'<br>');
       continue;
     }
     if(n.nodeType!==1) continue;
@@ -1021,7 +1046,7 @@ function render(){
     h+=`<div class="sec"><h2>${name}</h2>`+keys.map(k=>{const f=MODEL.fields.find(x=>x.k===k); return f?field(f):'';}).join('')+`</div>`;
   }
   h+=`<div class="sec" id="secMedia"><h2>Картинки и видео</h2><div class="media" id="media"></div>
-      <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap"><button class="btn" id="addFull">+ во всю ширину</button><button class="btn" id="addRow">+ пара</button><button class="btn" id="addVideo">+ видео</button></div></div>`;
+      <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap"><button class="btn" id="addFull">+ во всю ширину</button><button class="btn" id="addRow" title="Блок на две картинки рядом">+ две в ряд</button><button class="btn" id="addVideo">+ видео</button></div></div>`;
   $('#form').innerHTML=h;
 
   wireFields();
@@ -1217,7 +1242,9 @@ function drawMedia(){
     return '<div class="mb '+(m.type==='row'?'mb--row':'mb--full')+'" data-i="'+i+'" draggable="true">'
       + '<div class="mb__bar"><span class="grab">⠿</span><b>'+(m.type==='row'?'Две в ряд':'Во всю ширину')+'</b>'
         + '<div class="sp"></div>'
-        + (m.type==='full'?'<button class="x" data-act="topair">сделать парой</button>':'<button class="x" data-act="tofull">разбить</button>')
+        + (m.type==='full'
+            ? '<button class="x" data-act="topair" title="Картинка встанет в левую половину, справа появится место для второй">добавить вторую рядом</button>'
+            : '<button class="x" data-act="tofull" title="Каждая картинка станет отдельным блоком во всю ширину">поставить друг под другом</button>')
         + '<button class="x" data-act="del">удалить блок</button></div>'
       + '<div class="mb__body">'+items.map((it,j)=>slot(it,i,m.type==='row'?j:-1)).join('')+'</div></div>';
   }).join('') || '<div class="locked">Картинок пока нет.</div>';
@@ -1559,7 +1586,7 @@ function markFields(){
 }
 
 // keepDraft — не трогать черновик: раздел только что открыли, а не сохранили
-const unmark=(keepDraft)=>{ DIRTY=false; const b=$('#save'); b.classList.remove('pri'); b.textContent='Сохранить'; b.title=''; if(!keepDraft) dropDraft(); };
+const unmark=(keepDraft)=>{ DIRTY=false; const b=$('#save'); b.classList.remove('pri'); b.textContent='Сохранить'; b.title='Ctrl+S'; if(!keepDraft) dropDraft(); pubSoon(); };
 
 /* ── 3. Черновик в браузере ────────────────────────────────────────────
    Правки живут в памяти вкладки: перезагрузил или закрыл — потерял.
@@ -1621,23 +1648,48 @@ function offerDraft(){
   };
 }
 
+/* Свёрнутые разделы помнятся: форма перерисовывается после каждой загрузки файла,
+   и без памяти всё свёрнутое раскрывалось заново. У кейсов память общая — разделы
+   у них одинаковые; у страниц — своя на каждую. */
+const foldKey=()=>MODE==='case' ? 'case' : MODE+':'+((PAGE&&PAGE.file)||'');
+const secKey=s=>s.dataset.screen||s.id||(s.querySelector('h2')||{}).textContent||'';
+const formSecs=()=>[...$('#form').querySelectorAll('.sec')].filter(s=>s.querySelector('h2'));
+const foldStore=()=>{ try{ return JSON.parse(localStorage.getItem('cms.folded')||'{}'); }catch(e){ return {}; } };
+function saveFolds(){
+  const all=foldStore(), list=formSecs().filter(s=>s.classList.contains('folded')&&!s.classList.contains('is-off')).map(secKey);
+  if(list.length) all[foldKey()]=list; else delete all[foldKey()];
+  try{ localStorage.setItem('cms.folded',JSON.stringify(all)); }catch(e){}
+  paintFoldAll();
+}
+function unfold(sec){ if(!sec||!sec.classList.contains('folded')) return; sec.classList.remove('folded'); saveFolds(); }
+function paintFoldAll(){
+  const b=$('#foldAll');
+  b.textContent=formSecs().some(s=>!s.classList.contains('folded')) ? 'Свернуть все' : 'Раскрыть все';
+  $('#secnavBox').style.setProperty('--foldw',(b.offsetWidth+18)+'px');
+}
+
 /* ── 1. Полоска разделов ───────────────────────────────────────────────── */
 function buildSecNav(){
   const nav=$('#secnav'), box=$('#secnavBox');
-  const secs=[...$('#form').querySelectorAll('.sec')].filter(s=>s.querySelector('h2'));
+  const secs=formSecs();
   if(secs.length<2){ nav.innerHTML=''; box.hidden=true; return; }
   box.hidden=false;
+  const saved=new Set(foldStore()[foldKey()]||[]);
+  for(const s of secs) if(saved.has(secKey(s))) s.classList.add('folded');
   nav.innerHTML=secs.map((s,i)=>{
     const n=s.querySelectorAll('.rf,input,textarea').length;
-    return '<button data-s="'+i+'">'+esc(s.querySelector('h2').textContent)+(n?'<span class="n">'+n+'</span>':'')+'</button>';
+    return '<button data-s="'+i+'">'+esc(s.querySelector('h2').textContent)+(n?'<span class="n" title="полей в разделе">'+n+'</span>':'')+'</button>';
   }).join('');
+  $('#foldAll').onclick=()=>{ const close=secs.some(s=>!s.classList.contains('folded'));
+    for(const s of secs) s.classList.toggle('folded',close); saveFolds(); $('.main').scrollTop=0; };
+  paintFoldAll();
   // заголовок экрана встаёт сразу под шапкой и полоской, а не прячется за ними
   nav.onclick=e=>{ const b=e.target.closest('[data-s]'); if(!b) return;
     const s=secs[+b.dataset.s];
-    s.classList.remove('folded');
+    unfold(s);
     scrollMainTo(s); };
   // сворачивание по клику на заголовок
-  for(const s of secs) s.querySelector('h2').onclick=()=>{ s.classList.toggle('folded'); };
+  for(const s of secs) s.querySelector('h2').onclick=()=>{ s.classList.toggle('folded'); saveFolds(); };
   // Полоска длиннее колонки: с того края, где есть ещё экраны, она уходит в тень,
   // а колесо мыши листает её вбок — иначе до дальних названий не добраться.
   const edges=()=>{ box.classList.toggle('more-l',nav.scrollLeft>4);
@@ -2048,7 +2100,7 @@ function wirePageExtras(){
       if(nm){
         const id=nm.closest('.scr').dataset.id;
         const sec=$('#form').querySelector('.sec[data-screen="'+id+'"]');
-        if(sec){ sec.classList.remove('folded'); scrollMainTo(sec); }
+        if(sec){ unfold(sec); scrollMainTo(sec); }
         const d=Live.doc(), el=d&&d.getElementById(id);
         if(el){ const w=Live.win(), y=el.getBoundingClientRect().top+w.scrollY;
           if(w.__lenis&&w.__lenis.scrollTo) w.__lenis.scrollTo(y,{duration:.5}); else w.scrollTo({top:y,behavior:'smooth'}); }
@@ -2364,7 +2416,7 @@ function focusField(key, fromPreview){
   const el=fieldEl(key);
   if(!el) return false;
   const f=el.closest('.f'), sec=el.closest('.sec');
-  if(sec) sec.classList.remove('folded');
+  if(sec) unfold(sec);
   if(fromPreview) f.dataset.fromPreview='1';       // превью уже на месте — не дёргаем его обратно
   scrollMainTo(f);
   el.focus({preventScroll:true});
@@ -2407,18 +2459,18 @@ window.cmsResolveMedia=function(el){
     const hit=$('#media') && [...$('#media').querySelectorAll('.mb')].find(mb=>{
       const m=DATA.media[+mb.dataset.i]; if(!m) return false;
       return m.type==='video' ? m.video===name||m.poster===name : m.type==='row' ? m.items.some(x=>x.src===name) : m.src===name; });
-    if(hit) return {label:'Картинки и видео кейса', act:()=>{ $('#secMedia').classList.remove('folded'); scrollMainTo(hit); hit.classList.add('hot'); setTimeout(()=>hit.classList.remove('hot'),1300); }};
+    if(hit) return {label:'Картинки и видео кейса', act:()=>{ unfold($('#secMedia')); scrollMainTo(hit); hit.classList.add('hot'); setTimeout(()=>hit.classList.remove('hot'),1300); }};
   }
   // карточка в сетке портфолио → обложка её кейса
   const card=el.closest('.case');
   if(card){
     const cards=[...card.parentNode.querySelectorAll('.case')], c=liveCase(cards.indexOf(card)+1);
-    if(c) return {label:'Обложка кейса '+c.n, act:async()=>{ if(!(MODE==='case'&&CUR===c.n)) await open(c.n); const s=$('#secCover'); if(s){ s.classList.remove('folded'); scrollMainTo(s); } }};
+    if(c) return {label:'Обложка кейса '+c.n, act:async()=>{ if(!(MODE==='case'&&CUR===c.n)) await open(c.n); const s=$('#secCover'); if(s){ unfold(s); scrollMainTo(s); } }};
   }
   // картинка самой страницы
   if(MODE==='page' && PAGE && PAGE.images){
     const c=$('#form').querySelector('.pimg[data-img="'+CSS.escape(name)+'"]');
-    if(c) return {label:'Картинка страницы', act:()=>{ c.closest('.sec').classList.remove('folded'); scrollMainTo(c); }};
+    if(c) return {label:'Картинка страницы', act:()=>{ unfold(c.closest('.sec')); scrollMainTo(c); }};
   }
   return null;
 };
@@ -2695,6 +2747,24 @@ function changedPages(files){
   }
   return [...set];
 }
+// Что из изменённого относится к сайту: страницы, словари, картинки, видео, резюме.
+// Код (скрипты сайта, сама CMS, инструменты сборки) кнопкой не отправляется.
+const SITE_FILES=/^(index|portfolio|about|404)\.html$|^(projects|en|content)\/|^assets\/(img|cv|vid|og)\/|^sitemap\.xml$/;
+const fileOf=l=>l.replace(/^\S+\s+/,'').replace(/^"|"$/g,'');
+// Кнопка показывает, сколько сохранённого ещё не дошло до сайта: раньше это было
+// видно, только если её нажать, и сохранённая правка легко оставалась на компьютере.
+let pubTimer=null;
+async function pubCount(){
+  let ch; try{ ch=await api('/api/changes'); }catch(e){ return; }
+  const files=ch.files.filter(l=>SITE_FILES.test(fileOf(l))).length, n=files||ch.ahead||0;
+  const b=$('#pub');
+  b.innerHTML='Опубликовать'+(n?'<span class="pubn">'+n+'</span>':'');
+  b.title=files ? 'Сохранено, но ещё не на сайте: '+files+' '+plural(files,['файл','файла','файлов'])
+    : n ? 'Готовых версий без публикации: '+n : 'На сайте актуальная версия';
+}
+const pubSoon=()=>{ clearTimeout(pubTimer); pubTimer=setTimeout(pubCount,700); };
+addEventListener('focus',pubSoon);
+
 $('#pub').onclick=async()=>{
   if(DIRTY && !(await ask({title:'Есть несохранённые правки', text:'В публикацию уходит только то, что сохранено. Несохранённое останется в полях.', ok:'Публиковать без них', cancel:'Вернуться и сохранить'}))) return;
   const [ch,val,mir]=await Promise.all([api('/api/changes'),api('/api/validate'),api('/api/mirror').catch(()=>({items:[]}))]);
@@ -2702,10 +2772,8 @@ $('#pub').onclick=async()=>{
   // Кнопка отправляет содержимое сайта: страницы, словари, картинки, видео, резюме.
   // Код (скрипты сайта, сама CMS, инструменты сборки) отсюда не уходит — его в
   // списке не показываем, чтобы не обещать лишнего.
-  const SITE=/^(index|portfolio|about|404)\.html$|^(projects|en|content)\/|^assets\/(img|cv|vid|og)\/|^sitemap\.xml$/;
-  const fileOf=l=>l.replace(/^\S+\s+/,'').replace(/^"|"$/g,'');
-  const other=ch.files.filter(l=>!SITE.test(fileOf(l))).length;
-  ch.files=ch.files.filter(l=>SITE.test(fileOf(l)));
+  const other=ch.files.filter(l=>!SITE_FILES.test(fileOf(l))).length;
+  ch.files=ch.files.filter(l=>SITE_FILES.test(fileOf(l)));
   const pages=changedPages(ch.files);
   const can=ch.files.length||ch.ahead;
   const v=document.createElement('div'); v.className='veil';
@@ -2757,6 +2825,7 @@ $('#pub').onclick=async()=>{
     const r=await post('/api/publish',{message:$('#msg',v).value});
     $('#log',v).innerHTML=`<div class="steps">${r.steps.map(s=>`<div><span class="${s.ok?'m':'b'}">${s.ok?'✓':'✕'}</span><span>${esc(s.name)}${s.out?' — '+esc(s.out.split('\n').slice(-1)[0].slice(0,90)):''}</span></div>`).join('')}</div>`;
     if(r.published){ watchDeploy(); Guard.clearBase(); guardReset(); }
+    pubSoon();
     if(r.published){ go.textContent='Готово'; $('#log',v).insertAdjacentHTML('beforeend',
       '<p style="margin-top:10px">Отправлено. Сборка на GitHub идёт сама — сайт обновится за пару минут. Если правок не видно: Ctrl+Shift+R.</p>'); }
     else if(r.nothing){ go.textContent='Нечего публиковать'; }
