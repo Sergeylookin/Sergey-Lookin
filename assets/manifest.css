@@ -3263,8 +3263,14 @@ html[lang="ru"]{font-feature-settings:"locl" 1,"lnum" 1,"tnum" 1}
 @media (max-width:860px){
   .wk-cols{display:none}
   .wk-a{grid-template-columns:2.75rem minmax(0,1fr) auto;row-gap:0.3rem;padding:0.95rem 0}
-  .wk-y{grid-column:3;text-align:right}
-  .wk-r{grid-column:2 / -1;font-size:0.75rem}
+  /* Места названы явно: номер · название · год в первой строке, роль под названием.
+     В разметке год идёт раньше названия, и пока место было только у года, название
+     уезжало во вторую строку — в колонку номера шириной 2.75rem. Длинное слово
+     («Marketing», «Choise.com») в неё не помещалось и налезало на роль. */
+  .wk-n{grid-area:1 / 1}
+  .wk-t{grid-area:1 / 2}
+  .wk-y{grid-area:1 / 3;text-align:right}
+  .wk-r{grid-area:2 / 2 / 3 / -1;font-size:0.75rem}
   .wk-c{display:none}
 }
 @media (prefers-reduced-motion:reduce){
