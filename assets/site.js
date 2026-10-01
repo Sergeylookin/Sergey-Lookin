@@ -21,9 +21,11 @@
 
   /* Lazy case-preview videos — they're preload="none" + no autoplay in the HTML, so nothing
      downloads until a case is near the viewport. Play/pause by visibility (quality unchanged,
-     just deferred). Reduced-motion: leave the poster, never load the video. */
+     just deferred). Reduced-motion: leave the poster, never load the video.
+     Ролики внутри самого кейса (.pcase__media) размечены так же и живут по тому же
+     правилу: играют, пока видны, и встают на паузу, когда уехали с экрана. */
   (function lazyCaseVideos(){
-    var vids = document.querySelectorAll('.case__media video');
+    var vids = document.querySelectorAll('.case__media video, .pcase__media video');
     if (!vids.length || prefersReduced) return;
     function start(v){ if (v.preload === 'none') v.preload = 'auto'; var p = v.play(); if (p && p.catch) p.catch(function(){}); }
     if (!('IntersectionObserver' in window)) { vids.forEach(start); return; }
