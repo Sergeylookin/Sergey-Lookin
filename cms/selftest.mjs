@@ -46,8 +46,16 @@ const post = (p, body) => fetch(API + p, { method: 'POST', headers: { 'content-t
 const raw = (p, buf) => fetch(API + p, { method: 'POST', body: buf }).then((r) => r.json());
 const code = (p) => fetch(API + p).then((r) => r.status).catch(() => 0);
 const git = (...a) => { try { return execFileSync(GIT, a, { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 26 }); } catch (e) { return String(e.stdout || '') + String(e.stderr || ''); } };
-const dirty = (paths) => git('status', '--porcelain', '--', ...paths).split('\n').filter((l) => l.trim() && !l.startsWith('??')).length;
 const restore = (...paths) => git('checkout', '--', ...paths);
+// Дата <lastmod> в карте сайта — это время файла страницы на диске. Тест трогает
+// страницу и возвращает её байт в байт, но время у файла уже сегодняшнее, и при
+// следующей сборке дата в карте меняется. Это не правка: на сайт карта едет
+// пересобранной. Карту, где разошлись только даты, возвращаем, — иначе проверка
+// проходила лишь в день последней публикации, а на следующий краснела вся.
+const settleSitemap = () => {
+  if (git('diff', '--', 'sitemap.xml').trim() && !git('diff', '-I', '<lastmod>', '--', 'sitemap.xml').trim()) restore('sitemap.xml');
+};
+const dirty = (paths) => { settleSitemap(); return git('status', '--porcelain', '--', ...paths).split('\n').filter((l) => l.trim() && !l.startsWith('??')).length; };
 
 // ─────────────────────────────────────────────────────────────────────────
 g('Доступность');
@@ -605,17 +613,20 @@ g('Карточка и таблица кейса');
 {
   const snapPf = () => rd('portfolio.html') + rd('index.html') + rd('en/portfolio.html') + rd('en/index.html');
   const base = snapPf();
-  const was = await get('/api/case/08');
+  // Подопытный — обязательно кейс, который сейчас на сайте: у скрытого нет ни
+  // карточки, ни строки в таблице, и проверять на нём нечего.
+  const PUB = JSON.parse(rd('content/cases.json')).cases.find((c) => c.status === 'published').id;
+  const was = await get('/api/case/' + PUB);
   const ed = JSON.parse(JSON.stringify(was));
   ed.dict.ru['card.desc'] = 'Проба описания карточки'; ed.dict.en['card.desc'] = 'Card description probe';
   ed.dict.ru['works.dir'] = 'Проба'; ed.dict.en['works.dir'] = 'Probe';
-  await post('/api/case/08', ed);
+  await post('/api/case/' + PUB, ed);
   ok('описание карточки доходит до портфолио', rd('portfolio.html').includes('Проба описания карточки'));
   ok('и до английского портфолио', rd('en/portfolio.html').includes('Card description probe'));
   ok('направление доходит до таблицы на главной', />Проба<\/span><\/a><\/li>/.test(rd('index.html')));
-  await post('/api/case/08', was);
+  await post('/api/case/' + PUB, was);
   ok('вернул — карточка и таблица как были', snapPf() === base);
-  restore('projects/08.html', 'en/', 'index.html', 'portfolio.html');
+  restore(`projects/${PUB}.html`, 'en/', 'index.html', 'portfolio.html');
   ok('после теста карточки сайт как был', dirty(SITE_PATHS) === 0);
 }
 
@@ -748,6 +759,7 @@ g('Стражи');
 }
 
 g('Чистота');
+settleSitemap();
 const left = git('status', '--porcelain').split('\n').filter((l) => l.trim());
 const modified = left.filter((l) => !l.startsWith('??'));
 ok('рабочая папка не испорчена тестами', modified.length === 0, modified.slice(0, 3).join(' | '));
