@@ -99,7 +99,7 @@
       "id": "08",
       "slug": "poscredit",
       "order": 8,
-      "status": "published",
+      "status": "hidden",
       "cover": {
         "kind": "img",
         "poster": "poscredit-preview"
