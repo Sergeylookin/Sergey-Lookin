@@ -145,6 +145,31 @@ body.resizing iframe{pointer-events:none}
 .deploybar.bad .dot2{background:var(--accent);animation:none}
 .deploybar a{color:var(--ink)}
 .deploybar .sp{flex:1}
+/* 11. экран хода публикации: сменяет список правок после нажатия «Опубликовать».
+   Высоты строк заданы заранее — при смене состояния окно и кнопки стоят на месте. */
+.pubrun__top{display:flex;gap:.875rem;align-items:flex-start;min-height:4.5rem}
+.pubrun__mark{flex:none;width:2.25rem;height:2.25rem;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);color:var(--mute)}
+.pubrun__mark svg{width:1.125rem;height:1.125rem}
+.pubrun[data-st=run] .pubrun__mark{border:2px solid var(--line);border-top-color:var(--warn);animation:spin .8s linear infinite}
+.pubrun[data-st=ok] .pubrun__mark{background:rgba(74,157,106,.12);border-color:#2f5d43;color:var(--ok)}
+.pubrun[data-st=bad] .pubrun__mark{background:rgba(226,84,58,.1);border-color:#6d2c20;color:var(--accent)}
+.pubrun__t{font-size:var(--fs-5);font-weight:600;color:var(--ink);line-height:1.35;padding-top:.0625rem}
+.modal .body .pubrun__d{margin:.1875rem 0 0;max-width:36rem;text-wrap:balance}
+.pubrun__steps{list-style:none;margin:.875rem 0 0;padding:0;border:1px solid var(--line);border-radius:.5rem;background:#141418}
+.modal .body .pubrun__steps li{display:flex;align-items:center;gap:.625rem;margin:0;padding:0 .75rem;height:2.5rem;line-height:1.3;color:var(--mute);border-top:1px solid var(--line)}
+.modal .body .pubrun__steps li:first-child{border-top:0}
+.pubrun__steps i{flex:none;width:1rem;height:1rem;border-radius:50%;display:grid;place-items:center;border:1.5px solid #3a3a43}
+.pubrun__steps i svg{width:.625rem;height:.625rem}
+.pubrun__steps span{flex:none}
+.pubrun__steps em{flex:1;min-width:0;text-align:right;font:var(--fs-2) var(--mono);font-variant-numeric:tabular-nums;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pubrun__steps li[data-s=done],.pubrun__steps li[data-s=now],.pubrun__steps li[data-s=fail]{color:var(--ink)}
+.pubrun__steps li[data-s=done] i{border-color:var(--ok);background:var(--ok);color:#0b0b0d}
+.pubrun__steps li[data-s=now] i{border-color:var(--warn);border-top-color:transparent;animation:spin .8s linear infinite}
+.pubrun__steps li[data-s=fail] i{border-color:var(--accent);background:var(--accent);color:#fff}
+.pubrun .dfiles{margin-top:.625rem}
+.pubrun .steps div span:last-child{white-space:pre-wrap;word-break:break-word}
+.pubrun--bare .pubrun__steps,.pubrun--bare .dfiles{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .sec>h2{margin:0 0 .75rem;font:600 var(--fs-1)/1 var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--mute)}
 .f{margin-bottom:.8125rem}
@@ -2905,26 +2930,39 @@ window.cmsLiveChanged=function(){
 /* После отправки сборка на GitHub идёт ещё пару минут. Показываем, где она,
    и когда правки реально стали видны на сайте. */
 let deployTimer=null;
-function watchDeploy(){
+// onState(состояние, ответ) — чтобы окно публикации показывало то же, что полоса:
+// 'wait' собирается · 'ok' на сайте · 'bad' сборка упала · 'unknown' не узнали · 'long' ждём слишком долго
+function watchDeploy(onState){
   const bar=$('#deployBar');
   clearInterval(deployTimer);
-  let ticks=0;
+  let ticks=0, over=false;
+  const say=(st,d)=>{ if(onState) onState(st,d); };
+  const stop=()=>{ over=true; clearInterval(deployTimer); };
   const paint=(cls,html)=>{ bar.hidden=false; bar.className='deploybar'+(cls?' '+cls:''); bar.innerHTML=html; };
   paint('', '<span class="dot2"></span><span>Отправлено. GitHub собирает сайт…</span><span class="sp"></span>');
+  say('wait');
   const check=async()=>{
+    if(over) return;
     ticks++;
     let d; try{ d=await api('/api/deploy'); }catch(e){ return; }
-    if(d.unknown){ paint('', '<span class="dot2"></span><span>Отправлено. Состояние сборки узнать не удалось'+(d.why?' ('+d.why+')':'')+'.</span><span class="sp"></span><button class="btn" onclick="this.closest(\'.deploybar\').hidden=true">Скрыть</button>'); clearInterval(deployTimer); return; }
-    if(d.status!=='completed'){
+    if(d.unknown){ paint('', '<span class="dot2"></span><span>Отправлено. Состояние сборки узнать не удалось'+(d.why?' ('+d.why+')':'')+'.</span><span class="sp"></span><button class="btn" onclick="this.closest(\'.deploybar\').hidden=true">Скрыть</button>'); stop(); say('unknown',d); return; }
+    // Сборка этой версии появляется на GitHub через несколько секунд после отправки.
+    // До того сервер отдаёт предыдущую, уже законченную: за свою её не принимаем,
+    // иначе «Правки на сайте» загоралось раньше, чем сайт начинал собираться.
+    if(d.forThisVersion===false){
+      paint('', '<span class="dot2"></span><span>Отправлено. GitHub запускает сборку…</span><span class="sp"></span>');
+      say('wait',d);
+    } else if(d.status!=='completed'){
       paint('', '<span class="dot2"></span><span>Собирается версия '+esc(d.sha)+'…</span><span class="sp"></span><a href="'+d.url+'" target="_blank">смотреть на GitHub ↗</a>');
+      say('wait',d);
     } else if(d.conclusion==='success'){
-      paint('ok', '<span class="dot2"></span><span>Опубликовано. Правки на сайте.</span><span class="sp"></span><a href="'+d.site+'" target="_blank">открыть сайт ↗</a><button class="btn" onclick="this.closest(\'.deploybar\').hidden=true">Скрыть</button>');
-      clearInterval(deployTimer);
+      paint('ok', '<span class="dot2"></span><span>Опубликовано. Правки на сайте.</span><span class="sp"></span><a href="'+d.site+'?v='+esc(d.sha)+'" target="_blank">открыть сайт ↗</a><button class="btn" onclick="this.closest(\'.deploybar\').hidden=true">Скрыть</button>');
+      stop(); say('ok',d);
     } else {
       paint('bad', '<span class="dot2"></span><span>Сборка не прошла ('+esc(String(d.conclusion))+'). На сайте осталась прежняя версия.</span><span class="sp"></span><a href="'+d.url+'" target="_blank">посмотреть почему ↗</a>');
-      clearInterval(deployTimer);
+      stop(); say('bad',d);
     }
-    if(ticks>24) clearInterval(deployTimer);   // около шести минут и хватит
+    if(!over && ticks>24){ stop(); say('long',d); }   // около шести минут и хватит
   };
   check();
   deployTimer=setInterval(check, 15000);
@@ -3074,10 +3112,10 @@ $('#pub').onclick=async()=>{
       <h4>Подпись к правке</h4><input id="msg" value="Правки через CMS">
       <div id="log" style="margin-top:.875rem"></div>
     </div>
-    <footer><button class="btn" data-close>Отмена</button><button class="btn pri" id="go" disabled>Опубликовать</button></footer></div>`;
-  let closed=false;
+    <footer><button class="btn" data-close>Отмена</button><a class="btn" id="goSite" target="_blank" rel="noopener" hidden></a><button class="btn pri" id="go" disabled>Опубликовать</button></footer></div>`;
+  let closed=false, busy=false;
   v.onclick=e=>{
-    if(e.target===v||e.target.dataset.close!==undefined){ closed=true; v.remove(); return; }
+    if(e.target===v||e.target.dataset.close!==undefined){ if(busy) return; closed=true; v.remove(); return; }   // пока правки уходят, окно не закрываем
     const m=e.target.closest('[data-mir]');
     if(m){ const it=mir.items[+m.dataset.mir]; closed=true; v.remove(); setFMode('both'); jump(it.target, it.key); }
     const dg=e.target.closest('[data-dgo]');
@@ -3104,25 +3142,109 @@ $('#pub').onclick=async()=>{
     }
   } else arm();
 
-  go.onclick=async()=>{
-    go.disabled=true; go.textContent='публикую…';
-    $('#log',v).innerHTML='<div class="steps"><div>сборка…</div></div>';
-    const r=await post('/api/publish',{message:$('#msg',v).value});
-    $('#log',v).innerHTML=`<div class="steps">${r.steps.map(s=>`<div><span class="${s.ok?'m':'b'}">${s.ok?'✓':'✕'}</span><span>${esc(s.name)}${s.out?' — '+esc(s.out.split('\n').slice(-1)[0].slice(0,90)):''}</span></div>`).join('')}</div>`;
-    if(r.published){ watchDeploy(); Guard.clearBase(); guardReset(); }
-    pubSoon();
-    if(r.published){ go.textContent='Готово'; $('#log',v).insertAdjacentHTML('beforeend',
-      '<p style="margin-top:.625rem">Отправлено. Сборка на GitHub идёт сама — сайт обновится за пару минут. Если правок не видно: Ctrl+Shift+R.</p>');
-      const links=staleLinks(df);
-      if(links.length){
-        $('#log',v).insertAdjacentHTML('beforeend','<div class="tgnote"><b>Превью ссылок в Telegram устарело</b>'
-          + '<p>Изменились заголовок, описание или картинка превью. Telegram помнит старые: когда сайт обновится, открой бота @WebpageBot и отправь ему эти ссылки по одной.</p>'
-          + '<div class="steps">'+links.map(l=>'<div>'+esc(l)+'</div>').join('')+'</div><button class="btn" id="tgCopy">Скопировать ссылки</button></div>');
-        $('#tgCopy',v).onclick=()=>navigator.clipboard.writeText(links.join('\n')).then(()=>toast('Ссылки скопированы.'));
-      } }
-    else if(r.nothing){ go.textContent='Нечего публиковать'; }
-    else { go.disabled=false; go.textContent='Повторить'; }
+  // ── экран хода публикации ────────────────────────────────────────────────
+  // После нажатия список правок сменяется этим экраном: три этапа, общий итог и
+  // «Готово», которое загорается, когда сайт действительно обновился.
+  const ICO={ ok:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.4l3 3 6-6.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+              bad:'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5l7 7m0-7l-7 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>' };
+  const mmss=ms=>{ const s=Math.max(0,Math.round(ms/1000)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+  const closers=v.querySelectorAll('[data-close]'), footClose=$('footer [data-close]',v), site=$('#goSite',v);
+  const run={}; let pubMsg='', tick=null;
+  const runOpen=()=>{
+    pubMsg=$('#msg',v).value;
+    $('.body',v).innerHTML=`<div class="pubrun" data-st="run">
+      <div class="pubrun__top" role="status" aria-live="polite"><span class="pubrun__mark"></span><div><div class="pubrun__t"></div><p class="pubrun__d"></p></div></div>
+      <ol class="pubrun__steps">${['Сборка страниц','Отправка на GitHub','Обновление сайта'].map(t=>`<li data-s="wait"><i></i><span>${t}</span><em></em></li>`).join('')}</ol>
+      <div id="pubExtra"></div>
+      <details class="dfiles"><summary>Подробности сборки</summary><div class="steps" id="pubLog"></div></details>
+    </div>`;
+    run.box=$('.pubrun',v); run.mark=$('.pubrun__mark',v); run.t=$('.pubrun__t',v); run.d=$('.pubrun__d',v);
+    run.li=[...v.querySelectorAll('.pubrun__steps li')]; run.extra=$('#pubExtra',v); run.log=$('#pubLog',v); run.det=$('details',run.box);
   };
+  const runSet=(st,head,title,text)=>{ run.box.dataset.st=st; run.mark.innerHTML=ICO[st]||''; $('header h3',v).textContent=head; run.t.textContent=title; run.d.textContent=text; };
+  const runStep=(i,s,note)=>{ const li=run.li[i]; li.dataset.s=s; $('i',li).innerHTML=s==='done'?ICO.ok:s==='fail'?ICO.bad:''; if(note!=null) $('em',li).textContent=note; };
+  const link=(txt,href)=>{ site.textContent=txt; site.href=href; site.hidden=false; };
+
+  const publish=async()=>{
+    if(busy) return;
+    if(!run.box) runOpen();
+    run.det.open=false;       // после «Повторить» подробности прошлой неудачи сворачиваем
+    // Пока правки собираются и уходят, отменять уже нечего: закрытие выключено на эти секунды.
+    busy=true; closers.forEach(b=>{ b.disabled=true; });
+    site.hidden=true; go.hidden=false; go.disabled=true; go.textContent='Публикую…';
+    runSet('run','Публикация','Собираю и отправляю','Это несколько секунд. Окно пока не закрывай.');
+    runStep(0,'now',''); runStep(1,'wait',''); runStep(2,'wait','');
+    run.log.innerHTML='<div><span>сборка…</span></div>';
+    let r; try{ r=await post('/api/publish',{message:pubMsg}); }
+    catch(e){ r={ok:false,steps:[{name:'Связь с CMS',ok:false,out:'Программа CMS не ответила. Проверь, что её окно не закрыто.'}]}; }
+    busy=false; closers.forEach(b=>{ b.disabled=false; b.textContent='Закрыть'; });
+    const steps=r.steps||[];
+    run.log.innerHTML=steps.map(s=>{ const out=s.ok? (s.out||'').split('\n').slice(-1)[0].slice(0,90) : (s.out||'').trim();
+      return `<div><span class="${s.ok?'m':'b'}">${s.ok?'✓':'✕'}</span><span>${esc(s.name)}${out?' — '+esc(out):''}</span></div>`; }).join('');
+    pubSoon();
+
+    if(r.nothing){
+      run.box.classList.add('pubrun--bare'); go.hidden=true;
+      return runSet('ok','Публикация','Публиковать нечего','На сайте уже актуальная версия: все сохранённые правки там.');
+    }
+    if(!r.published){
+      const failed=steps.find(s=>!s.ok), sent=!!failed && failed.name==='Отправка';
+      runStep(0, sent?'done':'fail', sent?'':'остановилось на шаге «'+(failed?failed.name:'сборка')+'»');
+      if(sent) runStep(1,'fail','GitHub не принял правки');
+      runSet('bad','Публикация не прошла', sent?'Не удалось отправить на GitHub':'Сборка остановилась',
+        'На сайте осталась прежняя версия. Правки сохранены на компьютере и не потеряны. Причина — в подробностях ниже.');
+      run.det.open=true; go.disabled=false; go.textContent='Повторить';
+      return;
+    }
+
+    Guard.clearBase(); guardReset();
+    const t0=Date.now(), note=$('em',run.li[2]);
+    runStep(0,'done','каркас · контакты · английская версия');
+    runStep(1,'done',[r.files? r.files+' '+plural(r.files,['файл','файла','файлов']):'', r.sha? 'версия '+r.sha:''].filter(Boolean).join(' · '));
+    runStep(2,'now','GitHub собирает · 0:00');
+    runSet('run','Сайт обновляется','Правки отправлены, сайт обновляется',
+      'GitHub собирает сайт — обычно это одна-три минуты. Окно можно закрыть: сборка идёт сама, а итог появится в полосе под шапкой.');
+    go.textContent='Сайт обновляется…';
+    clearInterval(tick);
+    tick=setInterval(()=>{ if(!v.isConnected) return clearInterval(tick); note.textContent='GitHub собирает · '+mmss(Date.now()-t0); },1000);
+
+    const links=staleLinks(df);
+    if(links.length){
+      run.extra.innerHTML='<div class="tgnote"><b>Превью ссылок в Telegram устарело</b>'
+        + '<p>Изменились заголовок, описание или картинка превью. Telegram помнит старые: когда сайт обновится, открой бота @WebpageBot и отправь ему эти ссылки по одной.</p>'
+        + '<div class="steps">'+links.map(l=>'<div>'+esc(l)+'</div>').join('')+'</div><button class="btn" id="tgCopy">Скопировать ссылки</button></div>';
+      $('#tgCopy',v).onclick=()=>navigator.clipboard.writeText(links.join('\n')).then(()=>toast('Ссылки скопированы.'));
+    }
+
+    watchDeploy((st,d)=>{
+      if(st==='wait'){ if(d && d.forThisVersion && !r.sha && v.isConnected) $('em',run.li[1]).textContent='версия '+d.sha; return; }
+      clearInterval(tick);
+      // окно закрыли раньше — итог всё равно доносим: полосой под шапкой и всплывающей строкой
+      if(!v.isConnected){ if(st==='ok') toast('Сайт обновлён — правки на месте.',6000); return; }
+      if(st==='ok'){
+        const at=new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'});
+        runStep(2,'done','в '+at+' · за '+mmss(Date.now()-t0));
+        runSet('ok','Опубликовано','Сайт обновлён','Все правки на месте. Если у себя видишь старое — нажми Ctrl+Shift+R: браузер помнит страницу до десяти минут.');
+        link('Открыть сайт ↗', d.site+'?v='+d.sha);
+        footClose.hidden=true; go.disabled=false; go.textContent='Готово'; go.onclick=()=>{ closed=true; v.remove(); }; go.focus();
+        return;
+      }
+      go.hidden=true;
+      if(st==='bad'){
+        runStep(2,'fail','сборка не прошла');
+        runSet('bad','Сайт не обновился','GitHub не собрал сайт','На сайте осталась прежняя версия. Правки отправлены и не потеряны — по ссылке видно, на чём остановилось.');
+        link('Посмотреть почему ↗', d.url);
+      } else if(st==='long'){
+        runStep(2,'wait','дольше обычного');
+        runSet('','Сайт обновляется','GitHub собирает дольше обычного','Правки отправлены и никуда не денутся: сайт обновится сам. Следить за сборкой больше не буду.');
+        if(d && d.url && d.forThisVersion!==false) link('Смотреть на GitHub ↗', d.url);
+      } else {
+        runStep(2,'wait','состояние неизвестно');
+        runSet('','Отправлено','Правки отправлены','Узнать у GitHub состояние сборки не удалось'+(d&&d.why?' ('+d.why+')':'')+'. Сайт обновится сам за пару минут.');
+      }
+    });
+  };
+  go.onclick=publish;
 };
 
 boot();

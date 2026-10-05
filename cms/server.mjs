@@ -1824,6 +1824,12 @@ const srv = createServer(async (req, res) => {
     }
     if (path === '/api/publish' && req.method === 'POST') {
       const steps = [];
+      // Что именно уезжает: сколько файлов и какая версия. Считаем до отправки —
+      // после неё разницы с сайтом уже нет. Экран публикации показывает это человеку.
+      const outgoing = async () => ({
+        files: (await git('diff', '--name-only', 'origin/main', 'HEAD')).out.split('\n').filter(Boolean).length,
+        sha: (await git('rev-parse', '--short=7', 'HEAD')).out.trim(),
+      });
       // Порядок важен и он ровно такой же, как в npm run build: build-en ЧИТАЕТ
       // русские страницы, а build-pages их ПИШЕТ. Если собрать EN раньше каркаса,
       // английская версия уедет собранной из предыдущего состояния.
@@ -1852,9 +1858,10 @@ const srv = createServer(async (req, res) => {
         const n = ahead.out.split('\n').filter(Boolean).length;
         if (!n) { steps.push({ name: 'Публикация', ok: true, out: 'Менять нечего — на сайте уже актуальная версия.' }); return json(res, 200, { ok: true, steps, nothing: true }); }
         steps.push({ name: 'Готово к отправке', ok: true, out: `версий без публикации: ${n}` });
+        const sent0 = await outgoing();
         const ps0 = await git('push', 'origin', 'main');
         steps.push({ name: 'Отправка', ok: ps0.code === 0, out: ps0.out.slice(-400) });
-        return json(res, 200, { ok: ps0.code === 0, steps, published: ps0.code === 0 });
+        return json(res, 200, { ok: ps0.code === 0, steps, published: ps0.code === 0, ...sent0 });
       }
       const msg = JSON.parse((await body(req)).toString('utf8') || '{}').message || 'Правки через CMS';
       // Сообщение передаём ФАЙЛОМ, а не аргументом: на Windows кириллица
@@ -1866,9 +1873,10 @@ const srv = createServer(async (req, res) => {
       rmSync(msgFile, { force: true });
       steps.push({ name: 'Коммит', ok: ci.code === 0, out: ci.out.slice(-400) });
       if (ci.code !== 0) return json(res, 200, { ok: false, steps });
+      const sent = await outgoing();
       const ps = await git('push', 'origin', 'main');
       steps.push({ name: 'Отправка', ok: ps.code === 0, out: ps.out.slice(-400) });
-      return json(res, 200, { ok: ps.code === 0, steps, published: ps.code === 0 });
+      return json(res, 200, { ok: ps.code === 0, steps, published: ps.code === 0, ...sent });
     }
     // всё остальное — сам сайт, чтобы превью было настоящим.
     // Страницы ссылаются на ассеты абсолютно — /Sergey-Lookin/assets/… — потому что

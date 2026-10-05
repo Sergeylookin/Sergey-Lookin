@@ -260,11 +260,13 @@ for (const c of allCases()) {
     for (const lang of ['ru', 'en']) d[lang]['ui.nextTitle'] = data[nxt.id][lang]['p.title'] || '';
     html = putDict(html, d);
   }
-  // черновик и архив прячем от поиска
+  // черновик и архив прячем от поиска. Метку ставим ДО значков сайта: всё от
+  // первого <link rel="icon"> до </head> принадлежит каркасу, build-pages.mjs
+  // переписывает этот кусок целиком и стирал метку при каждой публикации.
   const hide = c.status !== 'published';
   const tag = '<meta name="robots" content="noindex, nofollow">';
   const has = html.includes(tag);
-  if (hide && !has) html = html.replace('</head>', tag + '</head>');
+  if (hide && !has) html = html.replace(html.includes('<link rel="icon"') ? '<link rel="icon"' : '</head>', (m) => tag + m);
   if (!hide && has) html = html.replace(tag, '');
   queue(`projects/${c.id}.html`, html);
 }

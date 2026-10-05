@@ -173,7 +173,14 @@ const p01 = readFileSync(resolve(ROOT, 'projects/01.html'), 'utf8');
 ok('скрытый уходит из таблицы', !ix2.includes('projects/02.html'));
 ok('соседи перелинковываются', /next-proj" href="03\.html"/.test(p01));
 ok('нумерация без дыр', /wk-n">01<[\s\S]{0,400}?wk-n">02</.test(ix2));
+// Публикация после скрытия гонит каркас и английскую версию. Каркас переписывает
+// конец <head> — метка для поисковиков обязана это пережить в обоих языках.
+for (const t of ['build-pages.mjs', 'build-en.mjs']) execFileSync(process.execPath, [resolve(ROOT, 'tools', t)], { cwd: ROOT, encoding: 'utf8' });
+const noidx = (f) => readFileSync(resolve(ROOT, f), 'utf8').includes('<meta name="robots" content="noindex, nofollow">');
+ok('скрытый закрыт от поисковиков и после сборки', noidx('projects/02.html') && noidx('en/projects/02.html'),
+  `ru: ${noidx('projects/02.html')}, en: ${noidx('en/projects/02.html')}`);
 await post('/api/case/02/status', { status: 'published' });
+ok('возвращённый снова открыт поисковикам', !noidx('projects/02.html') && !noidx('en/projects/02.html'));
 ok('возврат восстанавливает всё до байта', snap() === base);
 
 const order = model.cases.map((c) => c.n);
